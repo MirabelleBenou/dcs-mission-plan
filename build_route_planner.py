@@ -5315,6 +5315,7 @@ function profCursorShow(k) {
     (known && v.Y(g) >= v.mt ? '<circle cx="' + xs.toFixed(2) + '" cy="' + v.Y(g).toFixed(2) + '" r="4" class="prof-cd"/>' : '');       /* un sol au-dessus du haut réglé : pas de rond hors du cadre */
   const b = PROF.bub;
   b.textContent = txt;
+  b.style.maxWidth = v.col ? (v.W - PROF_SL_W - 4) + 'px' : '';       /* avec la colonne, la bulle s'arrête à son bord gauche et passe à la ligne */
   b.hidden = false;
   const bw = b.offsetWidth;
   const rl = v.col ? v.W - PROF_SL_W - 2 : v.W - 2;       /* la bulle ne recouvre pas la colonne du curseur du haut */
@@ -9062,6 +9063,7 @@ function fallbackDownload(blob, fname, toastMsg) {
 
 /* Met une route lue à la place de la route en cours (unités, théâtre, cap et déclinaison compris ; la couche et la grille restent) */
 function setRoute(route, noKey) {
+  PROF.topM = null;      /* une route lue prend la place de la route active, son rid reste : le haut du profil revient à Auto */
   if (S.theatre !== route.theatre) RL.pts.length = 0;      /* arriver sur un autre théâtre vide la règle (le mode Règle reste) */
   S.name = route.name;
   S.theatre = route.theatre;
@@ -9156,6 +9158,7 @@ function openRouteFile(file) {
 function rpMem() { syncActive(); return { S: JSON.parse(JSON.stringify(S)), RSET: JSON.parse(JSON.stringify(RSET)), layers: JSON.parse(JSON.stringify(CF_LAYERS)) }; }
 function rpBack(m) {
   S = m.S; RSET = m.RSET; CF_LAYERS = m.layers;
+  PROF.topM = null;      /* « Restaurer » : le jeu d'avant revient, le haut du profil repart de Auto */
   const r = RSET.routes[RSET.active];
   if (r) { S.name = r.name; S.points = r.points; }       /* la route active et S partagent leurs points, comme avant */
   sel = -1; selR = -1;
@@ -9223,6 +9226,7 @@ function clrRun(keys) {
   const what = CLR_SETS.filter(k => keys.indexOf(k) !== -1 && clrHas(c, k));
   if (!what.length) return;
   const has = k => what.indexOf(k) !== -1;
+  if (has('one') || has('routes')) PROF.topM = null;      /* « Effacer » une route ou toutes : les points partent, le rid reste ; le haut du profil revient à Auto */
   const before = rpRids(), activeRid = RSET.routes[RSET.active].rid;
   if (has('routes')) {
     RSET.routes = [blankRoute()]; RSET.active = 0;       /* les routes du théâtre courant seulement : celles des autres théâtres restent */
@@ -9462,6 +9466,7 @@ function openRouteSet(parsed) {
     const vis = rr.routes.filter(r => r.theatre === C), hid = rr.routes.filter(r => r.theatre !== C);
     const a0 = rr.routes[readActiveIndex(parsed.active, rr.routes.length)];
     RSET.routes = vis; RSET.hidden = hid; RSET.active = 0;
+    PROF.topM = null;      /* un jeu de routes ouvert : les rid du fichier sont gardés, le haut du profil revient à Auto */
     if (!vis.length) { const b = blankRoute(); b.theatre = C; vis.push(b); }
     const act = Math.max(0, vis.indexOf(a0));
     RSET.active = act;

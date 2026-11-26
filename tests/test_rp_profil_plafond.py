@@ -23,6 +23,24 @@ BASE_SCALE = {(1280, 800): {'m': (0, 800, 200), 'ft': (0, 3000, 1000)}, (412, 91
 BASE_SVG_SHA = {'m': '4bad7d983afbb285fb112ef269f9ae4b574f2de860caabe6d631dd78bfb34a00', 'ft': '20c35e739ab17da9fd832dccad67a20ab50d0ef3dd94a210bffa3e3a1d0e2297'}
 
 
+# toutes les ordonnées du SVG, dans l'ordre du document : y, y1, y2, cy, rect y et hauteur, les ordonnées de la ligne de vol, le haut et le bas de chaque tracé (les tracés du sol et des zones
+# regroupent leurs échantillons par pixel : leur nombre de points suit la largeur, pas leur étendue verticale)
+ORD_JS = """() => { const out = [], r = v => Math.round(v * 100) / 100;
+  document.querySelectorAll('#rp-prof .prof-svg *').forEach(e => {
+    const t = e.tagName, c = e.getAttribute('class') || '';
+    if (t === 'defs' || t === 'clipPath' || e.closest('defs') || t === 'g') return;
+    const o = [];
+    ['y', 'y1', 'y2', 'cy', 'height'].forEach(a => { if (e.hasAttribute(a)) o.push(a + '=' + r(parseFloat(e.getAttribute(a)))); });
+    if (t === 'polyline') o.push('pts=' + e.getAttribute('points').split(' ').map(p => r(parseFloat(p.split(',')[1]))).join(','));
+    if (t === 'path') { const b = e.getBBox(); o.push('y0=' + r(b.y), 'y1=' + r(b.y + b.height)); }
+    out.push(t + '.' + c + ':' + o.join(';'));
+  });
+  return out; }"""
+# sha256 de ces ordonnées sur la base (MP-V2.1.0+20, sans colonne), Auto, par taille et par unité
+BASE_ORD_SHA = {(1280, 800, 'm'): 'a906bf5148e34dded03d63a57e97dff7572c0eebbfd9f4f5bbd5ace43726dbfb', (1280, 800, 'ft'): 'd6426e80eee5e6e20f232d3599b43d46c002b236528bf2cde592076d40aacbcb',
+                (412, 915, 'm'): '49b1ee3f23cd27d920a676da2ddc474a6482dc40f0532137725812413687087b', (412, 915, 'ft'): '51ad75b00f28138499c2e4b787c5c86fca6794ea406abe3f8728015889bf6b2c'}
+
+
 def open_t(br, w, h, touch, lang='fr'):
     """Comme open_rp, avec le doigt au choix (une tablette de 820 px est au doigt, un écran de 1 280 px à la souris)."""
     ctx = br.new_context(viewport={'width': w, 'height': h}, has_touch=touch, is_mobile=touch)
@@ -113,6 +131,21 @@ def test_auto_is_the_scale_of_the_base_and_pressing_auto_gives_it_back(browser, 
         assert fr.evaluate("document.querySelector('.prof-svg').innerHTML") != before
         auto(fr, pg)
         assert scale(fr) == sc and col(fr)['pressed'] == 'true' and fr.evaluate("document.querySelector('.prof-svg').innerHTML") == before       # Auto : le même dessin, à l'octet
+    assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+@pytest.mark.parametrize('w,h', [(1280, 800), (412, 915)])
+def test_in_auto_with_the_column_every_ordinate_of_the_drawing_is_the_base_ordinate(browser, w, h):
+    pg, fr = start(browser, w, h)
+    assert col(fr)['shown'] is True
+    for u in ('m', 'ft'):
+        unit(fr, pg, u)
+        assert scale(fr)['set'] is False
+        o = fr.evaluate(ORD_JS)
+        assert len(o) > 25
+        assert hashlib.sha256(json.dumps(o).encode()).hexdigest() == BASE_ORD_SHA[(w, h, u)], (u, o)         # seules les abscisses changent : l'axe, la grille, la ligne de vol, les zones, les deux chiffres
     assert pg.errs == []
     pg.context.close()
 
@@ -373,9 +406,10 @@ def test_back_to_auto_at_another_route_a_new_route_a_deletion_the_theatre_and_th
     pg.wait_for_timeout(1700)
     wait_prof(fr)
     assert scale(fr)['top'] == 2500 and scale(fr)['set'] is True
-    fr.evaluate("S.points.pop(); renderAll();")
+    fr.evaluate("S.points.pop(); renderAll();")                                          # un point supprimé
     pg.wait_for_timeout(1700)
     wait_prof(fr)
+    assert scale(fr)['top'] == 2500 and scale(fr)['set'] is True
     # une route neuve : Auto
     fr.evaluate("addRoute()")
     pg.wait_for_timeout(600)
@@ -416,6 +450,92 @@ def test_back_to_auto_at_another_route_a_new_route_a_deletion_the_theatre_and_th
     fr.evaluate("(id) => { const s = document.getElementById('theatre'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); }", 'Syria')
     pg.wait_for_timeout(1200)
     assert fr.evaluate("__RP.prof.topM") is None
+    assert pg.errs == []
+    pg.context.close()
+
+
+def route_text(fr):
+    return fr.evaluate("JSON.stringify({ format: 'dcs-route-v1', name: 'R2', theatre: S.theatre, points: S.points.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef })) })")
+
+
+@needs_pw
+def test_back_to_auto_at_clear_at_the_opening_of_a_route_file_and_of_a_route_set(browser):
+    pg, fr = start(browser)
+    rid0 = fr.evaluate("RSET.routes[RSET.active].rid")
+    rtxt = route_text(fr)
+    stxt = fr.evaluate("JSON.stringify(setObject())")
+    pts = fr.evaluate("JSON.stringify(S.points)")
+    redraw = "(p) => { S.points.length = 0; JSON.parse(p).forEach(q => S.points.push(q)); renderAll(); }"
+    # « Effacer » cette route : les points partent, le rid reste ; la route redessinée repart de Auto
+    set_top(fr, pg, 3000)
+    assert scale(fr)['top'] == 3000
+    fr.evaluate("clrRun(['one'])")
+    pg.wait_for_timeout(300)
+    assert fr.evaluate("RSET.routes[RSET.active].rid") == rid0 and fr.evaluate("__RP.prof.topM") is None
+    fr.evaluate(redraw, pts)
+    pg.wait_for_timeout(1700)
+    wait_prof(fr)
+    assert scale(fr)['set'] is False and col(fr)['pressed'] == 'true'
+    # « Effacer » toutes les routes
+    set_top(fr, pg, 3000)
+    fr.evaluate("clrRun(['routes'])")
+    pg.wait_for_timeout(300)
+    assert fr.evaluate("__RP.prof.topM") is None
+    fr.evaluate(redraw, pts)
+    pg.wait_for_timeout(1700)
+    wait_prof(fr)
+    assert scale(fr)['set'] is False
+    # « Ouvrir » une route seule, dans la route active vidée à la main (le rid reste)
+    set_top(fr, pg, 3000)
+    fr.evaluate("S.points.length = 0; renderAll();")
+    pg.wait_for_timeout(300)
+    assert fr.evaluate("__RP.prof.topM") == 3000
+    fr.evaluate("(t) => openRouteFile(new File([t], 'r.json'))", rtxt)
+    pg.wait_for_timeout(2200)
+    wait_prof(fr)
+    assert fr.evaluate("__RP.prof.topM") is None and scale(fr)['set'] is False
+    # « Ouvrir » un jeu de routes : les rid du fichier sont gardés
+    set_top(fr, pg, 3000)
+    assert scale(fr)['top'] == 3000
+    rid1 = fr.evaluate("RSET.routes[RSET.active].rid")
+    stxt = fr.evaluate("JSON.stringify(setObject())")                                    # le jeu de la route d'aujourd'hui : son rid survit à l'ouverture
+    fr.evaluate("(t) => openRouteFile(new File([t], 's.json'))", stxt)
+    pg.wait_for_timeout(2200)
+    wait_prof(fr)
+    assert fr.evaluate("RSET.routes[RSET.active].rid") == rid1 and fr.evaluate("__RP.prof.topM") is None and scale(fr)['set'] is False
+    # « Restaurer » après un remplacement : Auto aussi
+    set_top(fr, pg, 3000)
+    fr.evaluate("rpBack(rpMem())")
+    pg.wait_for_timeout(1700)
+    wait_prof(fr)
+    assert fr.evaluate("__RP.prof.topM") is None
+    # l'Exemple : le shell rouvre l'outil, qui repart de Auto
+    set_top(fr, pg, 3000)
+    pg.evaluate("MP_WORK_EXAMPLE('fl')")
+    pg.wait_for_timeout(1500)
+    pg.evaluate("openModule('rp')")
+    pg.wait_for_timeout(2500)
+    fr2 = next(f for f in pg.frames if f != pg.main_frame and f.evaluate("typeof window.__RP !== 'undefined'"))
+    assert fr2.evaluate("__RP.prof.topM") is None
+    assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+def test_a_long_bubble_never_covers_the_column(browser):
+    names = ['SA-6 NOM TRÈS LONG ALPHA', 'SA-8 NOM TRÈS LONG BRAVO', 'SA-10 NOM TRÈS LONG CHARLIE']
+    pg, fr = start(browser, 412, 915, items=[sym(0, 'sa-6', name=names[0]), sym(1, 'sa-8', name=names[1]), sym(2, 'sa-10', name=names[2])])
+    sv = col(fr)['svg']
+    seen = 0
+    for fx in (0.1, 0.3, 0.5, 0.7, 0.9):
+        pg.touchscreen.tap(sv[0] + fx * (sv[2] - 52), sv[1] + 60)
+        pg.wait_for_timeout(250)
+        r = fr.evaluate("""() => { const b = document.querySelector('.prof-bub').getBoundingClientRect(), s = document.querySelector('.prof-sl').getBoundingClientRect(), g = document.querySelector('.prof-g').getBoundingClientRect();
+          return { hidden: document.querySelector('.prof-bub').hidden, right: b.right, left: b.left - g.left, colLeft: s.left, w: b.width, txt: document.querySelector('.prof-bub').textContent }; }""")
+        assert r['hidden'] is False and r['right'] <= r['colLeft'] + 0.01 and r['left'] >= -0.01, (fx, r)
+        if r['w'] > 300:
+            seen += 1
+    assert seen >= 1                                                                     # au moins un cas où la bulle est longue : elle passe à la ligne au lieu de recouvrir la colonne
     assert pg.errs == []
     pg.context.close()
 
@@ -611,7 +731,7 @@ def test_the_field_manual_the_texts_the_changelog_and_the_number_say_it():
     # le troisième élément du paragraphe, après « Le profil est un réglage d'écran… » : la phrase suit la deuxième dans le même paragraphe
     for a, b in (('Le profil est un réglage d’écran, hors du fichier de travail.', fr_s), ('The profile is a screen setting, outside the work file.', en_s)):
         i = rp.index(a)
-        assert rp.index(b) > i and rp[i:rp.index(b)].count('<p') == 1 and rp[i:rp.index(b)].count('</p>') == 1 or rp[i + len(a):rp.index(b)] in ('</p><p>', '</p>\n<p>', ' ')
+        assert rp[i + len(a):rp.index(b)] == '</p><p>'                                      # la phrase est le paragraphe qui suit aussitôt « … hors du fichier de travail. »
     assert rp.index('Le profil du sol') < rp.index(fr_s) < rp.index('La fiche d’un aérodrome')
     rpd = (ROOT / 'dist' / 'dcs_route_planner.html').read_text(encoding='utf-8')
     assert rpd.count("    'prof.top': 'Haut du graphique',") == 1 and rpd.count("    'prof.top': 'Top of the graph',") == 1
