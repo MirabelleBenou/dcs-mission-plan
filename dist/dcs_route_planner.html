@@ -963,6 +963,24 @@ select[data-tbm-src] { display: none !important; }
 #rp-prof .prof-cd { fill: #ffd400; stroke: #1a1c14; stroke-width: 1.5; }
 #rp-prof .prof-bub { position: absolute; top: 3px; left: 2px; z-index: 4; max-width: calc(100% - 4px); box-sizing: border-box; padding: 3px 8px; pointer-events: none; background: #1a1c14; border: 1px solid #ffd400; color: #f4ecd0; font: 600 12px/1.3 var(--f-ui); letter-spacing: .02em; }
 #rp-prof .prof-bub[hidden] { display: none; }
+#rp-prof .prof-sl { position: absolute; right: 0; z-index: 5; box-sizing: border-box; width: 44px; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: stretch; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+#rp-prof .prof-sl[hidden] { display: none; }
+#rp-prof .prof-slv { flex: none; box-sizing: border-box; width: 44px; height: 16px; overflow: hidden; text-align: center; white-space: nowrap; color: #c8923a; font: 700 10px/16px var(--f-ui); letter-spacing: 0; }
+#rp-prof .prof-slt { position: relative; flex: 1 1 0; min-height: 0; width: 44px; }
+#rp-prof .prof-sli { -webkit-appearance: none; appearance: none; position: absolute; left: 50%; top: 50%; box-sizing: border-box; width: var(--prof-sll, 40px); height: 44px; margin: -22px 0 0 calc(var(--prof-sll, 40px) / -2); padding: 0; transform: rotate(-90deg); background: transparent; accent-color: #c8923a; cursor: pointer; touch-action: none; }
+#rp-prof .prof-sli::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: rgba(200,146,58,.45); }
+#rp-prof .prof-sli::-moz-range-track { height: 4px; border-radius: 2px; background: rgba(200,146,58,.45); }
+#rp-prof .prof-sli::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; box-sizing: border-box; width: 16px; height: 16px; margin-top: -6px; border: 0; border-radius: 50%; background: #c8923a; }
+#rp-prof .prof-sli::-moz-range-thumb { -moz-appearance: none; appearance: none; box-sizing: border-box; width: 16px; height: 16px; border: 0; border-radius: 50%; background: #c8923a; }
+#rp-prof .prof-sli:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+#rp-prof .prof-sla { flex: none; box-sizing: border-box; width: 44px; height: 24px; margin: 0; padding: 0; border: 1px solid #c8923a; border-radius: 0; background: transparent; color: #c8923a; font: 700 11px/1 var(--f-ui); letter-spacing: .08em; cursor: pointer; touch-action: manipulation; }
+#rp-prof .prof-sla[aria-pressed="true"] { background: #c8923a; color: #1a1c14; }
+#rp-prof .prof-sla:focus-visible { outline: 2px solid var(--amber); outline-offset: -4px; }
+@media (pointer: coarse) {
+  #rp-prof .prof-sla { height: 44px; }
+  #rp-prof .prof-sli::-webkit-slider-thumb { width: 22px; height: 22px; margin-top: -9px; }
+  #rp-prof .prof-sli::-moz-range-thumb { width: 22px; height: 22px; }
+}
 .rp-prof-dot { box-sizing: border-box; width: 14px; height: 14px; border-radius: 50%; background: #ffd400; border: 2px solid #1a1c14; }
 table.nav tr.prof td { background: rgba(192,137,42,.16); color: #1f1c16; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: .3px; white-space: normal; overflow-wrap: anywhere; }
 table.nav tr.prof b { font-weight: 700; }
@@ -3067,6 +3085,7 @@ const I18N = {
     'prof.leg': '▲ Point le plus haut **{h}** · sécurité **{s}**',
     'prof.fold': 'Replier le profil',
     'prof.unfold': 'Déplier le profil',
+    'prof.top': 'Haut du graphique',
     'prof.legend': '▇ vu et à portée de tir des menaces (jusqu\'au plafond) · ▬ route vue (sous l\'axe) · ━ point le plus haut · ╍╍ sécurité',
     'prof.legend.base': '━ point le plus haut · ╍╍ sécurité',
     'dr.f.threat': 'Système',
@@ -3652,6 +3671,7 @@ const I18N = {
     'prof.leg': '▲ Highest point **{h}** · safety **{s}**',
     'prof.fold': 'Fold the profile',
     'prof.unfold': 'Unfold the profile',
+    'prof.top': 'Top of the graph',
     'prof.legend': '▇ seen and within firing range of threats (up to ceiling) · ▬ route seen (below the axis) · ━ highest point · ╍╍ safety',
     'prof.legend.base': '━ highest point · ╍╍ safety',
     'dr.f.threat': 'System',
@@ -7946,6 +7966,15 @@ const PROF_PLUS_M = 300;       /* ajoutés au plus haut du couloir */
 const PROF_TILES = 96;         /* tuiles d'altitude gardées au plus, dans un cache qui n'est ni celui du relief ni celui des menaces */
 const PROF_BLOCK = 16;         /* le couloir se parcourt par blocs de 16 × 16 pixels */
 const PROF_FT = 3.28084;
+const PROF_SL_W = 44;          /* la colonne du curseur du haut, collée au bord droit du graphique */
+const PROF_SL_MR = 52;         /* la marge droite du graphique quand la colonne est là : la colonne et 8 px */
+const PROF_SL_MIN_GH = 100;    /* la colonne n'est là que si le graphique fait au moins 100 px de haut */
+const PROF_SL_VAL = 16;        /* la valeur du haut, en tête de la colonne */
+const PROF_SL_AUTO = 24;       /* le bouton AUTO, à la souris (44 px au doigt) */
+const PROF_TOP_FT = 20000;     /* le haut du curseur : 20 000 ft ... */
+const PROF_TOP_M = 6100;       /* ... ou 6 100 m */
+const PROF_TXT_UP = 13;        /* un texte de l'échelle (11 px) tient dans le cadre quand sa boîte, 13 px au-dessus de sa ligne de base... */
+const PROF_TXT_DN = 3;         /* ... et 3 px dessous, reste dans le graphique */
 const PROF_YEL = '#ffd400', PROF_GREEN = '#8fe08f', PROF_LINE = '#f08a6c', PROF_RED = '#c8102e';
 const PROF = {
   tiles: new Map(),            /* adresse de la tuile d'altitude → promesse de ses mètres (Float32Array de 65 536, NaN là où l'alpha est 0) ou de null */
@@ -7955,7 +7984,9 @@ const PROF = {
   view: null,                  /* l'échelle du dernier dessin (pour les mesures et le curseur) */
   zones: [],                   /* la zone de chaque menace, au dernier dessin : { id, name, top, runs: [{ d0, d1, s: [{ d, lo }] }] } */
   bars: [],                    /* la barre « route vue » au dernier dessin : [{ d0, d1 }] en mètres depuis le départ */
-  cur: null, mark: null, drag: null, failed: ''
+  cur: null, mark: null, drag: null, failed: '',
+  topM: null,                  /* le haut réglé de l'échelle, en mètres ; null : Auto. Un état d'écran : jamais écrit (ni stockage du navigateur, ni fichier de travail) */
+  rkey: '', sl: null, sli: null, slv: null, sla: null
 };
 
 function profWanted() { return !!DISP.profile && reliefTheatre(S.theatre); }
@@ -7967,7 +7998,14 @@ function profGeom() {
   /* sous 760 px, le graphique s'adapte à la place pour que la carte garde 140 px, sans descendre sous 60 px (sous ce plancher, la carte rétrécit) */
   /* (le même calcul, 190 px au plus, pour une carte large dont .mapwrap est très basse : un téléphone en paysage ; à un écran de bureau, rien ne change) */
   const gh = Math.max(PROF_GH_MIN, Math.min(narrow ? PROF_GH_NARROW : PROF_GH, WH - head - PROF_MAP_MIN));
-  return { W: W, WH: WH, narrow: narrow, gh: gh, head: head, fold: fold, H: head + (fold ? 0 : gh) };
+  /* la colonne du curseur du haut : elle tient dans un graphique d'au moins 100 px ; AUTO y fait 44 px au doigt */
+  const touch = head === PROF_HEAD_TOUCH;
+  return { W: W, WH: WH, narrow: narrow, gh: gh, head: head, fold: fold, H: head + (fold ? 0 : gh), slOk: gh >= PROF_SL_MIN_GH, btn: touch ? 44 : PROF_SL_AUTO };
+}
+/* Le haut réglé revient à Auto à chaque changement de route choisie (une autre, une neuve, la choisie supprimée) et de théâtre : la clé est le théâtre et le rid de la route active */
+function profGuard() {
+  const a = typeof RSET !== 'undefined' && RSET && RSET.routes ? RSET.routes[RSET.active] : null, k = (S ? S.theatre : '') + '|' + (a && a.rid ? a.rid : '');
+  if (k !== PROF.rkey) { PROF.rkey = k; PROF.topM = null; }
 }
 
 /* ---- le sol : les tuiles d'altitude, l'inconnu gardé ---- */
@@ -8194,6 +8232,7 @@ function profAfterData() {
 
 /* ---- la synchronisation : un seul point d'entrée, peu coûteux quand rien n'a changé ---- */
 function profSync() {
+  profGuard();
   if (!mapCreated || !PROF.el) return;
   if (!profWanted()) {
     if (PROF.shown) profHide();
@@ -8257,20 +8296,25 @@ function profSetH(h) {
   if (map && mapCreated) map.invalidateSize({ animate: false });
 }
 
-function profRender() {
+function profRender(keepCursor) {
   if (!mapCreated || !PROF.el || !profWanted()) return;
+  profGuard();
   const G = profGeom(), el = PROF.el;
   if (!G.W) return;
   el.setAttribute('aria-label', t('prof.title'));
   el.style.setProperty('--prof-head', G.head + 'px');
   const grids = profGrids(), thrOn = DISP.threats && THR.state === 'ok' && THR.act.length > 0, d = PROF.data, fresh = !!d && d.key === profKey() && !d.fail;
+  /* la colonne du curseur du haut : le bandeau déplié, le graphique dessiné, au moins 100 px de haut ; absente, l'échelle est en Auto */
+  G.col = fresh && !G.fold && S.points.length >= 2 && G.slOk;
   const sig = JSON.stringify([fresh ? d.key : '', S.points.map(p => [p.name, p.alt, p.altRef]), CURRENT_LANG, S.units.altitude, S.units.distance, G.W, G.gh, G.head, G.fold, !!d && d.fail && d.key === profKey(), THR.ver, grids.map(x => x.a.key + '|' + x.a.name),
-    DISP.threats, THR.state, THR.spans, S.points.length]);
+    DISP.threats, THR.state, THR.spans, S.points.length].concat(G.col ? [1, PROF.topM] : []));
   PROF.shown = true;
   if (!el.parentNode) PROF.wrap.appendChild(el);
   profSetH(G.H);
+  if (PROF.sl && PROF.sl.hidden === G.col) PROF.sl.hidden = !G.col;
   if (sig === PROF.rsig) return;
   PROF.rsig = sig;
+  const keep = keepCursor && PROF.cur !== null ? PROF.cur : null;       /* le curseur du haut ne déplace pas le curseur du profil : il se redessine au même échantillon */
   profClearCursor();
   /* l'en-tête */
   el.classList.toggle('prof-fold', G.fold);
@@ -8304,11 +8348,31 @@ function profRender() {
     return;
   }
   svg.innerHTML = profSvg(G, d, grids);
+  profSlSync(G);
+  if (keep !== null && PROF.view && d.flat && keep < d.flat.N) profCursorShow(keep);
+}
+/* La colonne du curseur : ses bornes, sa valeur et son état suivent l'échelle qui vient d'être dessinée */
+function profSlSync(G) {
+  const v = PROF.view, sl = PROF.sl;
+  if (!sl || !v || !G.col) return;
+  const txt = thrNum(v.top) + ' ' + profUnit();
+  sl.style.top = (G.head - 2) + 'px';
+  sl.style.height = G.gh + 'px';
+  sl.style.setProperty('--prof-sll', Math.max(20, G.gh - PROF_SL_VAL - G.btn) + 'px');
+  PROF.sla.style.height = G.btn + 'px';
+  PROF.slv.textContent = txt;
+  const i = PROF.sli;
+  i.min = String(v.sMin); i.max = String(v.sMax); i.step = String(v.sStep);
+  const val = v.set ? v.top : Math.min(v.sMax, Math.max(v.sMin, Math.ceil(v.top / v.sStep - 1e-9) * v.sStep));       /* en Auto, la poignée se tient au haut automatique (arrondi au pas), bornes comprises */
+  if (parseFloat(i.value) !== val) i.value = String(val);
+  i.setAttribute('aria-label', t('prof.top'));
+  i.setAttribute('aria-valuetext', txt);
+  PROF.sla.setAttribute('aria-pressed', v.set ? 'false' : 'true');
 }
 
 function profSvg(G, d, grids) {
   const F = d.flat, N = F.N, D = Math.max(d.total, 1), pts = S.points, ft = S.units.altitude === 'ft', uf = ft ? 1 / FT_M : 1, nm = S.units.distance === 'nm';
-  const ml = G.narrow ? 36 : 42, mr = 8, mt = G.narrow ? 16 : 18, axisY = G.gh - 18, pw = G.W - ml - mr;
+  const ml = G.narrow ? 36 : 42, mr = G.col ? PROF_SL_MR : 8, mt = G.narrow ? 16 : 18, axisY = G.gh - 18, pw = G.W - ml - mr;
   /* l'élévation de la ligne de vol à chaque point : l'altitude en MER, ou le sol au point (inconnu : 0) plus l'altitude en SOL */
   const el = pts.map((p, i) => (p.altRef === 'AGL' ? p.alt + (d.gp[i] === d.gp[i] ? d.gp[i] : 0) : p.alt));
   const pd = []; { let c = 0; pts.forEach((p, i) => { if (i > 0) c += d.legs[i].m; pd.push(c); }); }
@@ -8323,14 +8387,27 @@ function profSvg(G, d, grids) {
   const nt = Math.max(axisY - mt < 60 ? 1 : 3, Math.min(6, Math.floor((axisY - mt) / 34)));       /* un graphique de 60 px : peu de graduations, lisibles */
   /* le bas de l'échelle : 500 m sous le plus bas, sans descendre sous 0 quand tout est au-dessus de 0 */
   const vb = vlo >= 0 ? Math.max(0, vlo - 500) : vlo - 500;
-  const step = profNice(((vhi + pad) - vb) * uf / nt);
-  const ulo = Math.floor(vb * uf / step) * step;
+  let step = profNice(((vhi + pad) - vb) * uf / nt);
+  let ulo = Math.floor(vb * uf / step) * step;
   let uhi = Math.ceil((vhi + pad) * uf / step) * step;
   if (uhi <= ulo) uhi = ulo + step;
+  /* le haut réglé (le curseur) : de 300 m au-dessus du bas (arrondi au pas du curseur) à 20 000 ft, ou au haut automatique arrondi s'il est plus haut ; le bas reste celui d'au-dessus, le pas et les graduations suivent ce haut.
+     Sans colonne (graphique trop bas, bandeau replié), l'échelle est en Auto. */
+  const sStep = ft ? 500 : 100, sMin = Math.ceil((vb + PROF_PLUS_M) * uf / sStep - 1e-9) * sStep;
+  const sMax = Math.max(sMin, ft ? PROF_TOP_FT : PROF_TOP_M, Math.ceil(uhi / sStep - 1e-9) * sStep);
+  const set = !!G.col && PROF.topM !== null;
+  if (set) {
+    uhi = Math.min(sMax, Math.max(sMin, Math.round(PROF.topM * uf / sStep) * sStep));
+    step = profNice((uhi - vb * uf) / nt);
+    ulo = Math.floor(vb * uf / step) * step;
+  }
   const X = dm => ml + dm / D * pw, Y = vm => mt + (1 - (vm * uf - ulo) / (uhi - ulo)) * (axisY - mt);
   const topM = uhi / uf;
-  PROF.view = { W: G.W, gh: G.gh, ml: ml, mr: mr, mt: mt, axisY: axisY, pw: pw, D: D, ulo: ulo, uhi: uhi, uf: uf, X: X, Y: Y };
-  let s = '<defs><clipPath id="prof-clip"><rect x="' + ml + '" y="' + mt + '" width="' + pw + '" height="' + (axisY - mt) + '"/></clipPath></defs>';
+  PROF.view = { W: G.W, gh: G.gh, ml: ml, mr: mr, mt: mt, axisY: axisY, pw: pw, D: D, ulo: ulo, uhi: uhi, uf: uf, X: X, Y: Y, col: !!G.col, set: set, top: uhi, sMin: sMin, sMax: sMax, sStep: sStep };
+  let s = '<defs><clipPath id="prof-clip"><rect x="' + ml + '" y="' + mt + '" width="' + pw + '" height="' + (axisY - mt) + '"/></clipPath>' +
+    (set ? '<clipPath id="prof-clip-top"><rect x="0" y="' + mt + '" width="' + G.W + '" height="' + (G.gh - mt) + '"/></clipPath>' : '') + '</defs>';
+  /* réglé, ce qui dépasse le haut est coupé (le sol, la ligne de vol, les deux chiffres) ; un texte qui ne tient pas dans le cadre ne se dessine pas */
+  const cg = set ? '<g clip-path="url(#prof-clip-top)">' : '', ce = set ? '</g>' : '';
   /* la grille et les axes */
   for (let v = ulo; v <= uhi + step * 1e-6; v += step) {
     const y = mt + (1 - (v - ulo) / (uhi - ulo)) * (axisY - mt);
@@ -8362,7 +8439,7 @@ function profSvg(G, d, grids) {
     run.push([x, y]);
   }
   flush();
-  s += '<path d="' + fill + '" class="prof-fill"/><path d="' + edge + '" class="prof-edge"/>';
+  s += cg + '<path d="' + fill + '" class="prof-fill"/><path d="' + edge + '" class="prof-edge"/>' + ce;
   /* les menaces : la zone, une seule teinte (l'union), puis le nom de chacune */
   const zones = [];
   let zs = '', names = '';
@@ -8399,33 +8476,37 @@ function profSvg(G, d, grids) {
     if (big && X(big.d1) - X(big.d0) >= 14) {
       const lows = big.s.map(q => Math.min(q.lo, topM)), lo = lows.reduce((u, v) => u + v, 0) / lows.length;
       const ym = (yT + Math.min(axisY, Math.max(mt, Y(lo)))) / 2;
-      names += '<text x="' + ((X(big.d0) + X(big.d1)) / 2).toFixed(1) + '" y="' + (ym + 4).toFixed(1) + '" text-anchor="middle" class="prof-zname">' + esc(x.a.name) + '</text>';
+      if (!set || (ym + 4 - PROF_TXT_UP >= mt && ym + 4 + PROF_TXT_DN <= axisY)) names += '<text x="' + ((X(big.d0) + X(big.d1)) / 2).toFixed(1) + '" y="' + (ym + 4).toFixed(1) + '" text-anchor="middle" class="prof-zname">' + esc(x.a.name) + '</text>';
     }
   });
   PROF.zones = zones;
   if (zs) s += '<g clip-path="url(#prof-clip)" opacity="0.55" fill="' + PROF_RED + '">' + zs + '</g>' + names;
   /* les deux chiffres de chaque branche : le point le plus haut (trait jaune, point) et la sécurité (tirets verts) */
+  s += cg;
   d.legs.forEach((lg, i) => {
     if (!lg) return;
     const x0 = X(lg.cum), x1 = X(lg.cum + lg.m);
     const sv = profSafeVal(lg.safe);
     if (sv != null) {
       const y = Y(ft ? sv * FT_M : sv);
-      s += '<line x1="' + x0.toFixed(2) + '" x2="' + x1.toFixed(2) + '" y1="' + y.toFixed(2) + '" y2="' + y.toFixed(2) + '" class="prof-safe" data-leg="' + i + '"/><text x="' + (x0 + 4).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" class="prof-sv" data-leg="' + i + '">' + esc((lg.safe.unk ? '≥ ' : '') + thrNum(sv)) + '</text>';
+      s += '<line x1="' + x0.toFixed(2) + '" x2="' + x1.toFixed(2) + '" y1="' + y.toFixed(2) + '" y2="' + y.toFixed(2) + '" class="prof-safe" data-leg="' + i + '"/>' +
+        (!set || (y - 3 - PROF_TXT_UP >= mt && y - 3 + PROF_TXT_DN <= axisY) ? '<text x="' + (x0 + 4).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" class="prof-sv" data-leg="' + i + '">' + esc((lg.safe.unk ? '≥ ' : '') + thrNum(sv)) + '</text>' : '');
     }
     if (lg.hi >= 0) {
       const hv = lg.g[lg.hi], y = Y(hv), xm = X(lg.cum + lg.m * lg.hi / lg.n);
       s += '<line x1="' + x0.toFixed(2) + '" x2="' + x1.toFixed(2) + '" y1="' + y.toFixed(2) + '" y2="' + y.toFixed(2) + '" class="prof-high" data-leg="' + i + '"/><circle cx="' + xm.toFixed(2) + '" cy="' + y.toFixed(2) + '" r="3" class="prof-hdot" data-leg="' + i + '"/>';
     }
   });
+  s += ce;
   /* la route vue : un trait de 5 px sous l'axe, sur les suites que la carte souligne (le halo) ; celles de la route d'aujourd'hui seulement */
   if (DISP.threats && THR.state === 'ok' && grids.length && THR.spans && THR.spans.pk === JSON.stringify(pts.map(p => [p.lat, p.lon, p.alt, p.altRef]))) THR.spans.list.forEach(b => {
     s += '<rect x="' + X(b.d0).toFixed(2) + '" y="' + (axisY + 1) + '" width="' + Math.max(1, X(b.d1) - X(b.d0)).toFixed(2) + '" height="5" class="prof-seen" data-d0="' + (b.d0 / 1000).toFixed(3) + '" data-d1="' + (b.d1 / 1000).toFixed(3) + '"/>';
     PROF.bars.push({ d0: b.d0, d1: b.d1 });
   });
   /* la ligne de vol : une droite d'un point à l'autre, chaque point à son altitude prévue ; aucune marque quand elle passe sous le sol */
-  s += '<polyline points="' + pts.map((p, i) => X(pd[i]).toFixed(2) + ',' + Y(el[i]).toFixed(2)).join(' ') + '" class="prof-line"/>';
+  s += cg + '<polyline points="' + pts.map((p, i) => X(pd[i]).toFixed(2) + ',' + Y(el[i]).toFixed(2)).join(' ') + '" class="prof-line"/>';
   pts.forEach((p, i) => { s += '<circle cx="' + X(pd[i]).toFixed(2) + '" cy="' + Y(el[i]).toFixed(2) + '" r="3.5" class="prof-pt"/>'; });
+  s += ce;
   /* chaque point : un trait pointillé et, en tête, « n NOM » (coupé à 4 lettres sous 760 px, sauf le premier et le dernier) ; un nom qui en recouvre un autre s'efface, jamais le premier ni le dernier */
   const lbls = pts.map((p, i) => {
     const nm0 = typeof p.name === 'string' ? p.name.trim() : '', nm1 = G.narrow && i > 0 && i < pts.length - 1 ? nm0.slice(0, 4) : nm0, txt = i + (nm1 ? ' ' + nm1 : ''), w = txt.length * 6.2, x = X(pd[i]);
@@ -8474,14 +8555,15 @@ function profCursorShow(k) {
     txt += ' · ' + t('prof.seen', { v: thrAlt(seen[0].lo), n: seen.map(q => q.n).join(', ') });
   }
   PROF.svg.querySelector('#prof-cur').innerHTML = '<line x1="' + xs.toFixed(2) + '" x2="' + xs.toFixed(2) + '" y1="' + v.mt + '" y2="' + v.axisY + '" class="prof-cl"/>' +
-    (known ? '<circle cx="' + xs.toFixed(2) + '" cy="' + v.Y(g).toFixed(2) + '" r="4" class="prof-cd"/>' : '');
+    (known && v.Y(g) >= v.mt ? '<circle cx="' + xs.toFixed(2) + '" cy="' + v.Y(g).toFixed(2) + '" r="4" class="prof-cd"/>' : '');       /* un sol au-dessus du haut réglé : pas de rond hors du cadre */
   const b = PROF.bub;
   b.textContent = txt;
   b.hidden = false;
   const bw = b.offsetWidth;
+  const rl = v.col ? v.W - PROF_SL_W - 2 : v.W - 2;       /* la bulle ne recouvre pas la colonne du curseur du haut */
   let left = xs + 8;
-  if (left + bw > v.W - 2) left = xs - 8 - bw;
-  b.style.left = Math.max(2, Math.min(v.W - bw - 2, left)) + 'px';
+  if (left + bw > rl) left = xs - 8 - bw;
+  b.style.left = Math.max(2, Math.min(rl - bw, left)) + 'px';
   const ll = L.latLng(F.lat[k], F.lon[k]);
   if (!PROF.mark) PROF.mark = L.marker(ll, { icon: L.divIcon({ className: 'rp-prof-dot', iconSize: [14, 14], iconAnchor: [7, 7] }), interactive: false, keyboard: false, zIndexOffset: 1000 }).addTo(map);
   else PROF.mark.setLatLng(ll);
@@ -8494,8 +8576,10 @@ function profInit() {
   el.id = 'rp-prof';
   el.setAttribute('role', 'region');
   el.innerHTML = '<div class="prof-h"><b class="prof-t"></b><span class="prof-leg"></span><button type="button" class="prof-fb" aria-expanded="true"></button></div>' +
-    '<div class="prof-g"><svg class="prof-svg" xmlns="http://www.w3.org/2000/svg" role="img" focusable="false" width="0" height="0"></svg><div class="prof-bub" role="status" hidden></div></div>';
+    '<div class="prof-g"><svg class="prof-svg" xmlns="http://www.w3.org/2000/svg" role="img" focusable="false" width="0" height="0"></svg><div class="prof-bub" role="status" hidden></div></div>' +
+    '<div class="prof-sl" hidden><div class="prof-slv" aria-hidden="true"></div><div class="prof-slt"><input type="range" class="prof-sli" aria-orientation="vertical" min="0" max="1" step="1" value="0"></div><button type="button" class="prof-sla" aria-pressed="true">AUTO</button></div>';
   PROF.el = el;
+  PROF.sl = el.querySelector('.prof-sl'); PROF.slv = el.querySelector('.prof-slv'); PROF.sli = el.querySelector('.prof-sli'); PROF.sla = el.querySelector('.prof-sla');
   PROF.svg = el.querySelector('.prof-svg'); PROF.bub = el.querySelector('.prof-bub');
   PROF.el.querySelector('.prof-fb').addEventListener('click', () => { DISP.profFold = !DISP.profFold; saveDisplay(); profRender(); });
   const gb = PROF.el.querySelector('.prof-g');
@@ -8507,8 +8591,19 @@ function profInit() {
   const up = e => { if (PROF.drag === e.pointerId) PROF.drag = null; };
   gb.addEventListener('pointerup', up);
   gb.addEventListener('pointercancel', up);
-  gb.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') profClearCursor(); });
-  document.addEventListener('pointerdown', e => { if (PROF.cur !== null && e.pointerType !== 'mouse' && !gb.contains(e.target)) profClearCursor(); }, true);
+  /* la colonne du curseur du haut est hors du graphique : la toucher, la glisser ou y passer la souris ne déplace pas le curseur du profil, n'ouvre pas sa bulle et ne touche pas à la carte */
+  const sl = PROF.sl;
+  gb.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !(e.relatedTarget && sl.contains(e.relatedTarget))) profClearCursor(); });
+  sl.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !(e.relatedTarget && gb.contains(e.relatedTarget))) profClearCursor(); });
+  document.addEventListener('pointerdown', e => { if (PROF.cur !== null && e.pointerType !== 'mouse' && !gb.contains(e.target) && !sl.contains(e.target)) profClearCursor(); }, true);
+  PROF.sli.addEventListener('input', () => {
+    profGuard();
+    const x = parseFloat(PROF.sli.value);
+    if (!isFinite(x)) return;
+    PROF.topM = x / (S.units.altitude === 'ft' ? 1 / FT_M : 1);
+    profRender(true);
+  });
+  PROF.sla.addEventListener('click', () => { PROF.topM = null; profRender(true); });
   if (window.ResizeObserver) new ResizeObserver(() => profSync()).observe(PROF.wrap);
 }
 
