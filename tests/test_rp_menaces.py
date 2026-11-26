@@ -405,6 +405,8 @@ def test_sheet_info_line_choice_units_and_unknown_values(browser):
     assert info() == f'Tir 16,0 km · détection 32,0 km · plafond 6{NBSP}000 m · capteur : radar de conduite de tir'
     pick('igla')
     assert info().endswith('capteur : le tireur lui-même') and f'plafond 3{NBSP}600 m' in info()
+    pick('chaparral')
+    assert f'plafond 3{NBSP}600 m' in info()
     # un système qui reste sans plafond : un canon antiaérien
     open_sheet(fr, 't3')
     pick('zsu-57-2')
@@ -423,6 +425,8 @@ def test_sheet_info_line_choice_units_and_unknown_values(browser):
     open_sheet(fr, 't1')
     pick('1l13')
     assert info() == f'Détection 300 km · plafond 20{NBSP}000 m · capteur : radar de veille'
+    pick('55g6')
+    assert info() == f'Détection 400 km · plafond 20{NBSP}000 m · capteur : radar de veille'
     # une valeur hors table : choisie, nommée « (inconnu) », ne dessine rien
     open_sheet(fr, 't2')
     o = options(fr)
