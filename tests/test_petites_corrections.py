@@ -74,6 +74,8 @@ ALL_TOOLS_2 = ["**Fixed: “⋯” on very narrow screens**\n- Below 345 px wide
                          "**Export in one tap**\n- With a list or a menu open, one tap on Export closes it and opens the export window, as the toolbar menus already did.",
                          "**Bottom tabs from the keyboard**\n- On a narrow screen, the arrow keys move between the bottom tabs, and each tab is tied to its section for screen readers.",
                          "**Fixed: every file is read safely**\n- In every tool, special keys such as __proto__ in a work file, a package, a route, a datacard file, a mission or what the browser kept are now ignored, as the Briefing Generator already did."]
+HEADINGS_ENTRY = ("**Headings follow the game's north**\n- True headings in the Route Planner, the Datacard Generator and the Flight Configurator are now grid headings, measured from the game's north like the mission editor's ruler; magnetic headings follow, so they match the cockpit compass. Away from the middle of a map they can change by several degrees (up to about ten on Germany Cold War); positions, distances and drawings do not change.\n"
+                  "- On the Mariana Islands (WWII), Iraq and Afghanistan maps, headings stay geodesic.")
 CHANGELOG = {
     '### HQ': ["**The Wing button keeps its place**\n- The Wing button now always sits between Flight packages and Example, whether or not the wing is set up; until it is, the button stays highlighted.",
               "**A clearer warning on a created flight**\n- When a package creates a flight, a waypoint that pointed to a unit of the package’s mission is reported as removed, no longer as to be checked."],
@@ -105,7 +107,7 @@ def test_changelog_entries_end_their_sections():
         assert sec.endswith('\n\n'.join(entries)), head
     assert 'MP-V2.1.0+22` for this one' in unreleased and 'MP-V2.1.0+8' not in log
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0]
-    assert all_tools.rstrip('\n').endswith('a wing still on the former “WG” logo shows the new one and still counts as not set up.\n\n' + '\n\n'.join(ALL_TOOLS_2))
+    assert all_tools.rstrip('\n').endswith('a wing still on the former “WG” logo shows the new one and still counts as not set up.\n\n' + '\n\n'.join(ALL_TOOLS_2 + [HEADINGS_ENTRY]))
 
 
 def test_hq_legend_numbers_follow_the_toolbar():

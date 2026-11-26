@@ -35,6 +35,8 @@ SHA256 = {
 }
 MIME = {'.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.png': 'image/png'}
 PAGES = ['dcs_hq', 'dcs_briefing_generator', 'dcs_recon_station', 'dcs_route_planner', 'dcs_datacard_generator', 'dcs_flight_configurator', 'dcs_field_manual']
+HEADINGS_ENTRY = ("**Headings follow the game's north**\n- True headings in the Route Planner, the Datacard Generator and the Flight Configurator are now grid headings, measured from the game's north like the mission editor's ruler; magnetic headings follow, so they match the cockpit compass. Away from the middle of a map they can change by several degrees (up to about ten on Germany Cold War); positions, distances and drawings do not change.\n"
+                  "- On the Mariana Islands (WWII), Iraq and Afghanistan maps, headings stay geodesic.")
 CREDIT = 'Squadron Ready Room insignia: original artwork of the project; lettering from Oswald (SIL Open Font License 1.1), converted to outlines.'
 
 
@@ -134,7 +136,8 @@ def test_readme_licences_changelog():
                          "**The “⋯” menu from the keyboard**\n- The arrow keys move through the “⋯” menu, like the other toolbar menus.",
                          "**Export in one tap**\n- With a list or a menu open, one tap on Export closes it and opens the export window, as the toolbar menus already did.",
                          "**Bottom tabs from the keyboard**\n- On a narrow screen, the arrow keys move between the bottom tabs, and each tab is tied to its section for screen readers.",
-                         "**Fixed: every file is read safely**\n- In every tool, special keys such as __proto__ in a work file, a package, a route, a datacard file, a mission or what the browser kept are now ignored, as the Briefing Generator already did."],
+                         "**Fixed: every file is read safely**\n- In every tool, special keys such as __proto__ in a work file, a package, a route, a datacard file, a mission or what the browser kept are now ignored, as the Briefing Generator already did.",
+                         HEADINGS_ENTRY],
         '### Home screen': ["**The Mission Plan insignia**\n- The home screen shows the Mission Plan insignia beside its title — on a phone, as a seal on the title's corner — and the family's icon in the top bar; when the Squadron Ready Room opens Mission Plan, your wing's emblem takes its place.\n- A *Squadron Ready Room family* line sits above the credits.",
                          "**Fixed: keyboard focus after choosing a theme**\n- After choosing a theme from “⋯” with the keyboard, or closing the list with Escape, the focus goes back to “⋯”."],
         '### Field Manual': ["**The home screen drawn with its insignia**\n- The two drawings of the home screen show the insignia and the family's icon.",

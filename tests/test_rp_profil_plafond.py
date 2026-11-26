@@ -736,7 +736,7 @@ def test_the_field_manual_the_texts_the_changelog_and_the_number_say_it():
     rpd = (ROOT / 'dist' / 'dcs_route_planner.html').read_text(encoding='utf-8')
     assert rpd.count("    'prof.top': 'Haut du graphique',") == 1 and rpd.count("    'prof.top': 'Top of the graph',") == 1
     log = (ROOT / 'CHANGELOG.md').read_bytes()
-    assert hashlib.sha256(log).hexdigest() == 'fa8c60b56dbb7259e65e0b2fde3ce123696092e75eee529296c526b4633c55cb'
+    assert hashlib.sha256(log).hexdigest() == 'cfe096f351483c9f2ce366e906595fc70eba437824d826f88dd2db3d777c6124'
     text = log.decode('utf-8')
     assert text.count('`MP-V2.1.0+22` for this one') == 1
     prof = text.split('Unreleased', 1)[1]
