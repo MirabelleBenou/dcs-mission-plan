@@ -8953,11 +8953,12 @@ function createMap() {
   map.on('moveend', () => { if (spSized()) SP.view = { c: map.getCenter(), z: map.getZoom() }; });       /* la dernière vue vue : rafraîchie tant que la carte a une taille */
   const onSize = () => {
     if (!wrap.clientWidth || !wrap.clientHeight) return;
-    const seen = SP.hold || SP.view, hid = SP.fullHidden;       /* avant invalidateSize, dont le moveend déplace la vue */
-    SP.fullHidden = false; SP.hold = null;
+    const seen = SP.hold || SP.view, hid = SP.away;       /* avant invalidateSize, dont le moveend déplace la vue */
+    SP.away = false; SP.hold = null;
+    if (hid) spSync();       /* l'outil revient : la hauteur du partage d'abord (la carte réapparaît au plancher posé pendant l'absence), avant que la vue ne soit rendue */
     map.invalidateSize({ animate: false });
     if (pendingView) { const f = pendingView; pendingView = null; f(); }       /* une vue demandée pendant que l'outil était caché est plus récente : elle gagne */
-    else if (hid && seen) map.setView(seen.c, seen.z, { animate: false });     /* sinon, un changement de la carte en grand a eu lieu caché : la dernière vue vue revient */
+    else if (hid && seen) map.setView(seen.c, seen.z, { animate: false });     /* sinon, la carte a changé caché (départ vers un autre outil, carte en grand) : la dernière vue vue revient */
     scheduleGrid();
     syncTowns();
     expLayout();
@@ -11186,7 +11187,7 @@ const KEY_SPLIT_LAND = 'rp_split_land_v1';
 const SP_MIN = 220, SP_MIN_LAND = 140, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_DEF_F = 0.52, SP_STEP = 40, SP_DBL_MS = 350, SP_KB_PANEL = 100, SP_KB_MIN = 60;
 function spTopbar() { const a = document.getElementById('app'); return (a && a.getBoundingClientRect().top) || 60; }   /* le haut du contenu, lu sur le contenu : la barre (60 px) et, quand elle est là, la ligne de la mission d'HQ (--mp-top) */
 const SP_PORTRAIT_MQ = '(max-width: 1100px) and ((min-height: 600px) or (orientation: portrait))';
-const SP = { view: null, hold: null, fullHidden: false, el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0, full: {} };
+const SP = { view: null, hold: null, away: false, el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0, full: {} };
 
 function spLand() { return !SP.port.matches; }
 function spGet() { return spLand() ? SP.hl : SP.h; }
@@ -11240,6 +11241,7 @@ function spKbKind() {
 /* Jusqu'à 1 100 px de large : la hauteur retenue de la mise en page courante, bornée, ou le partage de départ (52 % de H, borné) ; clavier ouvert : voir plus haut, rien en mémoire ; au-dessus : celle de la base */
 function spSync() {
   if (!SP.el) return;
+  if (SP.mq.matches) spAway();       /* la carte est cachée par le shell : sa vue est mise de côté avant que spApply ne l'invalide à 0 × 0 */
   const h = spGet(), kb = SP.mq.matches ? spKbKind() : '';
   const full = SP.mq.matches && !!(SP.full.exp || SP.full.dr);     /* la carte en grand : le cadre d'export ou le dessin est ouvert (jusqu'à 1 100 px seulement) */
   document.body.classList.toggle('rp-mapfull', full);
@@ -11255,14 +11257,17 @@ function spSync() {
 /* Le champ du panneau qui a le focus pendant le clavier est amené dans la partie visible du panneau */
 /* La carte en grand pendant le cadre d'export (why = 'exp') et le dessin (why = 'dr') : un drapeau en mémoire, jamais écrit ; spSync fait le reste */
 function spSized() { const w = $('map'); return mapSized() && !!w && w.clientWidth > 0 && w.clientHeight > 0; }
+/* Un autre outil passe au premier plan du shell : la carte tombe à 0 × 0 et le plancher de spBounds se pose sur une carte que Leaflet ne peut plus lire. La dernière vue vue (SP.view, rafraîchie à chaque moveend
+   tant que la carte a une taille) est mise de côté, et onSize la rend au retour, la hauteur du partage refaite d'abord ; une vue demandée entre-temps (pendingView) gagne. Rien n'est écrit. */
+function spAway() { const w = $('map'); if (map && mapCreated && w && !(w.clientWidth > 0 && w.clientHeight > 0)) { SP.away = true; if (!SP.hold) SP.hold = SP.view; } }       /* la taille lue sur le conteneur : celle que Leaflet garde en mémoire est encore 0 × 0 au retour, avant invalidateSize */
 function spFull(why, on) {
   const ok = !!(map && mapCreated), sized = ok && spSized();
   const v = sized ? { c: map.getCenter(), z: map.getZoom() } : null, s0 = sized ? map.getSize() : null;      /* lu juste avant spSync, sur une carte qui a une taille */
-  if (ok && !sized) { SP.fullHidden = true; if (!SP.hold) SP.hold = SP.view; }       /* carte cachée : la dernière vue vue est mise de côté avant spSync, dont le moveend (carte revenue à sa taille) la déplacerait */
+  if (ok && !sized) { SP.away = true; if (!SP.hold) SP.hold = SP.view; }       /* carte cachée : la dernière vue vue est mise de côté avant spSync, dont le moveend (carte revenue à sa taille) la déplacerait */
   if (on) SP.full[why] = true; else delete SP.full[why];
   spSync();
   if (!ok) return;
-  if (!sized || !spSized()) { SP.fullHidden = true; if (!SP.hold) SP.hold = SP.view; return; }       /* carte cachée par le shell : rien lu, rien en attente ; on note seulement le changement (onSize en tient compte au retour de la taille) */
+  if (!sized || !spSized()) { SP.away = true; if (!SP.hold) SP.hold = SP.view; return; }       /* carte cachée par le shell : rien lu, rien en attente ; on note seulement le changement (onSize en tient compte au retour de la taille) */
   const s1 = map.getSize();
   if (s1.x !== s0.x || s1.y !== s0.y) map.setView(v.c, v.z, { animate: false });       /* la carte change de hauteur : le centre et le zoom d'avant reviennent tout de suite */
 }
