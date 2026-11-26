@@ -185,7 +185,15 @@
    "pieces": [
     "CHAP_TorM2"
    ],
-   "goldwolf": null
+   "goldwolf": {
+    "range_km": 18.5,
+    "ceiling_km": 12,
+    "page": 9
+   },
+   "whiskey": {
+    "ceiling_ft": 19685,
+    "page": 13
+   }
   },
   {
    "id": "sa-19",
@@ -416,7 +424,11 @@
    "pieces": [
     "M48 Chaparral"
    ],
-   "goldwolf": null
+   "goldwolf": {
+    "range_km": 4.6,
+    "ceiling_km": 3.6,
+    "page": 12
+   }
   },
   {
    "id": "linebacker",
@@ -427,7 +439,11 @@
    "pieces": [
     "M6 Linebacker"
    ],
-   "goldwolf": null
+   "goldwolf": {
+    "range_km": 4.6,
+    "ceiling_km": 3.6,
+    "page": 12
+   }
   },
   {
    "id": "avenger",
@@ -455,7 +471,11 @@
     "Stinger comm",
     "Stinger comm dsr"
    ],
-   "goldwolf": null
+   "goldwolf": {
+    "range_km": 4.6,
+    "ceiling_km": 3.6,
+    "page": 12
+   }
   },
   {
    "id": "igla",
@@ -468,7 +488,11 @@
     "SA-18 Igla comm",
     "Igla manpad INS"
    ],
-   "goldwolf": null
+   "goldwolf": {
+    "range_km": 4.6,
+    "ceiling_km": 3.6,
+    "page": 12
+   }
   },
   {
    "id": "igla-s",
@@ -480,7 +504,11 @@
     "SA-18 Igla-S manpad",
     "SA-18 Igla-S comm"
    ],
-   "goldwolf": null
+   "goldwolf": {
+    "range_km": 4.6,
+    "ceiling_km": 3.6,
+    "page": 12
+   }
   },
   {
    "id": "zsu-23-4",
@@ -751,7 +779,11 @@
    "pieces": [
     "55G6 EWR"
    ],
-   "goldwolf": null
+   "goldwolf": {
+    "range_km": 360,
+    "ceiling_km": 20,
+    "page": 8
+   }
   },
   {
    "id": "fps-117",

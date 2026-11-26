@@ -221,10 +221,17 @@
    ],
    "fire_m": 16000,
    "detect_m": 32000,
-   "ceiling_m": null,
-   "goldwolf": null,
-   "whiskey": null,
-   "gap": false
+   "ceiling_m": 6000,
+   "goldwolf": {
+    "range_m": 18500,
+    "ceiling_m": 12000,
+    "page": 9
+   },
+   "whiskey": {
+    "ceiling_m": 6000,
+    "page": 13
+   },
+   "gap": true
   },
   {
    "id": "sa-19",
@@ -503,10 +510,14 @@
    ],
    "fire_m": 8500,
    "detect_m": 10000,
-   "ceiling_m": null,
-   "goldwolf": null,
+   "ceiling_m": 3600,
+   "goldwolf": {
+    "range_m": 4600,
+    "ceiling_m": 3600,
+    "page": 12
+   },
    "whiskey": null,
-   "gap": false
+   "gap": true
   },
   {
    "id": "linebacker",
@@ -519,8 +530,12 @@
    ],
    "fire_m": 4500,
    "detect_m": 8000,
-   "ceiling_m": null,
-   "goldwolf": null,
+   "ceiling_m": 3600,
+   "goldwolf": {
+    "range_m": 4600,
+    "ceiling_m": 3600,
+    "page": 12
+   },
    "whiskey": null,
    "gap": false
   },
@@ -557,8 +572,12 @@
    ],
    "fire_m": 4500,
    "detect_m": 5000,
-   "ceiling_m": null,
-   "goldwolf": null,
+   "ceiling_m": 3600,
+   "goldwolf": {
+    "range_m": 4600,
+    "ceiling_m": 3600,
+    "page": 12
+   },
    "whiskey": null,
    "gap": false
   },
@@ -575,10 +594,14 @@
    ],
    "fire_m": 5200,
    "detect_m": 5000,
-   "ceiling_m": null,
-   "goldwolf": null,
+   "ceiling_m": 3600,
+   "goldwolf": {
+    "range_m": 4600,
+    "ceiling_m": 3600,
+    "page": 12
+   },
    "whiskey": null,
-   "gap": false
+   "gap": true
   },
   {
    "id": "igla-s",
@@ -592,10 +615,14 @@
    ],
    "fire_m": 5200,
    "detect_m": 5000,
-   "ceiling_m": null,
-   "goldwolf": null,
+   "ceiling_m": 3600,
+   "goldwolf": {
+    "range_m": 4600,
+    "ceiling_m": 3600,
+    "page": 12
+   },
    "whiskey": null,
-   "gap": false
+   "gap": true
   },
   {
    "id": "zsu-23-4",
@@ -963,8 +990,12 @@
    ],
    "fire_m": 0,
    "detect_m": 400000,
-   "ceiling_m": null,
-   "goldwolf": null,
+   "ceiling_m": 20000,
+   "goldwolf": {
+    "range_m": 360000,
+    "ceiling_m": 20000,
+    "page": 8
+   },
    "whiskey": null,
    "gap": false
   },

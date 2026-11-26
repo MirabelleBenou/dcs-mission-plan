@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+19` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+20` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -208,6 +208,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 - Where the route is seen at its planned altitude, it is outlined in yellow, and the navigation sheet says by which threat and over what distance.
 - The checked height goes up to 20,000 ft (6,000 m) at least, whatever the ceilings; above a system’s ceiling, that system no longer tints.
 - Ceilings now come from Whiskey 188’s DCS SAM Threat Guide, taken from the game’s files, for the systems it covers; otherwise from Goldwolf’s DCS Threats Guide.
+- Seven more systems have a ceiling: Chaparral, Linebacker, Stinger, Igla and Igla-S, and the 55G6 Tall Rack radar, from Goldwolf’s DCS Threats Guide; the Tor M2 takes the Tor’s.
 
 **More map while exporting or drawing on a phone**
 - On a phone or a small tablet, the map takes the whole height while you frame an export or draw; the export buttons sit under the frame. Everything comes back when you finish.
@@ -217,6 +218,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 
 **The map keeps its centre when it grows**
 - On a phone, the map keeps the same centre when it takes the whole height to export or draw, and when it comes back.
+- Going to another tool and coming back no longer moves the map.
 
 **Ground profile under the route**
 - New “Ground profile” option in the Display menu, on Caucasus, Cold War Germany and Syria: a strip under the map shows the ground under the chosen route, read in DCS, and a straight line from each waypoint to the next at its planned altitude; ▾ folds it.

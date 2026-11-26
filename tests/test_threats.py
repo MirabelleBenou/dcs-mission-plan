@@ -340,7 +340,7 @@ def test_delivered_table_format():
             assert s['ceiling_m'] == s['goldwolf']['ceiling_m']
         if not s['goldwolf']:
             assert s['gap'] is False
-    assert sum(1 for s in DATA['systems'] if s['gap']) == 24
+    assert sum(1 for s in DATA['systems'] if s['gap']) == 28
 
 
 def test_delivered_table_known_values():
@@ -387,10 +387,10 @@ def test_input_and_delivered_tables_agree():
         assert list(d) == ['id', 'name_en', 'name_fr', 'kind', 'sensor', 'pieces', 'fire_m', 'detect_m', 'ceiling_m', 'goldwolf', 'whiskey', 'gap']
 
 
-def test_the_17_whiskey_systems():
+def test_the_18_whiskey_systems():
     got = {s['id']: (s['whiskey']['ceiling_m'], s['whiskey']['page']) for s in DATA['systems'] if s['whiskey']}
-    assert len(got) == 17 and len(DATA['systems']) == 57
-    assert got['sa-15'] == (6000, 13) and got['sa-6'] == (8000, 4) and got['sa-10'] == (25000, 7) and got['sa-5'] == (40000, 3)
+    assert len(got) == 18 and len(DATA['systems']) == 57
+    assert got['sa-15'] == (6000, 13) and got['sa-15-m2'] == (6000, 13) and got['sa-6'] == (8000, 4) and got['sa-10'] == (25000, 7) and got['sa-5'] == (40000, 3)
 
 
 def test_no_page_embeds_the_threats_yet():

@@ -392,8 +392,8 @@ def test_sheet_lists_the_systems_of_the_symbol_kind_sorted_by_name(browser):
 @needs_pw
 def test_sheet_info_line_choice_units_and_unknown_values(browser):
     pg, fr = open_rp(browser)
-    setup(fr, [sym(0, '', kind='sam'), sym(1, '', kind='radar'), sym(2, 'zz-9', kind='sam')], wait=False)
-    fr.evaluate("delete CF_LAYERS[0].items[0].threat; delete CF_LAYERS[0].items[1].threat; drawLayers();")
+    setup(fr, [sym(0, '', kind='sam'), sym(1, '', kind='radar'), sym(2, 'zz-9', kind='sam'), sym(3, '', kind='aaa')], wait=False)
+    fr.evaluate("delete CF_LAYERS[0].items[0].threat; delete CF_LAYERS[0].items[1].threat; delete CF_LAYERS[0].items[3].threat; drawLayers();")
     open_sheet(fr, 't0')
     pick = lambda v: fr.evaluate("(v) => { const s = document.querySelector('#dr-sheet select[data-f=threat]'); s.value = v; s.dispatchEvent(new Event('change', { bubbles: true })); }", v)
     info = lambda: fr.evaluate("document.getElementById('dr-f-threat-info').textContent")
@@ -402,9 +402,15 @@ def test_sheet_info_line_choice_units_and_unknown_values(browser):
     assert fr.evaluate("CF_LAYERS[0].items[0].threat") == 'sa-6'
     assert info() == f'Tir 25,0 km · détection 70,0 km · plafond 8{NBSP}000 m · capteur : radar de conduite de tir'
     pick('sa-15-m2')
-    assert info() == 'Tir 16,0 km · détection 32,0 km · plafond non connu · capteur : radar de conduite de tir'
+    assert info() == f'Tir 16,0 km · détection 32,0 km · plafond 6{NBSP}000 m · capteur : radar de conduite de tir'
     pick('igla')
+    assert info().endswith('capteur : le tireur lui-même') and f'plafond 3{NBSP}600 m' in info()
+    # un système qui reste sans plafond : un canon antiaérien
+    open_sheet(fr, 't3')
+    pick('zsu-57-2')
     assert info().endswith('capteur : le tireur lui-même') and 'plafond non connu' in info()
+    pick('')
+    open_sheet(fr, 't0')
     pick('sa-6')
     fr.evaluate("unChoose('nm'); unChoose('ft')")
     open_sheet(fr, 't0')
@@ -810,7 +816,7 @@ def test_field_manual_page_section_and_table():
             assert r[4] == ('—' if s['ceiling_m'] is None else format(s['ceiling_m'], ',').replace(',', sep))
     by = {r[0]: r for r in re.findall(r'<tr><th scope="row" class="s">(.*?)</th><td>(.*?)</td><td class="n">(.*?)</td><td class="n">(.*?)</td><td class="n">(.*?)</td><td>(.*?)</td></tr>', tables[0][1], re.S)}
     assert by['SA-6 Kub Gainful'][2:5] == ('25,0', '70,0', '8' + NBSP + '000')
-    assert by['1L13 Nebo Box Spring'][2] == '—' and by['Stinger (MANPADS)'][4] == '—'
+    assert by['1L13 Nebo Box Spring'][2] == '—' and by['M48 Chaparral'][4] == '3' + NBSP + '600'
     assert 'overflow-x: auto' in fm[fm.index('.fm-tbl-wrap {'):fm.index('.fm-tbl-wrap {') + 200]
 
 
@@ -1202,7 +1208,7 @@ def test_field_manual_rp_threats_gives_the_checked_height_range():
 def test_field_manual_rp_threats_credits_both_guides():
     fm = (ROOT / 'dist' / 'dcs_field_manual.html').read_text(encoding='utf-8')
     rp = fm[fm.index('<section id="page-rp"'):fm.index('<!-- /page-rp -->')]
-    assert 'les plafonds viennent du DCS SAM Threat Guide de [107th] Whiskey 188 (V2.1, relevé dans les fichiers du jeu) et, pour les systèmes qu’il ne couvre pas, du DCS Threats Guide de Goldwolf\u202f; nous les remercions tous deux.' in rp
-    assert 'the ceilings come from [107th] Whiskey 188’s DCS SAM Threat Guide (V2.1, taken from the game’s files) and, for the systems it does not cover, from Goldwolf’s DCS Threats Guide, with thanks to both.' in rp
+    assert 'les plafonds viennent du DCS SAM Threat Guide de [107th] Whiskey 188 (V2.1, relevé dans les fichiers du jeu) et, pour les systèmes qu’il ne couvre pas, du DCS Threats Guide de Goldwolf (le Tor M2 prend le plafond du Tor)\u202f; nous les remercions tous deux.' in rp
+    assert 'the ceilings come from [107th] Whiskey 188’s DCS SAM Threat Guide (V2.1, taken from the game’s files) and, for the systems it does not cover, from Goldwolf’s DCS Threats Guide (the Tor M2 takes the Tor’s), with thanks to both.' in rp
     assert 'les plafonds viennent du DCS Threats Guide de Goldwolf, que nous remercions.' not in rp
     assert 'the ceilings come from Goldwolf’s DCS Threats Guide, with thanks.' not in rp
