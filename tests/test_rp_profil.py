@@ -590,7 +590,7 @@ def test_a5_a_failed_reading_is_shown_and_read_again(browser, what):
 def test_a7_the_last_label_is_checked_against_the_last_label_kept(browser):
     pg, fr = open_rp(browser, 412, 915)
     tick(fr, pg)
-    route(fr, [pt('A', 20 / 256, .5), pt('BBBBBBBB', 150 / 256, .5), pt('CCCCCCCC', 200 / 256, .5), pt('DDDDDDDDDDDDDDDDDD', 250 / 256, .5)])
+    route(fr, [pt('A', 20 / 256, .5), pt('BBBBBBBB', 170 / 256, .5), pt('CCCCCCCC', 205 / 256, .5), pt('DDDDDDDDDDDDDDDDDD', 250 / 256, .5)])       # 170 et 205 (150 et 200 avant) : la colonne du curseur du haut, marge droite de 52 px à 412 px, rétrécit le tracé
     wait_prof(fr)
     pg.wait_for_timeout(400)
     shown = fr.evaluate("Array.from(document.querySelectorAll('.prof-pn')).map(e => e.getAttribute('data-i'))")
