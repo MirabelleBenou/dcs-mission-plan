@@ -1,4 +1,4 @@
-"""Le haut réglable du graphique du Profil du sol du Route Planner (MP-V2.1.0+21), joué sur le shell construit (dist/dcs_mission_plan.html, chromium), sans réseau : le relief de banc de test_rp_profil
+"""Le haut réglable du graphique du Profil du sol du Route Planner (MP-V2.1.0+22), joué sur le shell construit (dist/dcs_mission_plan.html, chromium), sans réseau : le relief de banc de test_rp_profil
 (une plaine à 100 m et, dans chaque tuile, une crête nord-sud à 300 m ; Syria, tuiles du niveau 11). Les contrôles passent par le DOM, dans le shell.
 Les sections suivent les règles du cadrage : l'échelle (1), la colonne (2), les bornes et le pas (3), sa présence (4), le retour à Auto et le stockage (5), le doigt et le clavier (6), le Field Manual et les textes (8, 9)."""
 import hashlib
@@ -738,8 +738,8 @@ def test_the_field_manual_the_texts_the_changelog_and_the_number_say_it():
     log = (ROOT / 'CHANGELOG.md').read_bytes()
     assert hashlib.sha256(log).hexdigest() == 'fa8c60b56dbb7259e65e0b2fde3ce123696092e75eee529296c526b4633c55cb'
     text = log.decode('utf-8')
-    assert text.count('`MP-V2.1.0+21` for this one') == 1
+    assert text.count('`MP-V2.1.0+22` for this one') == 1
     prof = text.split('Unreleased', 1)[1]
     assert prof.index('A slider on the right of the graph sets its top, up to 20,000 ft') > prof.index('Ground profile under the route')
-    assert re.search(r'^DEV_BUILD = 21$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
-    assert 'MP-V2.1.0+21' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
+    assert re.search(r'^DEV_BUILD = 22$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert 'MP-V2.1.0+22' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')

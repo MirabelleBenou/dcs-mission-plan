@@ -103,7 +103,7 @@ def test_changelog_entries_end_their_sections():
     for head, entries in CHANGELOG.items():
         sec = unreleased.split('\n' + head + '\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
         assert sec.endswith('\n\n'.join(entries)), head
-    assert 'MP-V2.1.0+21` for this one' in unreleased and 'MP-V2.1.0+8' not in log
+    assert 'MP-V2.1.0+22` for this one' in unreleased and 'MP-V2.1.0+8' not in log
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0]
     assert all_tools.rstrip('\n').endswith('a wing still on the former “WG” logo shows the new one and still counts as not set up.\n\n' + '\n\n'.join(ALL_TOOLS_2))
 

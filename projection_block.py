@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Bloc « PROJECTIONS DE DCS » : TM_PARAMS, llToDcs et dcsToLl, une seule source pour les outils qui lisent des coordonnées de mission.
 
-Le texte JavaScript est recopié, au caractère près, du Route Planner (build_route_planner.py) ; il s'appuie sur les constantes UTM_* du
-bloc de coordonnées partagé (WGS84, série de Krüger), déjà présent dans la page qui l'insère. Le Datacard Generator l'inclut par son build ;
-le Route Planner garde pour l'instant son propre texte, identique (l'inclure ici viendra plus tard).
+Le texte JavaScript s'appuie sur les constantes UTM_* du bloc de coordonnées partagé (WGS84, série de Krüger), déjà présent dans la page qui
+l'insère. Le Route Planner, le Datacard Generator et le Flight Configurator l'incluent par leur build. Il porte aussi le cap grille (gridBrg)
+et son inverse (gridDest, gridOrigin), qui s'appuient sur legCalc, legDest et legOrigin du bloc de coordonnées.
 
 Usage (par les builds) : from projection_block import build_block ; texte = build_block()
 """
@@ -66,6 +66,41 @@ function dcsToLl(theatre, x, y) {
   while (lon > 180) lon -= 360;
   while (lon < -180) lon += 360;
   return { lat: phi * 180 / Math.PI, lon: lon };
+}
+/* Cap grille : l'angle, de 0 à 360°, du segment qui va de llToDcs(a) à llToDcs(b), compté depuis l'axe x (le nord de la grille du théâtre).
+   Pour un théâtre sans TM_PARAMS, le cap géodésique de legCalc. Ne sert qu'aux caps qui se lisent ou se saisissent : la géométrie reste géodésique. */
+function hasGrid(theatre) { return Object.prototype.hasOwnProperty.call(TM_PARAMS, theatre); }
+function gridBrg(theatre, a, b) {
+  if (!hasGrid(theatre)) return legCalc(a, b).brg;
+  const p = llToDcs(theatre, a.lat, a.lon), q = llToDcs(theatre, b.lat, b.lon);
+  return (Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI + 360) % 360;
+}
+
+/* Le point à km kilomètres (grand cercle) de a, au cap grille donné : le cap géodésique passé à legDest est celui qui redonne ce cap grille */
+function gridDest(theatre, a, grid, km) {
+  if (!hasGrid(theatre)) return legDest(a, grid, km);
+  let g = grid, x = legDest(a, g, km);
+  for (let i = 0; i < 50; i++) {
+    const e = ((grid - gridBrg(theatre, a, x) + 540) % 360) - 180;
+    if (Math.abs(e) < 1e-9) break;
+    g = ((g + e) % 360 + 360) % 360;
+    x = legDest(a, g, km);
+  }
+  return x;
+}
+
+/* Le point X à km kilomètres (grand cercle) de b, tel que le cap grille de X vers b vaut grid ; null si non convergent */
+function gridOrigin(theatre, b, grid, km) {
+  if (!hasGrid(theatre)) return legOrigin(b, grid, km);
+  let g = grid;
+  for (let i = 0; i < 50; i++) {
+    const x = legOrigin(b, g, km);
+    if (!x) return null;
+    const e = ((grid - gridBrg(theatre, x, b) + 540) % 360) - 180;
+    if (Math.abs(e) < 1e-7) return x;
+    g = ((g + e) % 360 + 360) % 360;
+  }
+  return null;
 }
 """
 

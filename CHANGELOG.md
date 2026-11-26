@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+21` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+22` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -77,6 +77,10 @@ Between two releases, the hosted version shows its build number at the bottom of
 
 **Fixed: every file is read safely**
 - In every tool, special keys such as __proto__ in a work file, a package, a route, a datacard file, a mission or what the browser kept are now ignored, as the Briefing Generator already did.
+
+**Headings follow the game's north**
+- True headings in the Route Planner, the Datacard Generator and the Flight Configurator are now grid headings, measured from the game's north like the mission editor's ruler; magnetic headings follow, so they match the cockpit compass. Away from the middle of a map they can change by several degrees (up to about ten on Germany Cold War); positions, distances and drawings do not change.
+- On the Mariana Islands (WWII), Iraq and Afghanistan maps, headings stay geodesic.
 
 ### Home screen
 

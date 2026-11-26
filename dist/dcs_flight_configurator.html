@@ -13236,6 +13236,41 @@ function dcsToLl(theatre, x, y) {
   while (lon < -180) lon += 360;
   return { lat: phi * 180 / Math.PI, lon: lon };
 }
+/* Cap grille : l'angle, de 0 à 360°, du segment qui va de llToDcs(a) à llToDcs(b), compté depuis l'axe x (le nord de la grille du théâtre).
+   Pour un théâtre sans TM_PARAMS, le cap géodésique de legCalc. Ne sert qu'aux caps qui se lisent ou se saisissent : la géométrie reste géodésique. */
+function hasGrid(theatre) { return Object.prototype.hasOwnProperty.call(TM_PARAMS, theatre); }
+function gridBrg(theatre, a, b) {
+  if (!hasGrid(theatre)) return legCalc(a, b).brg;
+  const p = llToDcs(theatre, a.lat, a.lon), q = llToDcs(theatre, b.lat, b.lon);
+  return (Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI + 360) % 360;
+}
+
+/* Le point à km kilomètres (grand cercle) de a, au cap grille donné : le cap géodésique passé à legDest est celui qui redonne ce cap grille */
+function gridDest(theatre, a, grid, km) {
+  if (!hasGrid(theatre)) return legDest(a, grid, km);
+  let g = grid, x = legDest(a, g, km);
+  for (let i = 0; i < 50; i++) {
+    const e = ((grid - gridBrg(theatre, a, x) + 540) % 360) - 180;
+    if (Math.abs(e) < 1e-9) break;
+    g = ((g + e) % 360 + 360) % 360;
+    x = legDest(a, g, km);
+  }
+  return x;
+}
+
+/* Le point X à km kilomètres (grand cercle) de b, tel que le cap grille de X vers b vaut grid ; null si non convergent */
+function gridOrigin(theatre, b, grid, km) {
+  if (!hasGrid(theatre)) return legOrigin(b, grid, km);
+  let g = grid;
+  for (let i = 0; i < 50; i++) {
+    const x = legOrigin(b, g, km);
+    if (!x) return null;
+    const e = ((grid - gridBrg(theatre, x, b) + 540) % 360) - 180;
+    if (Math.abs(e) < 1e-7) return x;
+    g = ((g + e) % 360 + 360) % 360;
+  }
+  return null;
+}
 /* ===== FIN DES PROJECTIONS DE DCS ===== */
 
 /* ===== POINTS DE PAQUET (route → mission DCS) ===== */
@@ -18004,14 +18039,14 @@ function routeDateOf(f) { return f && f.route ? magRouteDate(f.route.missionDate
 // La ligne de la mission d'HQ (mission_line_block.py) : le théâtre de l'appel de la déclinaison (rTh), la src de cet appel (declSource, que la mission d'HQ ne fait jamais dépendre de la date d'une route) ; la déclinaison n'est calculée (et la ligne ne la dit) que si un groupe a une route et que sa valeur n'est pas saisie (manual) : sans route, le croquis ne prend rien de la déclinaison
 function fcMissionLine() { const ds = declSource(rpNav(), ''); return { theatre: rTh(), src: ds.manual ? '' : ds.ys.src, calc: !ds.manual && S.flights.some(hasRoute) }; }
 function declAt(ds, lat, lon) { if (ds.manual) return ds.v; const d = magVar(lat, lon, ds.ys.y); return d === null ? 0 : d; }
-// Les branches : cap initial vrai et distance par legCalc, cap magnétique = cap vrai − déclinaison au départ de la branche (toujours magnétique ici)
+// Les branches : distance par legCalc (grand cercle), cap vrai = cap grille (depuis le nord de la grille du théâtre), cap magnétique = cap grille − déclinaison au départ de la branche (toujours magnétique ici)
 function routeLegs(pts, ds) {
   const legs = [];
   let total = 0;
   for (let i = 0; i + 1 < pts.length; i++) {
     const L = legCalc(pts[i], pts[i + 1]), d = declAt(ds, pts[i].lat, pts[i].lon), nm = L.km / NAV_NM_KM;
     total += nm;
-    legs.push({ from: pts[i].name, to: pts[i + 1].name, hdg: fmtHdg(((L.brg - d) % 360 + 360) % 360), nm: nm });
+    legs.push({ from: pts[i].name, to: pts[i + 1].name, hdg: fmtHdg(((gridBrg(rTh(), pts[i], pts[i + 1]) - d) % 360 + 360) % 360), nm: nm });
   }
   return { legs: legs, total: total };
 }

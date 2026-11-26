@@ -3141,14 +3141,14 @@ function routeDateOf(f) { return f && f.route ? magRouteDate(f.route.missionDate
 // La ligne de la mission d'HQ (mission_line_block.py) : le théâtre de l'appel de la déclinaison (rTh), la src de cet appel (declSource, que la mission d'HQ ne fait jamais dépendre de la date d'une route) ; la déclinaison n'est calculée (et la ligne ne la dit) que si un groupe a une route et que sa valeur n'est pas saisie (manual) : sans route, le croquis ne prend rien de la déclinaison
 function fcMissionLine() { const ds = declSource(rpNav(), ''); return { theatre: rTh(), src: ds.manual ? '' : ds.ys.src, calc: !ds.manual && S.flights.some(hasRoute) }; }
 function declAt(ds, lat, lon) { if (ds.manual) return ds.v; const d = magVar(lat, lon, ds.ys.y); return d === null ? 0 : d; }
-// Les branches : cap initial vrai et distance par legCalc, cap magnétique = cap vrai − déclinaison au départ de la branche (toujours magnétique ici)
+// Les branches : distance par legCalc (grand cercle), cap vrai = cap grille (depuis le nord de la grille du théâtre), cap magnétique = cap grille − déclinaison au départ de la branche (toujours magnétique ici)
 function routeLegs(pts, ds) {
   const legs = [];
   let total = 0;
   for (let i = 0; i + 1 < pts.length; i++) {
     const L = legCalc(pts[i], pts[i + 1]), d = declAt(ds, pts[i].lat, pts[i].lon), nm = L.km / NAV_NM_KM;
     total += nm;
-    legs.push({ from: pts[i].name, to: pts[i + 1].name, hdg: fmtHdg(((L.brg - d) % 360 + 360) % 360), nm: nm });
+    legs.push({ from: pts[i].name, to: pts[i + 1].name, hdg: fmtHdg(((gridBrg(rTh(), pts[i], pts[i + 1]) - d) % 360 + 360) % 360), nm: nm });
   }
   return { legs: legs, total: total };
 }

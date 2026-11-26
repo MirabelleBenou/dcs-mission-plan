@@ -3026,7 +3026,7 @@ function navLegs(c) {
     if (!blank) {
       if (prev && prev.pt && pt) {
         const L = legCalc(prev.pt, pt);
-        let brg = L.brg, dv = null;
+        let brg = gridBrg(dgTheatre(), prev.pt, pt), dv = null;      /* cap grille : depuis le nord de la grille du théâtre */
         if (nv) { dv = varAt(nv, prev.pt); brg = ((brg - dv) % 360 + 360) % 360; }    /* la déclinaison du point de départ de la branche */
         const d = nm ? L.km / NAV_NM_KM : L.km;
         calc = { cap: fmtHdg(brg), dist: String(Math.round(d)), v: dv };
@@ -3036,7 +3036,7 @@ function navLegs(c) {
     out.push(o);
     if (!blank && pt) prev = o;       /* le cap et la distance se calculent depuis la ligne positionnée qui précède */
   });
-  /* Cap et distance saisis d'un point, lus : { brg (vrai), km } ou null ; le cap saisi est magnétique : cap vrai = cap + la déclinaison
+  /* Cap et distance saisis d'un point, lus : { brg (vrai, cap grille), km } ou null ; le cap saisi est magnétique : cap grille = cap + la déclinaison
      de base, le point connu dont on part (le précédent, ou à rebours le suivant) */
   const leg = (i, base) => {
     const r = c.nav[i];
@@ -3052,7 +3052,7 @@ function navLegs(c) {
     const o = out[i];
     if (o.pt || k === 0) return;
     const p = out[live[k - 1]], base = p.pt || p.est, L = base ? leg(i, base) : null;
-    if (base && L) { o.est = legDest(base, L.brg, L.km); o.estDir = 'prev'; }
+    if (base && L) { o.est = gridDest(dgTheatre(), base, L.brg, L.km); o.estDir = 'prev'; }
   });
   /* à rebours : le point suivant est placé et la branche saisie sur lui est lisible */
   for (let k = live.length - 2; k >= 0; k--) {
@@ -3060,7 +3060,7 @@ function navLegs(c) {
     if (o.pt || o.est) continue;
     const base = n.pt || n.est, L = base ? leg(live[k + 1], base) : null;
     if (base && L) {
-      const x = legOrigin(base, L.brg, L.km);
+      const x = gridOrigin(dgTheatre(), base, L.brg, L.km);
       if (x) { o.est = x; o.estDir = 'next'; }
     }
   }
@@ -3774,13 +3774,13 @@ function dgPromote(c, i, pt) {
   dgReanchor(c);
   return true;
 }
-/* Cap et distance d'une ligne depuis la ligne positionnée qui la précède : { base, brg (vrai), km } courants (positions), ou null */
+/* Cap (grille) et distance d'une ligne depuis la ligne positionnée qui la précède : { base, brg (vrai), km } courants (positions), ou null */
 function dgLegNow(c, i, legs) {
   let k = i - 1;
   while (k >= 0 && !legs[k].pt) k--;
   if (k < 0 || !legs[i].pt) return null;
   const L = legCalc(legs[k].pt, legs[i].pt);
-  return { base: legs[k].pt, brg: L.brg, km: L.km };
+  return { base: legs[k].pt, brg: gridBrg(dgTheatre(), legs[k].pt, legs[i].pt), km: L.km };
 }
 function dgPosByLeg(c, i, field, value) {
   const legs = navLegs(c), x = c.nav[i], nv = navVar(c);
@@ -3803,7 +3803,7 @@ function dgPosByLeg(c, i, field, value) {
     else if (cap != null && cap <= 360) brg = nv ? (cap + varAt(nv, base)) % 360 : cap;
     else return null;
   }
-  return legDest(base, brg, km);
+  return gridDest(dgTheatre(), base, brg, km);
 }
 /* Un champ de route d'une ligne de nav a changé (sortie du champ) : l'écriture dans la route (ou, sans route, dans la ligne) ; el : le champ */
 /* Une carte de groupe dont les points n'ont pas de route : le premier geste de la carte (champ, croix, monter, descendre) crée la route à partir des lignes, puis s'applique à la ligne devenue point ; vrai si la route est née */

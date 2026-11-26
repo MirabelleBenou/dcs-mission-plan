@@ -23,6 +23,7 @@ import sys
 from version_block import SUITE_VERSION
 from magvar_block import build_block as build_magvar_block
 from diss_block import build_block as build_diss_block, verify as diss_verify
+from projection_block import build_block as build_projection_block
 from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
 from route_write_block import build_block as build_route_write_block
@@ -2061,21 +2062,7 @@ const THEATRES = [
 ];
 const THEATRE_IDS = THEATRES.map(x => x.id);
 
-/* Les projections de DCS, une par théâtre (pydcs, LGPL-3.0) : Mercator transverse WGS84, échelle 0,9996, latitude d'origine 0 ;
-   [ méridien central (°), faux est (m), faux nord (m) ]. DCS pose x au nord, y à l'est. Ni MarianaIslandsWWII, ni Iraq, ni Afghanistan. */
-const TM_PARAMS = {
-  Caucasus:       [33,   -99516.9999999732,     -4998114.999999984],
-  Falklands:      [-57,  147639.99999997593,    5815417.000000032],
-  GermanyCW:      [21,   35427.619999985734,    -6061633.128000011],
-  Kola:           [21,   -62702.00000000087,    -7543624.999999979],
-  MarianaIslands: [147,  238417.99999989968,    -1491840.000000048],
-  Nevada:         [-117, -193996.80999964548,   -4410028.063999966],
-  Normandy:       [-3,   -195526.00000000204,   -5484812.999999951],
-  PersianGulf:    [57,   75755.99999999645,     -2894933.0000000377],
-  SinaiMap:       [33,   169221.9999999585,     -3325312.9999999693],
-  Syria:          [39,   282801.00000003993,    -3879865.9999999935],
-  TheChannel:     [3,    99376.00000000288,     -5636889.00000001]
-};
+@@PROJECTION_BLOCK@@
 
 /* Aérodromes DCS par théâtre : [ nom, lat, lon, « a » (terrain à piste) ou « h » (hélistation) ] — pydcs, LGPL-3.0 */
 const AIRFIELDS = __AIRFIELDS__;
@@ -3940,11 +3927,12 @@ function fmtDist(km) {
 function altValue(m) { return Math.round(S.units.altitude === 'ft' ? m / FT_M : m); }
 function altText(p) { return altValue(p.alt) + ' ' + t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m') + ' ' + t('refl.' + p.altRef); }
 
-/* Cap (vrai, ou magnétique = vrai − déclinaison du point de départ) et distance d'une branche */
+/* Cap (vrai = cap grille, depuis le nord de la grille du théâtre ; ou magnétique = cap grille − déclinaison du point de départ) et distance (grand cercle) d'une branche */
 function legInfo(a, b, ys) {
   const L = legCalc(a, b);
+  const g = gridBrg(S.theatre, a, b);
   const d = declAt(a, ys);
-  const brg = d == null ? L.brg : (((L.brg - d) % 360) + 360) % 360;
+  const brg = d == null ? g : (((g - d) % 360) + 360) % 360;
   return { cap: fmtHdg(brg), km: L.km };
 }
 
@@ -7160,6 +7148,13 @@ function drMid(it, a, b) {
   return map.unproject(map.project(L.latLng(it.points[a][0], it.points[a][1]), z).add(map.project(L.latLng(it.points[b][0], it.points[b][1]), z)).divideBy(2), z);
 }
 
+/* Le cap grille de l'axe d'une boîte (affichage seulement) : du centre au point à 1 km au cap géodésique it.brg ; sans projection du théâtre, it.brg */
+function drGridBrg(it) {
+  if (!hasGrid(S.theatre)) return it.brg;
+  const c = { lat: it.lat, lon: it.lon };
+  return gridBrg(S.theatre, c, legDest(c, it.brg, 1));
+}
+
 /* ---- Les poignées de l'orbite ---- */
 /* Le cap d'une orbite : de l'entrée (lat2, lon2) vers la sortie (lat, lon) */
 function drOrbitBrg(it) {
@@ -7342,7 +7337,7 @@ function drBoxHandles(it) {
   const rot = drMk('r rot', () => drBoxRotPos(it), {
     start: () => {
       c0 = cfMean(cfBoxGeom(it).corners);
-      DR.lab = { at: () => rot.pos(), text: () => fmtHdg(it.brg) + '°' };
+      DR.lab = { at: () => rot.pos(), text: () => fmtHdg(drGridBrg(it)) + '°' };
     },
     move: (d, e) => {
       const F = map.mouseEventToLatLng(e);
@@ -8522,12 +8517,12 @@ function readAddPosition() {
   if (!last) return null;
   const cap = readNum($('add-hdg').value), dist = readNum($('add-dist').value);
   if (cap == null || cap > 360 || dist == null || !(dist > 0)) { showToast(t('toast.badHd'), { type: 'err' }); return null; }
-  /* cap magnétique (navigation en cap magnétique et déclinaison lisible) : le point se calcule au cap vrai cap + déclinaison
-     du point dont on part (calculée au point, ou saisie) */
+  /* cap magnétique (navigation en cap magnétique et déclinaison lisible) : le point se calcule au cap grille cap + déclinaison
+     du point dont on part (calculée au point, ou saisie) ; le cap saisi est un cap grille, la distance un grand cercle */
   const d = declAt(last);
   const brg = d == null ? cap : (((cap + d) % 360) + 360) % 360;
   const km = S.units.distance === 'nm' ? dist * NM_KM : dist;
-  const p = legDest(last, brg, km);
+  const p = gridDest(S.theatre, last, brg, km);
   return { lat: r7(p.lat), lon: r7(p.lon) };
 }
 
@@ -9863,46 +9858,6 @@ function routesBind() {
 }
 
 /* ============= LE ROUTE TOOL DE DCS : PROJECTIONS, LECTURE, ÉCRITURE ============= */
-/* Mercator transverse du théâtre (série de Krüger du bloc de coordonnées) : x est le nord, y l'est, avec les faux de pydcs.
-   lat/lon (degrés) → { x, y } (mètres) */
-function llToDcs(theatre, lat, lon) {
-  const p = TM_PARAMS[theatre];
-  let d = lon - p[0];
-  while (d > 180) d -= 360;
-  while (d < -180) d += 360;
-  const phi = lat * Math.PI / 180, dl = d * Math.PI / 180;
-  const n = UTM_N, s = Math.sin(phi);
-  const q = 2 * Math.sqrt(n) / (1 + n);
-  const tt = Math.sinh(Math.atanh(s) - q * Math.atanh(q * s));
-  const xi0 = Math.atan2(tt, Math.cos(dl));
-  const eta0 = Math.atanh(Math.sin(dl) / Math.sqrt(1 + tt * tt));
-  let xi = xi0, eta = eta0;
-  for (let j = 1; j <= 4; j++) {
-    xi += UTM_ALPHA[j - 1] * Math.sin(2 * j * xi0) * Math.cosh(2 * j * eta0);
-    eta += UTM_ALPHA[j - 1] * Math.cos(2 * j * xi0) * Math.sinh(2 * j * eta0);
-  }
-  return { x: UTM_K0 * UTM_A * xi + p[2], y: UTM_K0 * UTM_A * eta + p[1] };
-}
-
-/* { x, y } (mètres DCS) → lat/lon (degrés) */
-function dcsToLl(theatre, x, y) {
-  const p = TM_PARAMS[theatre];
-  const xi = (x - p[2]) / (UTM_K0 * UTM_A);
-  const eta = (y - p[1]) / (UTM_K0 * UTM_A);
-  let xi1 = xi, eta1 = eta;
-  for (let j = 1; j <= 4; j++) {
-    xi1 -= UTM_BETA[j - 1] * Math.sin(2 * j * xi) * Math.cosh(2 * j * eta);
-    eta1 -= UTM_BETA[j - 1] * Math.cos(2 * j * xi) * Math.sinh(2 * j * eta);
-  }
-  const chi = Math.asin(Math.sin(xi1) / Math.cosh(eta1));
-  let phi = chi;
-  for (let j = 1; j <= 4; j++) phi += UTM_DELTA[j - 1] * Math.sin(2 * j * chi);
-  let lon = p[0] + Math.atan2(Math.sinh(eta1), Math.cos(xi1)) * 180 / Math.PI;
-  while (lon > 180) lon -= 360;
-  while (lon < -180) lon += 360;
-  return { lat: phi * 180 / Math.PI, lon: lon };
-}
-
 function hasRouteTool(id) { return Object.prototype.hasOwnProperty.call(TM_PARAMS, id); }
 function routeToolTheatres() { return THEATRES.filter(x => hasRouteTool(x.id)); }
 
@@ -11942,7 +11897,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@PUBLIC_HOST_BLOCK@@\n', build_public_host_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
+    js = js.replace('@@PROJECTION_BLOCK@@\n', build_projection_block()).replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@PUBLIC_HOST_BLOCK@@\n', build_public_host_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     js = js.replace('@@TBM_JS@@\n', build_tbm_block())
     js = js.replace('@@THREATS_BLOCK@@\n', threats_block.build_block())
     if '@@' in js:
