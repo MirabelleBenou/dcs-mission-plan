@@ -2127,7 +2127,11 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
   .leaflet-control-zoom a, .rp-search-btn, .tapmode .tb-btn { min-width: 44px; min-height: 44px; }
   .pt-num, .pt-del { min-width: 0; }                                /* les lignes de références gardent leurs largeurs ; la ligne de point d'une seule rangée a sa règle plus bas (44 × 44) */
   .gs-lock { width: 28px; }                                         /* le cadenas de vitesse : 28 de large sur toute la hauteur du champ (44) */
-  .pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-right: 30px; }
+  .pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-right: 28px; }
+}
+/* sous 520 px au doigt, le texte est à 16 px dans une colonne de 63 px : trois chiffres tiennent à côté du cadenas en serrant la marge de gauche */
+@media (pointer: coarse) and (max-width: 519.98px) {
+  .pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-left: 3px; }
 }
 /* la ligne de point d'une seule rangée (à partir de 520,02 px) : n° et ✕ d'au moins 44 × 44 px, les colonnes ALT., VIT. et RÉF. inchangées, le nom prend le reste */
 @media (pointer: coarse) and (min-width: 520.02px) {
