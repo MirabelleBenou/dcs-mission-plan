@@ -988,7 +988,7 @@ table.nav tr.prof b { font-weight: 700; }
 table.nav tr.nav-turn td { background: rgba(192,137,42,.16); color: #1f1c16; font-family: var(--f-ui); font-weight: 500; font-size: 11.5px; letter-spacing: .3px; white-space: normal; overflow-wrap: anywhere; }
 .trn-bad { display: inline-block; padding: 1px 6px; color: var(--ink); background: var(--mp-sig-orange); }
 #trn-note { margin: 8px 0 12px; }
-.trn-warn { display: block; margin-top: 4px; color: var(--mp-sig-orange); }
+.trn-warn { display: block; margin-top: 4px; }
 .trn-warn[hidden] { display: none; }
 path.rp-turn-bad { stroke: var(--mp-sig-orange-line); }
 #map.grid-only { background:
@@ -3315,6 +3315,7 @@ const I18N = {
     'trn.row.l': '\u21b0 virage de {a}° à gauche · rayon {r} · commencer {d} avant {name}',
     'trn.row.bad': '\u26a0 virage de {a}° à droite\u202f: {d} d\u2019anticipation, la branche ne suffit pas',
     'trn.row.bad.l': '\u26a0 virage de {a}° à gauche\u202f: {d} d\u2019anticipation, la branche ne suffit pas',
+    'trn.row.u': '\u26a0 demi-tour\u202f: aucun arc dessiné',
     't.red.m': '{p} à {h} intenable : il faudrait {n} ({v}) de {a} à {b}, au-delà de la marge de ±{m} %. Aux vitesses de la route : {r}.',
     't.red.lk': '{p} à {h} intenable : toutes les vitesses de {a} à {b} sont verrouillées. Aux vitesses de la route : {r}.',
     't.red.lt': '{p} à {h} intenable : les branches verrouillées de {a} à {b} prennent déjà {d}. Aux vitesses de la route : {r}.',
@@ -3929,6 +3930,7 @@ const I18N = {
     'trn.row.l': '\u21b0 {a}° left turn · radius {r} · start {d} before {name}',
     'trn.row.bad': '\u26a0 {a}° right turn: needs {d} lead, the leg is too short',
     'trn.row.bad.l': '\u26a0 {a}° left turn: needs {d} lead, the leg is too short',
+    'trn.row.u': '\u26a0 U-turn: no arc drawn',
     't.red.m': '{p} at {h} cannot be met: it would take {n} ({v}) from {a} to {b}, beyond the ±{m}% margin. At the route’s speeds: {r}.',
     't.red.lk': '{p} at {h} cannot be met: every speed from {a} to {b} is locked. At the route’s speeds: {r}.',
     't.red.lt': '{p} at {h} cannot be met: the locked legs from {a} to {b} already take {d}. At the route’s speeds: {r}.',
@@ -5869,7 +5871,7 @@ function rtmRedHtml(m, esc) {
 /* ===== FIN DES HEURES D'UNE ROUTE ===== */
 /* ===== VIRAGES D'UNE ROUTE (rayon, anticipation, arc) ===== */
 const RTN_R = 6378137, RTN_G = 9.80665, RTN_BANKS = [0, 15, 30, 45];
-const RTN_NONE_DEG = 1, RTN_WIDE_DEG = 179, RTN_D_CAP_DEG = 179.9, RTN_ARC_STEP_DEG = 3, RTN_ARC_MIN_SEG = 4;
+const RTN_NONE_DEG = 1, RTN_UTURN_DEG = 179, RTN_ARC_STEP_DEG = 3, RTN_ARC_MIN_SEG = 4;
 
 /* L'inclinaison d'une route lue : 0 (Aucun), 15, 30 ou 45 ; toute autre valeur donne 0 */
 function rtnBank(x) { return RTN_BANKS.indexOf(x) !== -1 ? x : 0; }
@@ -5882,8 +5884,8 @@ function rtnMerc(lat, lon) {
 function rtnInv(x, y) { return [(2 * Math.atan(Math.exp(y / RTN_R)) - Math.PI / 2) * 180 / Math.PI, x / RTN_R * 180 / Math.PI]; }
 /* Les virages d'une route : un élément par point (null au premier, au dernier et sans inclinaison) ;
    { i, delta (degrés, signé : positif à gauche), side ('left' | 'right'), turn (|Δ| ≥ 1°), v (m/s), R, d (mètres au sol), k, fits, wide (turn et pas fits),
-     t1, t2, c ([lat, lon] ; null si wide ou pas de virage), a0, sweep (radians, dans le plan projeté), rk (rayon projeté) } ;
-   speeds[i] : la vitesse sol (km/h) de la branche qui arrive au point i. Un virage de 179° ou plus est trop large d'office ; d se calcule alors avec 179,9° au plus. */
+     uturn (|Δ| ≥ 179° : un demi-tour), t1, t2, c ([lat, lon] ; null si wide ou pas de virage), a0, sweep (radians, dans le plan projeté), rk (rayon projeté) } ;
+   speeds[i] : la vitesse sol (km/h) de la branche qui arrive au point i. Un demi-tour est trop large d'office, sans rayon ni anticipation (R et d valent 0) : il compte 0 dans la somme des anticipations de ses deux branches. */
 function rtnCompute(points, speeds, bank) {
   const n = points.length, out = new Array(n).fill(null), phi = rtnBank(bank);
   if (phi === 0 || n < 3) return out;
@@ -5892,7 +5894,7 @@ function rtnCompute(points, speeds, bank) {
   for (let j = 1; j < n; j++) len.push(Math.hypot(P[j].x - P[j - 1].x, P[j].y - P[j - 1].y));
   for (let i = 1; i < n - 1; i++) {
     const v = speeds[i] / 3.6, k = 1 / Math.cos(points[i].lat * Math.PI / 180);
-    const o = { i: i, delta: 0, side: '', turn: false, v: v, R: 0, d: 0, k: k, fits: true, wide: false, t1: null, t2: null, c: null, a0: 0, sweep: 0, rk: 0 };
+    const o = { i: i, delta: 0, side: '', turn: false, v: v, R: 0, d: 0, k: k, fits: true, wide: false, uturn: false, t1: null, t2: null, c: null, a0: 0, sweep: 0, rk: 0 };
     out[i] = o;
     if (!(len[i] > 0) || !(len[i + 1] > 0) || !isFinite(v) || !(v > 0)) continue;
     const u1 = { x: (P[i].x - P[i - 1].x) / len[i], y: (P[i].y - P[i - 1].y) / len[i] };
@@ -5902,10 +5904,10 @@ function rtnCompute(points, speeds, bank) {
     const a = Math.abs(o.delta);
     if (a < RTN_NONE_DEG) continue;
     o.turn = true;
+    if (a >= RTN_UTURN_DEG) { o.uturn = true; o.fits = false; continue; }
     o.side = dl > 0 ? 'left' : 'right';
     o.R = v * v / (RTN_G * Math.tan(phi * Math.PI / 180));
-    o.d = o.R * Math.tan(Math.min(a, RTN_D_CAP_DEG) * Math.PI / 360);
-    o.fits = a < RTN_WIDE_DEG;
+    o.d = o.R * Math.tan(a * Math.PI / 360);
   }
   /* une branche déborde quand les anticipations de ses deux bouts (projetées) dépassent sa longueur : les virages de ses deux bouts sont trop larges */
   for (let j = 1; j < n; j++) {
@@ -12263,6 +12265,7 @@ function fmtTurnDist(m) {
 /* La ligne du tableau sous un point dont le virage est de 10° ou plus : le virage qui tient, ou le trop large dans sa pastille orange */
 function turnNavRow(o) {
   if (!o || !o.turn || Math.abs(o.delta) < 10) return '';
+  if (o.uturn) return '<tr class="nav-turn bad"><td></td><td colspan="3"><span class="trn-bad">' + esc(t('trn.row.u')) + '</span></td></tr>';
   const nm = S.points[o.i].name.trim() !== '' ? S.points[o.i].name.trim() : String(o.i);
   const txt = t((o.wide ? 'trn.row.bad' : 'trn.row') + (o.side === 'left' ? '.l' : ''), { a: Math.round(Math.abs(o.delta)), r: fmtTurnDist(o.R), d: fmtTurnDist(o.d), name: nm });
   return '<tr class="nav-turn' + (o.wide ? ' bad' : '') + '"><td></td><td colspan="3">' + (o.wide ? '<span class="trn-bad">' + esc(txt) + '</span>' : esc(txt)) + '</td></tr>';
@@ -12273,7 +12276,7 @@ function trnNoteRender(tn) {
   $('trn-note').hidden = !on;
   const el = $('trn-warn');
   el.hidden = w === 0;
-  el.textContent = w ? t(w === 1 ? 'trn.warn.1' : 'trn.warn.n', { n: w }) : '';
+  el.innerHTML = w ? '<span class="trn-bad">' + esc(t(w === 1 ? 'trn.warn.1' : 'trn.warn.n', { n: w })) + '</span>' : '';
 }
 
 function renderNav() {
@@ -12769,7 +12772,7 @@ function onRowInput(ev, kind) {
   else return;
   persistState();
   if (k === 'name') { if (kind === 'ref') drawRefs(); else drawRoute(); }
-  else if (kind !== 'ref') { drawDecor(); updateTimes(); }       /* altitude, référence, vitesse : boîtes, traits et temps écoulés */
+  else if (kind !== 'ref') { drawDecor(); drawTurns(); updateTimes(); }       /* altitude, référence, vitesse : boîtes, traits, virages et temps écoulés */
   renderNav();
 }
 
@@ -17301,7 +17304,7 @@ function bindEvents() {
     const v = readSpeed(e.target.value);
     if (v == null) return;
     S.groundSpeed = v;
-    persistState(); renderNav(); drawDecor(); updateTimes(); syncSpeedPlaceholders();
+    persistState(); renderNav(); drawDecor(); drawTurns(); updateTimes(); syncSpeedPlaceholders();
   });
   $('gs-def').addEventListener('change', e => { e.target.value = speedDisp(S.groundSpeed); });
   /* La marge des vitesses (± %) : un entier de 1 à 50. À la frappe, elle s'écrit quand la saisie est dans les bornes et n'est pas le début d'une saisie plus longue (un chiffre de 1 à 5 peut devenir 10 à 50) ;

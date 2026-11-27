@@ -58,10 +58,13 @@ def py_turns(pts, speeds, bank):
         u2 = ((P[i + 1][0] - P[i][0]) / L[i + 1], (P[i + 1][1] - P[i][1]) / L[i + 1])
         delta = math.degrees(math.atan2(u1[0] * u2[1] - u1[1] * u2[0], u1[0] * u2[0] + u1[1] * u2[1]))
         v = speeds[i] / 3.6
-        R = v * v / (G * math.tan(math.radians(bank)))
-        d = R * math.tan(math.radians(min(abs(delta), 179.9)) / 2)
         k = 1 / math.cos(math.radians(pts[i][0]))
-        out[i] = {'delta': delta, 'R': R, 'd': d, 'k': k, 'turn': abs(delta) >= 1, 'wide': abs(delta) >= 179}
+        if abs(delta) >= 179:                                                              # un demi-tour : trop large d'office, ni rayon ni anticipation, il compte 0
+            out[i] = {'delta': delta, 'R': 0, 'd': 0, 'k': k, 'turn': True, 'wide': True, 'uturn': True}
+            continue
+        R = v * v / (G * math.tan(math.radians(bank)))
+        d = R * math.tan(math.radians(abs(delta)) / 2)
+        out[i] = {'delta': delta, 'R': R, 'd': d, 'k': k, 'turn': abs(delta) >= 1, 'wide': False, 'uturn': False}
     for j in range(1, n):
         a, b = out[j - 1], out[j]
         s = (a['d'] * a['k'] if a and a['turn'] else 0) + (b['d'] * b['k'] if b and b['turn'] else 0)
@@ -143,8 +146,21 @@ def test_under_one_degree_is_no_turn_and_179_degrees_or_more_is_too_wide_at_once
     assert abs(abs(r['delta']) - 178.5) < 0.01 and r['fits'] is True and r['wide'] is False and len(r['arc']) > 4
     dy2 = big * math.tan(math.radians(0.5))
     r = node_turns([(0, 0), (0, big), (dy2, 0)], [None, 220, 220], 30)[1]
-    assert abs(abs(r['delta']) - 179.5) < 0.01 and r['turn'] is True and r['fits'] is False and r['wide'] is True and r['arc'] == [] and r['t1'] is None
-    assert math.isfinite(r['d']) and r['d'] < 1e7                                      # l'anticipation reste un nombre lisible (179,9° au plus)
+    assert abs(abs(r['delta']) - 179.5) < 0.01 and r['turn'] is True and r['fits'] is False and r['wide'] is True and r['uturn'] is True and r['arc'] == [] and r['t1'] is None
+    assert r['d'] == 0 and r['R'] == 0 and r['side'] == ''                             # un demi-tour : ni rayon ni anticipation calculés
+
+
+@needs_node
+def test_a_u_turn_counts_zero_and_never_makes_a_neighbouring_turn_too_wide():
+    # A → B → A : un demi-tour à B ; puis un virage de 90° à A sur une branche de 222 km : il tient
+    pts = [(0, 0), (0, 2), (0, 0), (2, 0)]
+    r = node_turns(pts, [None, 220, 220, 220], 30)
+    assert r[1]['uturn'] is True and r[1]['wide'] is True and r[1]['d'] == 0 and r[1]['arc'] == []
+    assert r[2]['uturn'] is False and r[2]['wide'] is False and r[2]['side'] == 'right' and abs(abs(r[2]['delta']) - 90) < 1e-6 and len(r[2]['arc']) == 31
+    # même à 15°, sur des branches courtes : le demi-tour ne prend rien à son voisin (1,1 km pour 1 420 m de rayon : le voisin seul décide)
+    pts = [(0, 0), (0, 0.01), (0, 0), (0.2, 0)]
+    r = node_turns(pts, [None, 220, 220, 220], 45)
+    assert r[1]['uturn'] is True and r[2]['wide'] is False                              # 381 m sur 1 112 m
 
 
 @needs_node
@@ -219,6 +235,9 @@ def expected_rows(bank, fr, nm=False, pts=None, speeds=None, names=None):
         if not o or not o['turn'] or abs(o['delta']) < 10:
             continue
         a, left = int(math.floor(abs(o['delta']) + 0.5)), o['delta'] > 0
+        if o['uturn']:
+            out[i] = ('⚠ demi-tour%s: aucun arc dessiné' % NBSP if fr else '⚠ U-turn: no arc drawn', True)
+            continue
         r, d = fmt_m(o['R'], fr, nm), fmt_m(o['d'], fr, nm)
         if o['wide']:
             side = ('à gauche' if left else 'à droite') if fr else ('left' if left else 'right')
@@ -262,7 +281,7 @@ def test_the_bank_group_its_note_and_its_reflection(browser, w, h, touch):
     g = fr.evaluate("""() => { const set = document.querySelector('.nav-set'), cells = [...set.children], i = cells.findIndex(c => c.querySelector('[data-trn]')), lbl = cells[i].querySelector('.lbl');
       return { n: cells.length, i: i, prev: cells[i - 1].querySelector('.lbl').textContent, lbl: lbl.textContent, aria: cells[i].querySelector('[role=group]').getAttribute('aria-label'),
         btn: [...cells[i].querySelectorAll('[data-trn]')].map(b => [b.dataset.trn, b.textContent, b.getAttribute('aria-pressed'), b.classList.contains('on')]) }; }""")
-    assert g['prev'] == 'Traits des minutes' and g['lbl'] == 'Virages (inclinaison)' and g['aria'] == 'Virages (inclinaison)' and g['i'] == g['n'] - 1
+    assert g['prev'] == 'Traits des minutes' and g['lbl'] == 'Virages (inclinaison)' and g['aria'] == 'Virages (inclinaison)'
     assert g['btn'] == [['0', 'Aucun', 'true', True], ['15', '15°', 'false', False], ['30', '30°', 'false', False], ['45', '45°', 'false', False]]
     note = lambda: fr.evaluate("() => { const n = document.getElementById('trn-note'); return { hidden: n.hidden, shown: n.getClientRects().length > 0, text: n.innerText, warn: !document.getElementById('trn-warn').hidden }; }")
     assert note()['hidden'] is True and note()['shown'] is False
@@ -425,4 +444,60 @@ def test_at_aucun_nothing_is_added_and_at_a_bank_the_arcs_the_dots_and_the_circl
     fr.evaluate("() => { S.ui.trace = 'black'; persistState(); drawRoute(); syncControls(); }")
     d = fr.evaluate("() => routeGroup.getLayers().filter(x => /rp-turn-(arc|dot)/.test(x.options.className || '')).map(x => x.options.color + '|' + x.options.fillColor)")
     assert all(x in ('#1f1c16|null', '#f0e8d6|#1f1c16') for x in d), d                          # tracé Noir : l'arc et le point en #1f1c16
+    assert pg.errs == []
+
+
+@needs_pw
+def test_a_changed_speed_redraws_the_arcs_the_dots_and_the_circles(browser):
+    pg = shell(browser, 1280, 800)
+    fr = open_rp(pg)
+    nav_open(fr)
+    load_route(fr, maq_route())
+    pick_bank(fr, 30, False)
+    fr.evaluate("() => rpSetTab('route')")
+    attendre(fr, "!!document.querySelector('#pts .pt-row.pts')", 'les lignes de points')
+    same = """() => { const dots = routeGroup.getLayers().filter(l => l.options.className === 'rp-turn-dot').map(l => [l.getLatLng().lat, l.getLatLng().lng]);
+      const want = turnsOf(timing()).filter(o => o && o.turn && !o.wide).map(o => o.t1);
+      return { n: dots.length, eq: dots.length === want.length && dots.every((d, k) => Math.abs(d[0] - want[k][0]) < 1e-9 && Math.abs(d[1] - want[k][1]) < 1e-9), first: JSON.stringify(dots) }; }"""
+    a = fr.evaluate(same)
+    assert a['eq'] and a['n'] == 5
+    fr.locator('#gs-def').fill('300')                                                      # la vitesse de la route : les rayons grandissent
+    attendre(fr, 'S.groundSpeed === 300', 'la vitesse de la route à 300')
+    b = fr.evaluate(same)
+    assert b['eq'] and b['first'] != a['first']
+    g = fr.locator('#pts input[data-k="gs"]:not(:disabled)').nth(1)                           # la vitesse de la branche qui arrive au point 2
+    g.fill('120')
+    attendre(fr, 'S.points[2].gs === 120', 'la vitesse du point 2 à 120')
+    c = fr.evaluate(same)
+    assert c['eq'] and c['first'] != b['first']
+    g.fill('')
+    attendre(fr, 'S.points[2].gs === undefined', 'la vitesse du point 2 retirée')
+    assert fr.evaluate(same)['eq']
+    assert pg.errs == []
+
+
+@needs_pw
+@pytest.mark.parametrize('lang', ['fr', 'en'])
+def test_a_u_turn_is_circled_in_orange_with_its_own_line_and_counts_in_the_note(browser, lang):
+    pg = shell(browser, 1280, 800, lang=lang)
+    fr = open_rp(pg)
+    nav_open(fr)
+    r = {'format': 'dcs-route-v1', 'name': 'ALLER-RETOUR', 'theatre': 'Syria', 'points': [
+        {'name': 'A', 'lat': 33.7, 'lon': 36.0}, {'name': 'B', 'lat': 33.7, 'lon': 36.2}, {'name': 'C', 'lat': 33.7, 'lon': 36.0}, {'name': 'D', 'lat': 33.9, 'lon': 36.0}]}
+    load_route(fr, r)
+    pick_bank(fr, 30, False)
+    pts = [(p['lat'], p['lon']) for p in r['points']]
+    want = expected_rows(30, lang == 'fr', pts=pts, speeds=[None, 220, 220, 220], names=['A', 'B', 'C', 'D'])
+    assert want[1][0] == ('⚠ demi-tour' + NBSP + ': aucun arc dessiné' if lang == 'fr' else '⚠ U-turn: no arc drawn')
+    rows = fr.evaluate(READ_ROWS)
+    turns = [(k, x) for k, x in enumerate(rows) if 'nav-turn' in x['cls']]
+    assert [x['text'] for _k, x in turns] == [w[0] for _i, w in sorted(want.items())]
+    assert [rows[k - 1]['n'] for k, _x in turns] == [str(i) for i in sorted(want)]
+    assert 'bad' in turns[0][1]['cls'].split() and turns[0][1]['span'] == 3
+    # sur la carte : un cercle (le demi-tour), un arc et son point (le virage de 90° voisin) ; la note le compte
+    n = fr.evaluate("() => ({ bad: routeGroup.getLayers().filter(l => l.options.className === 'rp-turn-bad').length, arc: routeGroup.getLayers().filter(l => l.options.className === 'rp-turn-arc').length, dot: routeGroup.getLayers().filter(l => l.options.className === 'rp-turn-dot').length })")
+    assert n == {'bad': 1, 'arc': 1, 'dot': 1}
+    w = fr.evaluate("() => { const e = document.getElementById('trn-warn'), s = e.querySelector('.trn-bad'); return { t: e.textContent, bg: getComputedStyle(s).backgroundColor, ink: getComputedStyle(s).color, ref: (() => { const i = document.createElement('i'); i.style.color = 'var(--ink)'; document.body.appendChild(i); const c = getComputedStyle(i).color; i.remove(); return c; })() }; }")
+    assert w['t'] == ('⚠ 1 virage trop large pour sa branche, cerclé en orange.' if lang == 'fr' else '⚠ 1 turn too wide for the leg, circled in orange.')
+    assert w['bg'] == 'rgb(224, 122, 18)' and w['ink'] == w['ref']                          # la pastille orange, le texte à l'encre du thème
     assert pg.errs == []

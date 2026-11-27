@@ -15,7 +15,7 @@ BLOCK_END = '/* ===== FIN DES VIRAGES D\'UNE ROUTE ===== */'
 
 _JS = r"""
 const RTN_R = 6378137, RTN_G = 9.80665, RTN_BANKS = [0, 15, 30, 45];
-const RTN_NONE_DEG = 1, RTN_WIDE_DEG = 179, RTN_D_CAP_DEG = 179.9, RTN_ARC_STEP_DEG = 3, RTN_ARC_MIN_SEG = 4;
+const RTN_NONE_DEG = 1, RTN_UTURN_DEG = 179, RTN_ARC_STEP_DEG = 3, RTN_ARC_MIN_SEG = 4;
 
 /* L'inclinaison d'une route lue : 0 (Aucun), 15, 30 ou 45 ; toute autre valeur donne 0 */
 function rtnBank(x) { return RTN_BANKS.indexOf(x) !== -1 ? x : 0; }
@@ -28,8 +28,8 @@ function rtnMerc(lat, lon) {
 function rtnInv(x, y) { return [(2 * Math.atan(Math.exp(y / RTN_R)) - Math.PI / 2) * 180 / Math.PI, x / RTN_R * 180 / Math.PI]; }
 /* Les virages d'une route : un élément par point (null au premier, au dernier et sans inclinaison) ;
    { i, delta (degrés, signé : positif à gauche), side ('left' | 'right'), turn (|Δ| ≥ 1°), v (m/s), R, d (mètres au sol), k, fits, wide (turn et pas fits),
-     t1, t2, c ([lat, lon] ; null si wide ou pas de virage), a0, sweep (radians, dans le plan projeté), rk (rayon projeté) } ;
-   speeds[i] : la vitesse sol (km/h) de la branche qui arrive au point i. Un virage de 179° ou plus est trop large d'office ; d se calcule alors avec 179,9° au plus. */
+     uturn (|Δ| ≥ 179° : un demi-tour), t1, t2, c ([lat, lon] ; null si wide ou pas de virage), a0, sweep (radians, dans le plan projeté), rk (rayon projeté) } ;
+   speeds[i] : la vitesse sol (km/h) de la branche qui arrive au point i. Un demi-tour est trop large d'office, sans rayon ni anticipation (R et d valent 0) : il compte 0 dans la somme des anticipations de ses deux branches. */
 function rtnCompute(points, speeds, bank) {
   const n = points.length, out = new Array(n).fill(null), phi = rtnBank(bank);
   if (phi === 0 || n < 3) return out;
@@ -38,7 +38,7 @@ function rtnCompute(points, speeds, bank) {
   for (let j = 1; j < n; j++) len.push(Math.hypot(P[j].x - P[j - 1].x, P[j].y - P[j - 1].y));
   for (let i = 1; i < n - 1; i++) {
     const v = speeds[i] / 3.6, k = 1 / Math.cos(points[i].lat * Math.PI / 180);
-    const o = { i: i, delta: 0, side: '', turn: false, v: v, R: 0, d: 0, k: k, fits: true, wide: false, t1: null, t2: null, c: null, a0: 0, sweep: 0, rk: 0 };
+    const o = { i: i, delta: 0, side: '', turn: false, v: v, R: 0, d: 0, k: k, fits: true, wide: false, uturn: false, t1: null, t2: null, c: null, a0: 0, sweep: 0, rk: 0 };
     out[i] = o;
     if (!(len[i] > 0) || !(len[i + 1] > 0) || !isFinite(v) || !(v > 0)) continue;
     const u1 = { x: (P[i].x - P[i - 1].x) / len[i], y: (P[i].y - P[i - 1].y) / len[i] };
@@ -48,10 +48,10 @@ function rtnCompute(points, speeds, bank) {
     const a = Math.abs(o.delta);
     if (a < RTN_NONE_DEG) continue;
     o.turn = true;
+    if (a >= RTN_UTURN_DEG) { o.uturn = true; o.fits = false; continue; }
     o.side = dl > 0 ? 'left' : 'right';
     o.R = v * v / (RTN_G * Math.tan(phi * Math.PI / 180));
-    o.d = o.R * Math.tan(Math.min(a, RTN_D_CAP_DEG) * Math.PI / 360);
-    o.fits = a < RTN_WIDE_DEG;
+    o.d = o.R * Math.tan(a * Math.PI / 360);
   }
   /* une branche déborde quand les anticipations de ses deux bouts (projetées) dépassent sa longueur : les virages de ses deux bouts sont trop larges */
   for (let j = 1; j < n; j++) {

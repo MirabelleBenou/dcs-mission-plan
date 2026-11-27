@@ -394,7 +394,7 @@ table.nav tr.prof b { font-weight: 700; }
 table.nav tr.nav-turn td { background: rgba(192,137,42,.16); color: #1f1c16; font-family: var(--f-ui); font-weight: 500; font-size: 11.5px; letter-spacing: .3px; white-space: normal; overflow-wrap: anywhere; }
 .trn-bad { display: inline-block; padding: 1px 6px; color: var(--ink); background: var(--mp-sig-orange); }
 #trn-note { margin: 8px 0 12px; }
-.trn-warn { display: block; margin-top: 4px; color: var(--mp-sig-orange); }
+.trn-warn { display: block; margin-top: 4px; }
 .trn-warn[hidden] { display: none; }
 path.rp-turn-bad { stroke: var(--mp-sig-orange-line); }
 #map.grid-only { background:
@@ -2397,6 +2397,7 @@ const I18N = {
     'trn.row.l': '\u21b0 virage de {a}° à gauche · rayon {r} · commencer {d} avant {name}',
     'trn.row.bad': '\u26a0 virage de {a}° à droite\u202f: {d} d\u2019anticipation, la branche ne suffit pas',
     'trn.row.bad.l': '\u26a0 virage de {a}° à gauche\u202f: {d} d\u2019anticipation, la branche ne suffit pas',
+    'trn.row.u': '\u26a0 demi-tour\u202f: aucun arc dessiné',
     't.red.m': '{p} à {h} intenable : il faudrait {n} ({v}) de {a} à {b}, au-delà de la marge de ±{m} %. Aux vitesses de la route : {r}.',
     't.red.lk': '{p} à {h} intenable : toutes les vitesses de {a} à {b} sont verrouillées. Aux vitesses de la route : {r}.',
     't.red.lt': '{p} à {h} intenable : les branches verrouillées de {a} à {b} prennent déjà {d}. Aux vitesses de la route : {r}.',
@@ -3011,6 +3012,7 @@ const I18N = {
     'trn.row.l': '\u21b0 {a}° left turn · radius {r} · start {d} before {name}',
     'trn.row.bad': '\u26a0 {a}° right turn: needs {d} lead, the leg is too short',
     'trn.row.bad.l': '\u26a0 {a}° left turn: needs {d} lead, the leg is too short',
+    'trn.row.u': '\u26a0 U-turn: no arc drawn',
     't.red.m': '{p} at {h} cannot be met: it would take {n} ({v}) from {a} to {b}, beyond the ±{m}% margin. At the route’s speeds: {r}.',
     't.red.lk': '{p} at {h} cannot be met: every speed from {a} to {b} is locked. At the route’s speeds: {r}.',
     't.red.lt': '{p} at {h} cannot be met: the locked legs from {a} to {b} already take {d}. At the route’s speeds: {r}.',
@@ -8618,6 +8620,7 @@ function fmtTurnDist(m) {
 /* La ligne du tableau sous un point dont le virage est de 10° ou plus : le virage qui tient, ou le trop large dans sa pastille orange */
 function turnNavRow(o) {
   if (!o || !o.turn || Math.abs(o.delta) < 10) return '';
+  if (o.uturn) return '<tr class="nav-turn bad"><td></td><td colspan="3"><span class="trn-bad">' + esc(t('trn.row.u')) + '</span></td></tr>';
   const nm = S.points[o.i].name.trim() !== '' ? S.points[o.i].name.trim() : String(o.i);
   const txt = t((o.wide ? 'trn.row.bad' : 'trn.row') + (o.side === 'left' ? '.l' : ''), { a: Math.round(Math.abs(o.delta)), r: fmtTurnDist(o.R), d: fmtTurnDist(o.d), name: nm });
   return '<tr class="nav-turn' + (o.wide ? ' bad' : '') + '"><td></td><td colspan="3">' + (o.wide ? '<span class="trn-bad">' + esc(txt) + '</span>' : esc(txt)) + '</td></tr>';
@@ -8628,7 +8631,7 @@ function trnNoteRender(tn) {
   $('trn-note').hidden = !on;
   const el = $('trn-warn');
   el.hidden = w === 0;
-  el.textContent = w ? t(w === 1 ? 'trn.warn.1' : 'trn.warn.n', { n: w }) : '';
+  el.innerHTML = w ? '<span class="trn-bad">' + esc(t(w === 1 ? 'trn.warn.1' : 'trn.warn.n', { n: w })) + '</span>' : '';
 }
 
 function renderNav() {
@@ -9124,7 +9127,7 @@ function onRowInput(ev, kind) {
   else return;
   persistState();
   if (k === 'name') { if (kind === 'ref') drawRefs(); else drawRoute(); }
-  else if (kind !== 'ref') { drawDecor(); updateTimes(); }       /* altitude, référence, vitesse : boîtes, traits et temps écoulés */
+  else if (kind !== 'ref') { drawDecor(); drawTurns(); updateTimes(); }       /* altitude, référence, vitesse : boîtes, traits, virages et temps écoulés */
   renderNav();
 }
 
@@ -12079,7 +12082,7 @@ function bindEvents() {
     const v = readSpeed(e.target.value);
     if (v == null) return;
     S.groundSpeed = v;
-    persistState(); renderNav(); drawDecor(); updateTimes(); syncSpeedPlaceholders();
+    persistState(); renderNav(); drawDecor(); drawTurns(); updateTimes(); syncSpeedPlaceholders();
   });
   $('gs-def').addEventListener('change', e => { e.target.value = speedDisp(S.groundSpeed); });
   /* La marge des vitesses (± %) : un entier de 1 à 50. À la frappe, elle s'écrit quand la saisie est dans les bornes et n'est pas le début d'une saisie plus longue (un chiffre de 1 à 5 peut devenir 10 à 50) ;
