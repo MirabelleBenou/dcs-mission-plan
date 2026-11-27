@@ -12,7 +12,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / 'tests'))
 from ui_block import build_bar_js  # noqa: E402
+from banc_attente import attendre, attendre_barre_prete, attendre_barre_stable, attendre_fenetre  # noqa: E402
 
 NODE = shutil.which('node')
 needs_node = pytest.mark.skipif(NODE is None, reason='node absent')
@@ -424,7 +426,7 @@ def test_le_menu_dans_un_vrai_dom():
                 errs = []
                 pg.on('pageerror', lambda e: errs.append(str(e)))
                 pg.set_content(html)
-                pg.wait_for_timeout(500)
+                attendre_barre_prete(pg)
                 return c, pg, errs
             state = """() => { const tb = document.querySelector('.toolbar'), m = tb.querySelector('.tb-more-btn'), cs = getComputedStyle(tb), r = m && m.getBoundingClientRect();
               return { cls: [...tb.classList], padR: parseFloat(cs.paddingRight), cw: tb.clientWidth, right: r ? r.right : null, shown: !!(r && r.width > 0), last: tb.lastElementChild === m, active: document.activeElement === m, ox: cs.overflowX, id: m && m.id }; }"""
@@ -433,6 +435,10 @@ def test_le_menu_dans_un_vrai_dom():
                 items: [...p.querySelectorAll('li')].map(li => ({ role: li.getAttribute('role'), txt: li.textContent.trim(), dis: li.getAttribute('aria-disabled'), tcol: getComputedStyle(li).color, icol: li.querySelector('svg') ? getComputedStyle(li.querySelector('svg')).color : null })) }; }"""
             panel = "() => !!document.querySelector('.tb-more-panel')"
             clicks = "() => ({ ...window.clicks })"
+            liste = "!!document.querySelector('.tbm-panel:not(.tb-more-panel)')"
+
+            def plus(on=True):             # le menu « ⋯ » est ouvert (ou fermé)
+                attendre(pg, "!!document.querySelector('.tb-more-panel') === arg", 'le menu « ⋯ » %s' % ('ouvert' if on else 'fermé'), lu="!!document.querySelector('.tb-more-panel')", arg=on)
             for w in (345, 412):
                 c, pg, errs = fresh(w)
                 st = pg.evaluate(state)
@@ -445,8 +451,8 @@ def test_le_menu_dans_un_vrai_dom():
             st = pg.evaluate(state)
             assert 'tb-st8' in st['cls'] and st['padR'] == 2 and abs(st['right'] - (st['cw'] - 2)) < 0.01, st      # étape 8 : 2 px
             # 5, 6 : ARIA et alignement ; 4 : ligne grisée
-            pg.evaluate("() => { document.getElementById('btn-clear').disabled = true; }"); pg.wait_for_timeout(300)
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            pg.evaluate("() => { document.getElementById('btn-clear').disabled = true; }"); attendre_barre_stable(pg)
+            pg.locator('.tb-more-btn').tap(); plus(True)
             m = pg.evaluate(menu)
             assert m['ulRole'] == 'menu' and m['panelRole'] is None and m['lab'] == 'tb-more-btn', m                  # point 5
             assert all(i['role'] == 'menuitem' for i in m['items']), m
@@ -455,30 +461,39 @@ def test_le_menu_dans_un_vrai_dom():
             assert len(grise) == 1 and grise[0]['icol'] == grise[0]['tcol'], m                                     # point 4
             ok = [i for i in m['items'] if i['dis'] != 'true' and i['icol']]
             assert ok, m
-            pg.evaluate("() => { document.getElementById('btn-clear').disabled = false; }"); pg.wait_for_timeout(300)
+            pg.evaluate("() => { document.getElementById('btn-clear').disabled = false; }"); attendre_barre_stable(pg)
             # 2 : « ⋯ » ouvert, un toucher sur un autre menu de la barre (Affichage) ferme « ⋯ » et ouvre ce menu, en un seul geste (son clic passe : ici il compte 1) ; la sonde, elle, ne reçoit pas le clic de fermeture
             if not pg.evaluate(panel):
-                pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
-            pg.locator('#btn-display').tap(); pg.wait_for_timeout(500)
+                pg.locator('.tb-more-btn').tap(); plus(True)
+            pg.locator('#btn-display').tap()
+            attendre(pg, "!document.querySelector('.tb-more-panel') && window.clicks.display === 1", 'le menu « ⋯ » fermé et le clic d\'Affichage compté (1)', lu='[!!document.querySelector(".tb-more-panel"), window.clicks.display]')
             assert not pg.evaluate(panel) and pg.evaluate(clicks)['display'] == 1, pg.evaluate(clicks)
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
-            pg.locator('#probe').tap(); pg.wait_for_timeout(500)
+            pg.locator('.tb-more-btn').tap(); plus(True)
+            pg.locator('#probe').tap()
+            attendre(pg, '!document.querySelector(".tb-more-panel") && TBM.swallow === false', 'le menu « ⋯ » fermé et le clic de fermeture avalé (TBM.swallow retombé)', lu='[!!document.querySelector(".tb-more-panel"), TBM.swallow]')
             assert not pg.evaluate(panel) and pg.evaluate(clicks)['probe'] == 0
-            pg.locator('#probe').tap(); pg.wait_for_timeout(300)
+            pg.locator('#probe').tap()
+            attendre(pg, 'window.clicks.probe === 1', 'le clic de la sonde compté (1)', lu='window.clicks.probe')
             assert pg.evaluate(clicks)['probe'] == 1
             # 3 : le théâtre choisi depuis « ⋯ » : le focus revient à « ⋯ » ; 8 : un toucher sur « ⋯ » liste ouverte ouvre le menu du premier coup
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
-            pg.locator('.tb-more-panel li', has_text='Théâtre').first.tap(); pg.wait_for_timeout(400)
+            pg.locator('.tb-more-btn').tap(); plus(True)
+            pg.locator('.tb-more-panel li', has_text='Théâtre').first.tap()
+            attendre(pg, liste, 'la liste du théâtre ouverte depuis « ⋯ »', lu=liste)
             assert pg.evaluate("() => !!document.querySelector('.tbm-panel:not(.tb-more-panel)')")
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(400)
+            pg.locator('.tb-more-btn').tap()
+            attendre(pg, '!!document.querySelector(".tb-more-panel") && !(%s)' % liste, 'le menu « ⋯ » ouvert du premier coup, la liste fermée', lu='[!!document.querySelector(".tb-more-panel"), %s]' % liste)
             assert pg.evaluate(panel) and not pg.evaluate("() => !!document.querySelector('.tbm-panel:not(.tb-more-panel)')")
-            pg.locator('.tb-more-panel li', has_text='Théâtre').first.tap(); pg.wait_for_timeout(400)
-            pg.locator('.tbm-panel:not(.tb-more-panel) .tbm-opt', has_text='Allemagne').first.tap(); pg.wait_for_timeout(700)
+            pg.locator('.tb-more-panel li', has_text='Théâtre').first.tap()
+            attendre(pg, liste, 'la liste du théâtre ouverte depuis « ⋯ »', lu=liste)
+            pg.locator('.tbm-panel:not(.tb-more-panel) .tbm-opt', has_text='Allemagne').first.tap()
+            attendre(pg, "document.getElementById('theatre').value === 'b' && document.activeElement === document.querySelector('.tb-more-btn')", 'le théâtre choisi (b) et le focus revenu à « ⋯ »',
+                     lu="[document.getElementById('theatre').value, document.activeElement && document.activeElement.id]")
             assert pg.evaluate("() => document.getElementById('theatre').value") == 'b'
             st = pg.evaluate(state)
             assert st['active'] and st['shown'], st
             # 7 : le shell déplace #btn-lang en fin de barre : « ⋯ » revient au bout
-            pg.evaluate("() => { const tb = document.querySelector('.toolbar'); tb.appendChild(document.getElementById('btn-lang')); }"); pg.wait_for_timeout(500)
+            pg.evaluate("() => { const tb = document.querySelector('.toolbar'); tb.appendChild(document.getElementById('btn-lang')); }")
+            attendre(pg, "document.querySelector('.toolbar').lastElementChild === document.querySelector('.tb-more-btn')", '« ⋯ » revenu au bout de la barre', lu="document.querySelector('.toolbar').lastElementChild.id")
             assert pg.evaluate(state)['last']
             assert not errs, errs
             c.close()
@@ -523,68 +538,90 @@ def test_le_menu_reste_ouvert_tant_que_la_decision_est_la_meme():
                 errs = []
                 pg.on('pageerror', lambda e: errs.append(str(e)))
                 pg.set_content(html)
-                pg.wait_for_timeout(500)
+                attendre_barre_prete(pg)
                 return c, pg, errs
             panel = "() => !!document.querySelector('.tb-more-panel')"
             liste = "() => !!document.querySelector('.tbm-panel:not(.tb-more-panel)')"
             align = "() => { const p = document.querySelector('.tb-more-panel'); if (!p) return null; return Math.abs(p.getBoundingClientRect().right - document.querySelector('.tb-more-btn').getBoundingClientRect().right); }"
             align_liste = "() => { const p = document.querySelector('.tbm-panel:not(.tb-more-panel)'); if (!p) return null; return Math.abs(p.getBoundingClientRect().right - document.querySelector('.tb-more-btn').getBoundingClientRect().right); }"
+
+            def plus(on=True):             # le menu « ⋯ » est ouvert (ou fermé)
+                attendre(pg, "!!document.querySelector('.tb-more-panel') === arg", 'le menu « ⋯ » %s' % ('ouvert' if on else 'fermé'), lu="!!document.querySelector('.tb-more-panel')", arg=on)
+
+            def liste_ouverte(on=True):    # la liste du théâtre ouverte depuis « ⋯ » (ou fermée)
+                attendre(pg, "!!document.querySelector('.tbm-panel:not(.tb-more-panel)') === arg", 'la liste du théâtre %s' % ('ouverte' if on else 'fermée'), lu="!!document.querySelector('.tbm-panel:not(.tb-more-panel)')", arg=on)
+
+            def recalculs():               # trois recalculs sans changement : la police des lignes qui finit de charger, un attribut reposé à la même valeur
+                for _ in range(3):
+                    pg.evaluate("() => document.fonts.dispatchEvent(new Event('loadingdone'))")
+                    attendre_barre_stable(pg)
+                    pg.evaluate(noop)
+                    attendre_barre_stable(pg)
             noop = ("() => { const e = document.getElementById('btn-open'); e.setAttribute('hidden', ''); e.removeAttribute('hidden'); "
                     "const d = document.getElementById('btn-display'); d.setAttribute('style', d.getAttribute('style') || ''); d.hidden = false; }")
             c, pg, errs = fresh(345)
             sig0 = pg.evaluate("() => UIMORE.sig")
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            pg.locator('.tb-more-btn').tap(); plus(True)
             assert pg.evaluate(panel)
             # un recalcul sans changement : la police des lignes qui finit de charger, un attribut reposé à la même valeur (plusieurs fois)
-            for _ in range(3):
-                pg.evaluate("() => document.fonts.dispatchEvent(new Event('loadingdone'))"); pg.wait_for_timeout(120)
-                pg.evaluate(noop); pg.wait_for_timeout(120)
-            pg.wait_for_timeout(600)
+            recalculs()
             assert pg.evaluate(panel) and pg.evaluate("() => UIMORE.sig") == sig0
             assert pg.evaluate("() => document.querySelector('.tb-more-btn').getAttribute('aria-expanded')") == 'true'
             # le texte d'une ligne change sans que la décision change : la ligne se refait, le menu reste ouvert
-            pg.evaluate("() => { document.querySelector('#btn-clear').disabled = true; }"); pg.wait_for_timeout(400)
+            pg.evaluate("() => { document.querySelector('#btn-clear').disabled = true; }")
+            attendre(pg, "!!document.querySelector('.tb-more-panel') && document.querySelector('.tb-more-panel li[aria-disabled=true]') !== null", 'la ligne grisée refaite dans le menu resté ouvert', lu="[!!document.querySelector('.tb-more-panel'), !!document.querySelector('.tb-more-panel li[aria-disabled=true]')]")
             assert pg.evaluate(panel) and pg.evaluate("() => document.querySelector('.tb-more-panel li[aria-disabled=true]') !== null")
-            pg.evaluate("() => { document.querySelector('#btn-clear').disabled = false; }"); pg.wait_for_timeout(400)
+            pg.evaluate("() => { document.querySelector('#btn-clear').disabled = false; }")
+            attendre(pg, "!!document.querySelector('.tb-more-panel') && document.querySelector('.tb-more-panel li[aria-disabled=true]') === null", 'la ligne dégrisée refaite dans le menu resté ouvert', lu="[!!document.querySelector('.tb-more-panel'), !!document.querySelector('.tb-more-panel li[aria-disabled=true]')]")
             assert pg.evaluate(panel) and pg.evaluate("() => document.querySelector('.tb-more-panel li[aria-disabled=true]') === null")
             # « ⋯ » se déplace pendant que la décision reste la même : le menu reste aligné sur lui
             x0 = pg.evaluate("() => document.querySelector('.tb-more-btn').getBoundingClientRect().right")
-            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = '18px'; }"); pg.wait_for_timeout(500)
+            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = '18px'; }")
+            attendre(pg, "document.querySelector('.tb-more-btn').getBoundingClientRect().right < arg - 3", '« ⋯ » déplacé vers la gauche par la marge de la barre', lu="document.querySelector('.tb-more-btn').getBoundingClientRect().right", arg=x0)
+            attendre_barre_stable(pg)
             x1 = pg.evaluate("() => document.querySelector('.tb-more-btn').getBoundingClientRect().right")
             assert pg.evaluate("() => UIMORE.sig") == sig0 and x1 < x0 - 3, (x0, x1)
             assert pg.evaluate(panel) and pg.evaluate(align) <= 0.5
-            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = ''; }"); pg.wait_for_timeout(500)
+            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = ''; }")
+            attendre(pg, "Math.abs(document.querySelector('.tb-more-btn').getBoundingClientRect().right - arg) < 1", '« ⋯ » revenu à sa place', lu="document.querySelector('.tb-more-btn').getBoundingClientRect().right", arg=x0)
+            attendre_barre_stable(pg)
             assert pg.evaluate(panel) and pg.evaluate(align) <= 0.5
             # une décision qui change (un élément sort de « ⋯ ») ferme le menu
-            pg.evaluate("() => { document.getElementById('btn-clear').style.display = 'none'; }"); pg.wait_for_timeout(500)
+            pg.evaluate("() => { document.getElementById('btn-clear').style.display = 'none'; }")
+            plus(False)
             assert not pg.evaluate(panel), 'la décision a changé : le menu se ferme'
             assert pg.evaluate("() => document.querySelector('.tb-more-btn').getAttribute('aria-expanded')") == 'false'
-            pg.evaluate("() => { document.getElementById('btn-clear').style.display = ''; }"); pg.wait_for_timeout(500)
+            pg.evaluate("() => { document.getElementById('btn-clear').style.display = ''; }"); attendre_barre_stable(pg)
             # le redimensionnement ferme le menu
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            pg.locator('.tb-more-btn').tap(); plus(True)
             assert pg.evaluate(panel)
-            pg.set_viewport_size({'width': 346, 'height': 640}); pg.wait_for_timeout(500)
+            pg.set_viewport_size({'width': 346, 'height': 640}); attendre_fenetre(pg, 346, 640)
+            plus(False)
             assert not pg.evaluate(panel), 'le redimensionnement ferme le menu'
             # la liste ouverte depuis le menu suit la même règle : elle reste (et reste alignée sur « ⋯ »), puis se ferme quand la décision change
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
-            pg.locator('.tb-more-panel li', has_text='Théâtre').first.tap(); pg.wait_for_timeout(400)
+            pg.locator('.tb-more-btn').tap(); plus(True)
+            pg.locator('.tb-more-panel li', has_text='Théâtre').first.tap(); liste_ouverte(True)
             assert pg.evaluate(liste) and not pg.evaluate(panel)
-            for _ in range(3):
-                pg.evaluate("() => document.fonts.dispatchEvent(new Event('loadingdone'))"); pg.wait_for_timeout(120)
-                pg.evaluate(noop); pg.wait_for_timeout(120)
-            pg.wait_for_timeout(500)
+            recalculs()
             assert pg.evaluate(liste), 'la liste ouverte depuis « ⋯ » reste ouverte tant que la décision est la même'
-            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = '18px'; }"); pg.wait_for_timeout(500)
+            xl = pg.evaluate("() => document.querySelector('.tb-more-btn').getBoundingClientRect().right")
+            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = '18px'; }")
+            attendre(pg, "document.querySelector('.tb-more-btn').getBoundingClientRect().right < arg - 3", '« ⋯ » déplacé vers la gauche par la marge de la barre', lu="document.querySelector('.tb-more-btn').getBoundingClientRect().right", arg=xl)
+            attendre_barre_stable(pg)
             assert pg.evaluate(liste) and pg.evaluate(align_liste) <= 0.5
-            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = ''; }"); pg.wait_for_timeout(500)
-            pg.evaluate("() => { document.getElementById('btn-clear').style.display = 'none'; }"); pg.wait_for_timeout(500)
+            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = ''; }")
+            attendre(pg, "Math.abs(document.querySelector('.tb-more-btn').getBoundingClientRect().right - arg) < 1", '« ⋯ » revenu à sa place', lu="document.querySelector('.tb-more-btn').getBoundingClientRect().right", arg=xl)
+            attendre_barre_stable(pg)
+            pg.evaluate("() => { document.getElementById('btn-clear').style.display = 'none'; }")
+            liste_ouverte(False)
             assert not pg.evaluate(liste), 'la décision a changé : la liste se ferme aussi'
-            pg.evaluate("() => { document.getElementById('btn-clear').style.display = ''; }"); pg.wait_for_timeout(500)
+            pg.evaluate("() => { document.getElementById('btn-clear').style.display = ''; }"); attendre_barre_stable(pg)
             # le redimensionnement ferme la liste (comme avant)
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
-            pg.locator('.tb-more-panel li', has_text='Théâtre').first.tap(); pg.wait_for_timeout(400)
+            pg.locator('.tb-more-btn').tap(); plus(True)
+            pg.locator('.tb-more-panel li', has_text='Théâtre').first.tap(); liste_ouverte(True)
             assert pg.evaluate(liste)
-            pg.set_viewport_size({'width': 345, 'height': 640}); pg.wait_for_timeout(500)
+            pg.set_viewport_size({'width': 345, 'height': 640}); attendre_fenetre(pg, 345, 640)
+            liste_ouverte(False)
             assert not pg.evaluate(liste) and not pg.evaluate(panel)
             assert not errs, errs
             c.close()
@@ -605,29 +642,39 @@ def test_un_toucher_sur_more_avec_un_menu_de_module_ouvert_ouvre_le_menu_du_prem
             pg = c.new_page()
             errs = []
             pg.on('pageerror', lambda e: errs.append(str(e)))
-            pg.set_content(html); pg.wait_for_timeout(500)
+            pg.set_content(html); attendre_barre_prete(pg)
             panel = "() => !!document.querySelector('.tb-more-panel')"
             dsp = "() => !!document.getElementById('fake-dsp')"
+
+            def plus(on=True):             # le menu « ⋯ » est ouvert (ou fermé)
+                attendre(pg, "!!document.querySelector('.tb-more-panel') === arg", 'le menu « ⋯ » %s' % ('ouvert' if on else 'fermé'), lu="!!document.querySelector('.tb-more-panel')", arg=on)
+
+            def module(on=True):           # le menu du module (Affichage, factice) est ouvert (ou fermé)
+                attendre(pg, "!!document.getElementById('fake-dsp') === arg", 'le menu du module %s' % ('ouvert' if on else 'fermé'), lu="!!document.getElementById('fake-dsp')", arg=on)
             assert pg.evaluate("() => !!document.querySelector('.tb-more-btn') && document.querySelector('.tb-more-btn').getBoundingClientRect().width > 0")
-            pg.locator('#btn-display').tap(); pg.wait_for_timeout(300)
+            pg.locator('#btn-display').tap(); module(True)
             assert pg.evaluate(dsp)
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(400)
+            pg.locator('.tb-more-btn').tap()
+            attendre(pg, "!document.getElementById('fake-dsp') && !!document.querySelector('.tb-more-panel')", 'le menu du module fermé et « ⋯ » ouvert du premier coup', lu="[!!document.getElementById('fake-dsp'), !!document.querySelector('.tb-more-panel')]")
             assert not pg.evaluate(dsp) and pg.evaluate(panel), 'le menu du module se ferme, « ⋯ » s\'ouvre du premier coup'
             assert pg.evaluate("() => document.querySelector('.tb-more-btn').getAttribute('aria-expanded')") == 'true'
-            pg.wait_for_timeout(1000)
+            attendre(pg, 'TBM.swallow === false', 'le clic suivant plus avalé (TBM.swallow retombé)', lu='TBM.swallow')       # la garde du clic suivant retombe d\'elle-même ; le menu doit rester ouvert après
+            attendre_barre_stable(pg)
             assert pg.evaluate(panel)
             # le menu du module ouvert, un toucher ailleurs (la sonde) : le menu se ferme, le clic est avalé (comme avant)
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)                          # ferme « ⋯ »
-            pg.locator('#btn-display').tap(); pg.wait_for_timeout(300)
+            pg.locator('.tb-more-btn').tap(); plus(False)                                       # ferme « ⋯ »
+            pg.locator('#btn-display').tap(); module(True)
             assert pg.evaluate(dsp)
-            pg.locator('#probe').tap(); pg.wait_for_timeout(500)
+            pg.locator('#probe').tap()
+            attendre(pg, "!document.getElementById('fake-dsp') && TBM.swallow === false", 'le menu du module fermé et le clic de fermeture avalé (TBM.swallow retombé)', lu="[!!document.getElementById('fake-dsp'), TBM.swallow]")
             assert not pg.evaluate(dsp) and pg.evaluate("() => window.clicks.probe") == 0
-            pg.locator('#probe').tap(); pg.wait_for_timeout(300)
+            pg.locator('#probe').tap()
+            attendre(pg, 'window.clicks.probe === 1', 'le clic de la sonde compté (1)', lu='window.clicks.probe')
             assert pg.evaluate("() => window.clicks.probe") == 1
             # le clic avalé ne reste pas armé : « ⋯ » s'ouvre au toucher suivant, puis se referme au suivant
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            pg.locator('.tb-more-btn').tap(); plus(True)
             assert pg.evaluate(panel)
-            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            pg.locator('.tb-more-btn').tap(); plus(False)
             assert not pg.evaluate(panel)
             assert not errs, errs
             c.close()

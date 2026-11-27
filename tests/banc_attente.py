@@ -183,3 +183,25 @@ def attendre_profil_repos(fr, zones=False, delai=60000):
     if zones:
         attendre(fr, '__RP.prof.zones.length > 0 && document.querySelectorAll("path.prof-zone").length > 0', 'au moins une zone de menace dessinée dans le profil', lu='[__RP.prof.zones.length, document.querySelectorAll("path.prof-zone").length]', delai=delai)
     attendre_repos(fr, delai)
+
+
+# --- la barre d'outils « ⋯ » (UIMORE) dans un DOM fabriqué (test_barre_plus) ---
+BARRE_PRETE = "() => typeof UIMORE !== 'undefined' && UIMORE.sig !== '' && !!document.querySelector('.tb-more-btn') && document.querySelector('.tb-more-btn').getBoundingClientRect().width > 0"
+BARRE_PRETE_LU = "() => ({ uimore: typeof UIMORE, sig: typeof UIMORE !== 'undefined' ? UIMORE.sig : null, bouton: !!document.querySelector('.tb-more-btn') })"
+BARRE = """() => { const tb = document.querySelector('.toolbar'); if (!tb) return false; const m = tb.querySelector('.tb-more-btn'), r = m ? m.getBoundingClientRect() : null, p = document.querySelector('.tb-more-panel');
+  const k = JSON.stringify([UIMORE.sig, tb.className, tb.scrollWidth, tb.clientWidth, r && [r.x, r.right], !!p, p ? p.getAttribute('data-key') : null, tb.querySelectorAll('[data-mp-off]').length]);
+  const avant = window.__banc_barre; window.__banc_barre = k; return avant === k; }"""
+
+
+def attendre_barre_prete(pg, delai=DELAI):
+    """La barre fabriquée a pris sa décision (UIMORE.sig posé, « ⋯ » affiché) et ne bouge plus."""
+    attendre_etat(pg, BARRE_PRETE, 'la barre prête (UIMORE.sig posé, « ⋯ » affiché)', lecture=BARRE_PRETE_LU, delai=delai)
+    attendre_barre_stable(pg, delai)
+
+
+def attendre_barre_stable(pg, delai=DELAI):
+    """La barre au repos après un geste ou une mutation : des images de rendu sont passées et deux lectures (décision, classes, largeurs, « ⋯ », menu ouvert) à 100 ms d'écart sont égales."""
+    attendre_images(pg, 2, delai)
+    pg.evaluate('() => { window.__banc_barre = null; }')
+    attendre_etat(pg, BARRE, 'la barre au repos (décision, classes, largeurs, « ⋯ », menu : deux lectures égales à 100 ms)',
+                  lecture='() => ({ sig: UIMORE.sig, classes: document.querySelector(".toolbar").className, derniere_lecture: String(window.__banc_barre).slice(0, 160) })', delai=delai, polling=100)
