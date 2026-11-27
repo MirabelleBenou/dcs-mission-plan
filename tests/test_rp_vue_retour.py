@@ -9,7 +9,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tests'))
-from test_rp_menaces import (browser, display, needs_pw, open_rp, ready, setup, sym)  # noqa: E402,F401
+from test_rp_menaces import (browser, display, needs_pw, open_rp, open_rp_qui_ecoute, ready, setup, sym)  # noqa: E402,F401
 from test_rp_menaces_pastille import DRIFT, STORE, VIEW  # noqa: E402,F401
 from test_rp_profil import tick  # noqa: E402
 from banc_attente import attendre, attendre_fenetre, attendre_mise_en_page, attendre_theatre, attendre_vue_stable, quitter_rp, revenir_rp, viser  # noqa: E402
@@ -142,7 +142,7 @@ def test_rotated_while_away_the_same_centre_and_zoom_come_back_at_the_new_orient
 @needs_pw
 @pytest.mark.parametrize('w,h', [(345, 590), (915, 412)])
 def test_a_view_asked_while_the_tool_was_hidden_wins_the_new_theatre_is_framed(browser, w, h):
-    pg, fr = open_rp(browser, w=w, h=h)
+    pg, fr = open_rp_qui_ecoute(browser, w=w, h=h)         # l'autre outil écrit le théâtre : le cadre doit entendre les évènements storage
     setup(fr, [sym(0, 'sa-8')])
     aim(fr, pg)
     quitter_rp(pg, 'dg')

@@ -14,7 +14,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tests'))
-from banc_attente import attendre, attendre_images, attendre_menaces, attendre_rp, attendre_shell, exemple  # noqa: E402
+from banc_attente import attendre, attendre_ecoute_storage, attendre_images, attendre_menaces, attendre_rp, attendre_shell, exemple  # noqa: E402
 
 CHROMIUM = Path('/opt/pw-browsers/chromium')
 try:
@@ -126,6 +126,16 @@ def open_rp(br, w=1280, h=800, lang='fr', init='', doc=True, seed=None):
     pg.evaluate("openModule('rp')")
     fr = attendre_rp(pg)
     return pg, fr
+
+
+def open_rp_qui_ecoute(br, essais=10, **kw):
+    """open_rp, pour les tests où un autre outil écrit le théâtre ou la route que le Route Planner doit suivre : un cadre sourd aux évènements storage (voir attendre_ecoute_storage) est fermé et l'ouverture refaite."""
+    for _ in range(essais):
+        pg, fr = open_rp(br, **kw)
+        if attendre_ecoute_storage(pg, fr):
+            return pg, fr
+        pg.context.close()
+    raise AssertionError('le cadre du Route Planner est resté sourd aux évènements storage en %d ouvertures' % essais)
 
 
 SIDC = {'sam': 'GPEWMS--', 'aaa': 'GPEWAH--', 'radar': 'GPESR---'}

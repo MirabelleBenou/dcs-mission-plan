@@ -265,3 +265,18 @@ def attendre_toast_parti(*cibles, delai=20000):
     """Plus aucun toast affiché dans la page ou le cadre ; le toast à bouton (« Restaurer ») dure 12 s par construction de l'application (showToast), d'où le délai."""
     for c in cibles:
         attendre(c, "!document.querySelector('.toast.show')", 'aucun toast affiché', lu="[...document.querySelectorAll('.toast')].map(e => e.className)", delai=delai)
+
+
+def attendre_ecoute_storage(pg, fr, delai=3000):
+    """Le cadre `fr` reçoit-il les évènements storage ? Une clé d'essai est écrite par la page du shell, puis retirée ; rend vrai si le cadre l'a entendue dans le délai.
+    Mesuré au banc (chromium sans interface, contexte en mémoire) : une ouverture du Route Planner sur douze environ donne un cadre qui ne reçoit aucun évènement storage, ni du shell
+    ni d'un autre outil, de bout en bout ; les tests qui attendent qu'un autre outil fasse suivre le théâtre ou la route à ce cadre ne peuvent alors pas tenir."""
+    fr.evaluate("() => { window.__banc_storage = 0; window.addEventListener('storage', () => { window.__banc_storage++; }); }")
+    pg.evaluate("localStorage.setItem('banc_ecoute', '1')")
+    try:
+        attendre(fr, 'window.__banc_storage > 0', 'le cadre a reçu un évènement storage', delai=delai, polling=100)
+        entendu = True
+    except AssertionError:
+        entendu = False
+    pg.evaluate("localStorage.removeItem('banc_ecoute')")
+    return entendu

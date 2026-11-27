@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tests'))
-from test_rp_menaces import (browser, display, needs_pw, open_rp, ready, setup, sym)  # noqa: E402,F401
+from test_rp_menaces import (browser, display, needs_pw, open_rp, open_rp_qui_ecoute, ready, setup, sym)  # noqa: E402,F401
 from banc_attente import (attendre, attendre_images, attendre_mise_en_page, attendre_rp, attendre_shell, attendre_theatre, attendre_vue_stable, cadre_export, poser_mode,  # noqa: E402
                           quitter_rp, revenir_rp, viser)
 
@@ -458,8 +458,8 @@ def test_above_1100_px_the_big_map_calls_no_move_at_all(browser):
 
 
 # ---------- règle 4 : la vue pendant que l'outil est caché ----------
-def _hidden_path(browser, w, h, kind):
-    pg, fr = open_rp(browser, w=w, h=h)
+def _hidden_path(browser, w, h, kind, ecoute=False):
+    pg, fr = (open_rp_qui_ecoute if ecoute else open_rp)(browser, w=w, h=h)
     setup(fr, [sym(0, 'sa-8')])
     aim(fr, pg)
     v0 = fr.evaluate(VIEW)
@@ -478,7 +478,7 @@ def _hidden_path(browser, w, h, kind):
 @needs_pw
 @pytest.mark.parametrize('w,h', [(345, 590), (915, 412)])
 def test_drawing_then_another_tool_changes_the_theatre_then_back_the_map_frames_the_new_theatre(browser, w, h):
-    pg, fr, v0, vin = _hidden_path(browser, w, h, 'draw')
+    pg, fr, v0, vin = _hidden_path(browser, w, h, 'draw', ecoute=True)         # l'autre outil écrit le théâtre : le cadre doit entendre les évènements storage
     pg.evaluate("localStorage.setItem('mp_theatre_v1', JSON.stringify({ theatre: 'Caucasus' }))")
     attendre_theatre(fr, 'Caucasus', polling=100)             # l'évènement storage est traité dans l'outil caché (un cadre caché ne reçoit pas d'images de rendu : lecture toutes les 100 ms)
     revenir_rp(pg, fr)
@@ -493,7 +493,7 @@ def test_drawing_then_another_tool_changes_the_theatre_then_back_the_map_frames_
 @needs_pw
 @pytest.mark.parametrize('w,h', [(345, 590), (915, 412)])
 def test_drawing_then_another_tool_writes_the_route_then_back_the_view_is_the_one_the_base_gives(browser, w, h):
-    pg, fr, v0, vin = _hidden_path(browser, w, h, 'draw')
+    pg, fr, v0, vin = _hidden_path(browser, w, h, 'draw', ecoute=True)         # l'autre outil écrit la route : le cadre doit entendre les évènements storage
     pg.evaluate("(() => { const s = JSON.parse(localStorage.getItem('route_state_v1')); (s.points || []).forEach(p => { p.lat += 1.0; p.lon += 1.5; }); localStorage.setItem('route_state_v1', JSON.stringify(s)); })()")
     attendre(fr, "JSON.stringify(S.points.map(p => [p.lat, p.lon])) === JSON.stringify((JSON.parse(localStorage.getItem('route_state_v1')).points || []).map(p => [p.lat, p.lon]))",
              "la route relue dans l'outil caché (les points de S sont ceux du stockage)", lu='[S.points.map(p => [p.lat, p.lon]), JSON.parse(localStorage.getItem("route_state_v1")).points.map(p => [p.lat, p.lon])]', polling=100)
