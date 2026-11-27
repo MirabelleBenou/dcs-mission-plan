@@ -25,7 +25,9 @@ import gzip
 import json
 import os
 import re
+import struct
 import sys
+import zlib
 
 from version_block import SUITE_VERSION, DEV_BUILD
 from brand_block import add_tab_icons as brand_tab_icons, INSIGNE_MP, INSIGNE_RR, PICTO
@@ -293,20 +295,36 @@ def encode_file_b64(path):
         return base64.b64encode(f.read()).decode('ascii')
 
 
+def octets(n):
+    """Un nombre d'octets groupé par trois, avec une espace ordinaire (8 000 000)."""
+    return f'{n:,}'.replace(',', ' ')
+
+
+def gzip_bytes(raw):
+    """Le gzip de `raw`, écrit à la main : l'en-tête est fixe (mtime 0, XFL 2 pour le niveau 9, OS 255 : ceux de Python 3.13) autour d'un deflate brut de niveau 9, avec le CRC32 et la taille en queue.
+    Python sort ainsi de l'équation (gzip.compress écrit un octet OS qui change d'une version à l'autre) : la sortie ne dépend plus que de l'implémentation de zlib (version imprimée par le build)."""
+    c = zlib.compressobj(9, zlib.DEFLATED, -15)
+    body = c.compress(raw) + c.flush()
+    return b'\x1f\x8b\x08\x00\x00\x00\x00\x00\x02\xff' + body + struct.pack('<II', zlib.crc32(raw), len(raw) & 0xffffffff)
+
+
 def encode_module_b64(path):
-    """Le HTML d'un outil (les octets de son fichier, de l'UTF-8), compressé (gzip -9, mtime 0 : les mêmes octets à chaque passage), puis en base64. Rend (base64, taille brute, taille compressée)."""
+    """Le HTML d'un outil (les octets de son fichier, de l'UTF-8), compressé (gzip niveau 9, mtime 0 : les mêmes octets à chaque passage), puis en base64. Rend (base64, taille brute, taille compressée)."""
     abs_path = os.path.join(SCRIPT_DIR, path)
     if not os.path.isfile(abs_path):
         raise SystemExit(f"[ERREUR] Entrée manquante : {abs_path} (lancer d'abord les builds de modules)")
     with open(abs_path, 'rb') as fh:                    # les octets du fichier de l'outil, tels quels (un chemin texte retirerait les CR de ce qu'un outil embarque, ses feuilles de Leaflet)
         raw = fh.read()
     raw.decode('utf-8')                                 # un fichier qui n'est pas de l'UTF-8 valide arrête le build
-    packed = gzip.compress(raw, 9, mtime=0)
+    packed = gzip_bytes(raw)
+    if gzip.decompress(packed) != raw:
+        raise SystemExit(f"[ERREUR] {path} : le compressé ne redonne pas le fichier — build arrêté")
     return base64.b64encode(packed).decode('ascii'), len(raw), len(packed)
 
 
 def build_module_html_js(modules):
     """N'encode que les modules 'active'. Chaque outil : poids brut, compressé, base64."""
+    print(f'  [zlib] {zlib.ZLIB_RUNTIME_VERSION} (compilée avec {zlib.ZLIB_VERSION}) : le compressé change avec elle')
     lines = ['const MODULE_HTML = {']
     active = [m for m in modules if m['status'] == 'active']
     for i, mod in enumerate(active):
@@ -1328,7 +1346,9 @@ select[data-tbm-src] {{ display: none !important; }}
   function renderLoadError() {{
     var el = document.getElementById('module-loading');
     if (!el) return;
+    var had = el.contains(document.activeElement);                      /* le bouton refait par un changement de langue garde le clavier s'il l'avait */
     el.setAttribute('data-err', '1');
+    el.setAttribute('role', 'alert');                                   /* lu par les lecteurs d'écran */
     el.textContent = '';
     var msg = document.createElement('p');
     msg.textContent = t('oldBrowser');
@@ -1338,10 +1358,17 @@ select[data-tbm-src] {{ display: none !important; }}
     btn.addEventListener('click', goHub);
     el.appendChild(msg);
     el.appendChild(btn);
+    if (had) btn.focus();
+  }}
+  function clearLoadError(el) {{
+    el.removeAttribute('data-err');
+    el.removeAttribute('role');
   }}
   function showLoadError() {{
     renderLoadError();
-    document.getElementById('module-loading').classList.remove('hidden');
+    var el = document.getElementById('module-loading');
+    el.classList.remove('hidden');
+    try {{ el.querySelector('button').focus(); }} catch(e) {{}}           /* la carte ou la touche qui a ouvert l'outil est cachée : le clavier va au retour */
   }}
 
   /* ── Barre d'un outil dans le shell ────────────────────────── */
@@ -1444,7 +1471,7 @@ select[data-tbm-src] {{ display: none !important; }}
 
     if (!iframes[id]) {{
       var loading = document.getElementById('module-loading');
-      loading.removeAttribute('data-err');
+      clearLoadError(loading);
       loading.classList.remove('hidden');
       loading.textContent = t('loading') + '…';
 
@@ -1457,7 +1484,7 @@ select[data-tbm-src] {{ display: none !important; }}
         if (iframe.mpState === 'decoding') return;                        /* le « load » du cadre vide, à son insertion : pas encore l'outil */
         try {{ if (iframe.contentWindow.location.href === 'about:blank') return; }} catch(e) {{}}
         iframe.mpState = 'ready';
-        loading.classList.add('hidden');
+        if (activeModule === id) loading.classList.add('hidden');          /* l'outil chargé n'est pas celui qu'on regarde (retour à l'accueil, autre outil) : « Chargement… » reste à celui qui se charge */
         if (typeof suiteOnLoad === 'function') suiteOnLoad(id);
         toastWatch(iframe);
         var doc = iframe.contentDocument;
@@ -1527,7 +1554,7 @@ select[data-tbm-src] {{ display: none !important; }}
           if (btnLang) toolbar.appendChild(btnLang);
         }}
         try {{ doc.body.setAttribute('data-theme', document.body.getAttribute('data-theme') || 'cw-nato'); }} catch(e) {{}}
-        try {{ iframe.contentWindow.focus(); }} catch(e) {{}}       /* l'outil ouvert reçoit le clavier : Ctrl+S lui parvient sans clic */
+        if (activeModule === id) {{ try {{ iframe.contentWindow.focus(); }} catch(e) {{}} }}       /* l'outil ouvert reçoit le clavier : Ctrl+S lui parvient sans clic ; un outil caché ne le prend pas */
       }});
 
       mv.appendChild(iframe);
@@ -1538,15 +1565,19 @@ select[data-tbm-src] {{ display: none !important; }}
         iframe.mpState = 'loading';
         iframe.srcdoc = html;
       }}).catch(function(e) {{
+        if (iframes[id] !== iframe) {{ iframe.remove(); return; }}         /* un cadre périmé (retiré entre-temps) : rien à dire, le cadre neuf a son propre sort */
         console.warn('[M·P] Module ' + id + ' : ' + e);
-        if (iframes[id] === iframe) delete iframes[id];                    /* le cadre vide n'est pas gardé : un autre essai repart de zéro */
+        delete iframes[id];                    /* le cadre vide n'est pas gardé : un autre essai repart de zéro */
         iframe.remove();
         if (activeModule === id) showLoadError();
       }});
     }} else if (iframes[id].mpState !== 'ready') {{
       /* Le même outil, rouvert pendant son décodage ou son chargement : un seul cadre, un seul décodage ; « Chargement… » reste à l'écran jusqu'au « load » */
       iframes[id].style.display = 'block';
-      document.getElementById('module-loading').classList.remove('hidden');
+      var pend = document.getElementById('module-loading');
+      clearLoadError(pend);
+      pend.textContent = t('loading') + '…';
+      pend.classList.remove('hidden');
     }} else {{
       iframes[id].style.display = 'block';
       /* La langue suit comme le thème : un module déjà chargé qui n'est pas dans la langue de la suite passe à celle-ci, sans se recharger, par sa propre fonction de langue (celle de son drapeau) */
@@ -1637,7 +1668,7 @@ select[data-tbm-src] {{ display: none !important; }}
     document.getElementById('module-view').style.display = 'none';
     var ldg = document.getElementById('module-loading');                /* ni « Chargement… » ni le message d'un navigateur trop ancien ne restent sur l'accueil */
     ldg.classList.add('hidden');
-    if (ldg.hasAttribute('data-err')) {{ ldg.removeAttribute('data-err'); ldg.textContent = t('loading') + '…'; }}
+    if (ldg.hasAttribute('data-err')) {{ clearLoadError(ldg); ldg.textContent = t('loading') + '…'; }}
     var landing = document.getElementById('landing');
     landing.style.display = '';
     activeModule = null;
@@ -2162,7 +2193,7 @@ def main():
 
     shell_bytes = len(html.encode('utf-8'))
     if shell_bytes > SHELL_BUDGET:
-        raise SystemExit(f'[ERREUR] Le shell pèse {shell_bytes} octets, au-delà du budget de {SHELL_BUDGET} octets : relever le budget est une décision — build arrêté')
+        raise SystemExit(f'[ERREUR] Le shell pèse {octets(shell_bytes)} octets, au-delà du budget de {octets(SHELL_BUDGET)} octets : relever le budget est une décision — build arrêté')
 
     out_path = os.path.join(SCRIPT_DIR, OUT_FILE)
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -2171,7 +2202,7 @@ def main():
 
     size_kb = os.path.getsize(out_path) // 1024
     print(f'\n✓ Fichier généré : {out_path}')
-    print(f'  Taille : {os.path.getsize(out_path)} octets ({size_kb} Ko), budget {SHELL_BUDGET} octets')
+    print(f'  Taille : {octets(os.path.getsize(out_path))} octets ({size_kb} Ko), budget {octets(SHELL_BUDGET)} octets')
     print('\n=== Build terminé ===')
 
 

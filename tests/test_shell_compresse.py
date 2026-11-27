@@ -58,7 +58,7 @@ def test_the_shell_is_within_its_budget():
 
 
 def test_the_build_stops_over_budget():
-    """Le build, budget abaissé dans une copie du script (lue en mémoire ; le fichier du shell part dans un dossier à part, jamais dans dist/) : code 1, le message, rien d'écrit."""
+    """Le build, budget abaissé à 1 000 000 dans une copie du script (lue en mémoire ; le fichier du shell part dans un dossier à part, jamais dans dist/) : code 1, le message, rien d'écrit."""
     with tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp) / 'shell.html'
         stub = (
@@ -69,11 +69,11 @@ def test_the_build_stops_over_budget():
             "src = open(path, encoding='utf-8').read()\n"
             "a, b = 'SHELL_BUDGET = 8_000_000', \"OUT_FILE = 'dist/dcs_mission_plan.html'\"\n"
             "assert src.count(a) == 1 and src.count(b) == 1\n"
-            "src = src.replace(a, 'SHELL_BUDGET = 1000').replace(b, 'OUT_FILE = ' + repr(out))\n"
+            "src = src.replace(a, 'SHELL_BUDGET = 1_000_000').replace(b, 'OUT_FILE = ' + repr(out))\n"
             "exec(compile(src, path, 'exec'), {'__name__': '__main__', '__file__': path})\n")
         r = subprocess.run([sys.executable, '-B', '-c', stub, str(ROOT), str(out)], capture_output=True, text=True, timeout=300)
         assert r.returncode == 1, (r.returncode, r.stdout[-300:], r.stderr[-300:])
-        assert re.search(r'\[ERREUR\] Le shell pèse \d+ octets, au-delà du budget de 1000 octets : relever le budget est une décision — build arrêté', r.stderr), r.stderr[-400:]
+        assert re.search(r'\[ERREUR\] Le shell pèse \d{1,3}(?: \d{3})+ octets, au-delà du budget de 1 000 000 octets : relever le budget est une décision — build arrêté', r.stderr), r.stderr[-400:]
         assert not out.exists()
 
 
@@ -111,7 +111,8 @@ LOADING = """() => { const ld = document.getElementById('module-loading'), b = l
   return { hidden: ld.classList.contains('hidden'), err: ld.hasAttribute('data-err'), msg: p ? p.textContent : null, btn: b ? b.textContent : null,
            btnH: b ? Math.round(b.getBoundingClientRect().height) : 0, btnW: b ? Math.round(b.getBoundingClientRect().width) : 0,
            frames: Object.keys(iframes), dom: document.querySelectorAll('#module-view iframe').length, active: activeModule,
-           wall: document.getElementById('landing').style.display !== 'none' }; }"""
+           wall: document.getElementById('landing').style.display !== 'none', role: ld.getAttribute('role'),
+           focus: document.activeElement === b ? 'bouton' : document.activeElement.tagName }; }"""
 
 
 @needs_pw
@@ -139,16 +140,44 @@ def test_two_close_openings_of_one_tool_make_one_frame_and_one_decoding(browser)
 @needs_pw
 def test_back_to_the_wall_while_the_tool_decodes_breaks_nothing(browser):
     pg = new_page(browser)
+    pg.evaluate("() => { window.__dec = 0; const d = decodeModule; decodeModule = function (b) { window.__dec++; return d(b); }; }")
     pg.evaluate("() => { openModule('fc'); goHub(); }")                              # le cadre se remplit, caché
     r = pg.evaluate(LOADING)
     assert r['hidden'] and r['wall'] and r['active'] is None and r['frames'] == ['fc'], r
-    attendre(pg, "document.getElementById('iframe-fc').contentDocument.readyState === 'complete' && document.getElementById('iframe-fc').contentDocument.location.href === 'about:srcdoc'",
-             "le cadre du Flight Configurator rempli (srcdoc chargé)", lu="document.getElementById('iframe-fc').contentDocument.location.href")
-    r = pg.evaluate("() => ({ shown: document.getElementById('iframe-fc').style.display, wall: document.getElementById('landing').style.display !== 'none', active: activeModule })")
-    assert r == {'shown': 'none', 'wall': True, 'active': None}, r
+    attendre(pg, "iframes.fc.mpState === 'ready'", "le cadre du Flight Configurator rempli et chargé", lu="[iframes.fc.mpState, document.getElementById('iframe-fc').contentDocument.location.href]")
+    r = pg.evaluate("""() => ({ shown: document.getElementById('iframe-fc').style.display, wall: document.getElementById('landing').style.display !== 'none', active: activeModule,
+      focus: document.activeElement.tagName, frame: document.activeElement === document.getElementById('iframe-fc'), loadingHidden: document.getElementById('module-loading').classList.contains('hidden') })""")
+    assert r['shown'] == 'none' and r['wall'] and r['active'] is None and r['loadingHidden'], r
+    assert not r['frame'] and r['focus'] != 'IFRAME', r                              # le clavier reste dans le document du shell : Ctrl+S à l'accueil n'ira pas à l'outil caché
     pg.evaluate("() => openModule('fc')")                                            # il se rouvre, sans nouveau décodage
     attendre_outil(pg, 'fc')
-    assert pg.evaluate("() => document.querySelectorAll('#module-view iframe').length") == 1
+    assert pg.evaluate("() => [window.__dec, document.querySelectorAll('#module-view iframe').length]") == [1, 1]
+    assert pg.errs == []
+
+
+@needs_pw
+def test_a_tool_that_finishes_loading_hidden_leaves_the_loading_of_the_other_tool(browser):
+    pg = new_page(browser)
+    pg.evaluate("""() => { const d = decodeModule; decodeModule = function (b) { return b === MODULE_HTML.hq ? new Promise(r => { window.__lache = r; }).then(() => d(b)) : d(b); }; }""")
+    pg.evaluate("() => { openModule('fc'); goHub(); openModule('hq'); }")           # HQ attend son décodage, le FC se charge caché
+    attendre(pg, "iframes.fc.mpState === 'ready'", "le Flight Configurator chargé, caché", lu="iframes.fc.mpState")
+    r = pg.evaluate("() => ({ hq: iframes.hq.mpState, active: activeModule, loadingHidden: document.getElementById('module-loading').classList.contains('hidden'), frame: document.activeElement === document.getElementById('iframe-fc') })")
+    assert r == {'hq': 'decoding', 'active': 'hq', 'loadingHidden': False, 'frame': False}, r      # « Chargement… » reste à HQ, le clavier n'est pas au FC
+    pg.evaluate("() => window.__lache()")
+    attendre_outil(pg, 'hq')
+    assert pg.errs == []
+
+
+@needs_pw
+def test_a_frame_removed_while_its_tool_decodes_is_never_filled(browser):
+    """Un remplacement du travail (Exemple « fl ») dans le même tour qu'openModule : l'ancien cadre est retiré, jamais rempli ; le cadre neuf s'ouvre."""
+    pg = new_page(browser)
+    pg.evaluate("() => { window.__dec = 0; const d = decodeModule; decodeModule = function (b) { window.__dec++; return d(b); }; }")
+    r = pg.evaluate("() => { openModule('rp'); window.__f0 = iframes.rp; const ok = MP_WORK_EXAMPLE('fl'); return { ok, remplace: iframes.rp !== window.__f0, connecte: window.__f0.isConnected }; }")
+    assert r == {'ok': True, 'remplace': True, 'connecte': False}, r
+    attendre_outil(pg, 'rp')
+    r = pg.evaluate("() => ({ dec: window.__dec, dom: document.querySelectorAll('#module-view iframe').length, vieux: [window.__f0.srcdoc, window.__f0.mpState], neuf: iframes.rp.mpState, charge: document.getElementById('module-loading').className })")
+    assert r == {'dec': 2, 'dom': 1, 'vieux': ['', 'decoding'], 'neuf': 'ready', 'charge': 'hidden'}, r       # deux décodages, un cadre, l'ancien jamais rempli
     assert pg.errs == []
 
 
@@ -165,9 +194,10 @@ def test_an_old_browser_opens_no_tool_and_says_so(browser, lang, msg):
         assert r['msg'] == msg and r['btn'] == BACK[lang], (essai, r)
         assert r['btnH'] >= 44 and r['btnW'] >= 44, r                                # une cible tactile
         assert r['frames'] == [] and r['dom'] == 0 and r['active'] == 'rp', r        # aucun outil, aucun cadre gardé
+        assert r['role'] == 'alert' and r['focus'] == 'bouton', r                    # lu par les lecteurs d'écran, et le clavier va au retour
         pg.locator('#module-loading button').click()
         r = pg.evaluate(LOADING)
-        assert r['hidden'] and r['wall'] and r['active'] is None and not r['err'], r  # l'accueil, utilisable
+        assert r['hidden'] and r['wall'] and r['active'] is None and not r['err'] and r['role'] is None, r  # l'accueil, utilisable
         attendre_navigation_stable(pg)
     pg.locator('#card-hq').click()                                                   # une carte de l'accueil répond : le message revient
     attendre(pg, "document.getElementById('module-loading').hasAttribute('data-err')", 'le message pour HQ', lu="document.getElementById('module-loading').className")
