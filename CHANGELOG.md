@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+22` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+23` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -81,6 +81,10 @@ Between two releases, the hosted version shows its build number at the bottom of
 **Headings follow the game's north**
 - True headings in the Route Planner, the Datacard Generator and the Flight Configurator are now grid headings, measured from the game's north like the mission editor's ruler; magnetic headings follow, so they match the cockpit compass. Away from the middle of a map they can change by several degrees (up to about ten on Germany Cold War); positions, distances and drawings do not change.
 - On the Mariana Islands (WWII), Iraq and Afghanistan maps, headings stay geodesic.
+
+**A lighter Mission Plan file**
+- The Mission Plan file is about three times lighter (about 6 MB instead of 17) and opens about twice as fast; each tool is unpacked when you open it.
+- It needs Safari or iOS 16.4, Chrome or Edge 80, Firefox 113, or later; an older browser shows a message instead of opening a tool.
 
 ### Home screen
 

@@ -34,7 +34,7 @@ Mission Plan is designed to be used **where you actually fly** — on a tablet n
 - **Touch-first UI** — large tap targets, drag-and-drop, no tiny desktop-only controls
 - **Responsive layout** — split view on tablet/desktop, tabbed view on phone
 - **Rotation-safe** — keeps working when you flip the tablet between landscape and portrait
-- **No install** — open a link or a single file in the mobile browser; works offline once loaded (except the Route Planner's online map backgrounds and airfield chart sheets)
+- **No install** — open a link or a single file in the mobile browser; works offline once loaded (except the Route Planner's online map backgrounds and airfield chart sheets); needs Safari or iOS 16.4, Chrome or Edge 80, Firefox 113, or later
 - **Export on the go** — generate PDF/PNG straight from the device
 
 ## 🧰 The suite

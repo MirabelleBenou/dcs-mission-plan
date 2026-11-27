@@ -21,6 +21,7 @@ Sources images (à placer dans ./tiles/) :
 """
 
 import base64
+import gzip
 import json
 import os
 import re
@@ -114,6 +115,9 @@ LANDING_CSS = r"""
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 OUT_FILE = 'dist/dcs_mission_plan.html'
+
+# Le poids du shell écrit ne dépasse pas ce budget (octets) : au-delà, le build s'arrête. Le relever est une décision.
+SHELL_BUDGET = 8_000_000
 
 # status : 'active' = module embarqué ; 'soon' = carte voilée uniquement
 # Ordre des modules actifs = ordre des cartes de la landing, en deux cadres : Mission Commander (hq, bg, rs) puis Flight Leader (rp, dg, fc).
@@ -290,26 +294,26 @@ def encode_file_b64(path):
 
 
 def encode_module_b64(path):
+    """Le HTML d'un outil (les octets de son fichier, de l'UTF-8), compressé (gzip -9, mtime 0 : les mêmes octets à chaque passage), puis en base64. Rend (base64, taille brute, taille compressée)."""
     abs_path = os.path.join(SCRIPT_DIR, path)
     if not os.path.isfile(abs_path):
         raise SystemExit(f"[ERREUR] Entrée manquante : {abs_path} (lancer d'abord les builds de modules)")
-    with open(abs_path, 'r', encoding='utf-8') as fh:
-        html = fh.read()
-    return base64.b64encode(html.encode('utf-8')).decode('ascii')
+    with open(abs_path, 'rb') as fh:                    # les octets du fichier de l'outil, tels quels (un chemin texte retirerait les CR de ce qu'un outil embarque, ses feuilles de Leaflet)
+        raw = fh.read()
+    raw.decode('utf-8')                                 # un fichier qui n'est pas de l'UTF-8 valide arrête le build
+    packed = gzip.compress(raw, 9, mtime=0)
+    return base64.b64encode(packed).decode('ascii'), len(raw), len(packed)
 
 
 def build_module_html_js(modules):
-    """N'encode que les modules 'active'."""
+    """N'encode que les modules 'active'. Chaque outil : poids brut, compressé, base64."""
     lines = ['const MODULE_HTML = {']
     active = [m for m in modules if m['status'] == 'active']
     for i, mod in enumerate(active):
-        b64 = encode_module_b64(mod['src'])
-        if b64 is None:
-            print(f'  [WARN] Source introuvable : {mod["src"]} — module {mod["id"]} désactivé', file=sys.stderr)
-            b64 = ''
+        b64, n_raw, n_gz = encode_module_b64(mod['src'])
         comma = ',' if i < len(active) - 1 else ''
         lines.append(f'  {mod["id"]}: "{b64}"{comma}')
-        print(f'  [OK] Module {mod["id"]} — {len(b64)//1024} Ko base64 (UTF-8)')
+        print(f'  [OK] Module {mod["id"]} — {n_raw} octets bruts, {n_gz} compressés (gzip), {len(b64)} en base64')
     lines.append('};')
     return '\n'.join(lines)
 
@@ -844,6 +848,9 @@ select[data-tbm-src] {{ display: none !important; }}
   display:flex; align-items:center; justify-content:center;
   font-family:var(--f-mono); font-size:13px; letter-spacing:.18em; color:var(--amber); text-transform:uppercase;}}
 #module-loading.hidden{{display:none;}}
+#module-loading[data-err]{{flex-direction:column; gap:22px; padding:24px; text-align:center; text-transform:none; letter-spacing:.02em; font-size:15px; line-height:1.5;}}
+#module-loading[data-err] p{{margin:0; max-width:34em;}}
+#module-loading[data-err] button{{font:inherit; font-size:13px; letter-spacing:.06em; cursor:pointer; color:var(--amber); background:transparent; border:1px solid var(--amber); border-radius:3px; padding:0 18px; min-height:44px; min-width:44px;}}
 
 @media(max-width:900px){{ .active-row,.soon-row{{grid-template-columns:1fr;}} }}
 @media(max-width:768px){{
@@ -1089,6 +1096,7 @@ select[data-tbm-src] {{ display: none !important; }}
       cta: '▶ Ouvrir le dossier',
       soon: 'À venir',
       loading: 'Chargement',
+      oldBrowser: 'Ce navigateur est trop ancien pour Mission Plan : il faut Safari ou iOS 16.4, Chrome ou Edge 80, Firefox 113, ou plus récent.',
       back: '◄ Mission Plan',
       'back.tip': 'Retour à l’accueil de Mission Plan',
       'switch.name': 'Changer d’outil',
@@ -1142,6 +1150,7 @@ select[data-tbm-src] {{ display: none !important; }}
       cta: '▶ Open the file',
       soon: 'Coming soon',
       loading: 'Loading',
+      oldBrowser: 'This browser is too old for Mission Plan: it needs Safari or iOS 16.4, Chrome or Edge 80, Firefox 113, or later.',
       back: '◄ Mission Plan',
       'back.tip': 'Back to the Mission Plan home',
       'switch.name': 'Switch tool',
@@ -1219,7 +1228,7 @@ select[data-tbm-src] {{ display: none !important; }}
     setTheme(cur);
     /* Bouton chargement */
     var loadEl = document.getElementById('module-loading');
-    if (loadEl) loadEl.textContent = t('loading') + '…';
+    if (loadEl) {{ if (loadEl.hasAttribute('data-err')) renderLoadError(); else loadEl.textContent = t('loading') + '…'; }}
     mpCrestRefresh();
   }}
 
@@ -1303,12 +1312,36 @@ select[data-tbm-src] {{ display: none !important; }}
     document.documentElement.lang = CURRENT_LANG;
   }}
 
-  /* ── Module : decode UTF-8 ─────────────────────────────────── */
+  /* ── Module : décodage (base64, puis gzip, puis UTF-8) ───────── */
+  /* Rend une promesse du HTML de l'outil. Sans DecompressionStream (Safari et Firefox d'avant mars 2023), ou si le décodage échoue : promesse rejetée, pas de repli. */
   function decodeModule(b64) {{
-    var bin = atob(b64);
-    var bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return new TextDecoder('utf-8').decode(bytes);
+    if (typeof DecompressionStream !== 'function') return Promise.reject(new Error('DecompressionStream absent'));
+    try {{
+      var bin = atob(b64);
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    }} catch (e) {{ return Promise.reject(e); }}
+  }}
+
+  /* Le message d'un navigateur trop ancien (ou d'un décodage qui échoue) : dans #module-loading, dans la langue du shell, avec le retour à l'accueil. */
+  function renderLoadError() {{
+    var el = document.getElementById('module-loading');
+    if (!el) return;
+    el.setAttribute('data-err', '1');
+    el.textContent = '';
+    var msg = document.createElement('p');
+    msg.textContent = t('oldBrowser');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = t('back');
+    btn.addEventListener('click', goHub);
+    el.appendChild(msg);
+    el.appendChild(btn);
+  }}
+  function showLoadError() {{
+    renderLoadError();
+    document.getElementById('module-loading').classList.remove('hidden');
   }}
 
   /* ── Barre d'un outil dans le shell ────────────────────────── */
@@ -1411,15 +1444,19 @@ select[data-tbm-src] {{ display: none !important; }}
 
     if (!iframes[id]) {{
       var loading = document.getElementById('module-loading');
+      loading.removeAttribute('data-err');
       loading.classList.remove('hidden');
       loading.textContent = t('loading') + '…';
 
       var iframe = document.createElement('iframe');
       iframe.id = 'iframe-' + id;
       iframe.title = id;
-      iframe.srcdoc = decodeModule(MODULE_HTML[id]);
+      iframe.mpState = 'decoding';                                         /* decoding : l'outil se décode, le cadre est vide ; loading : srcdoc posé ; ready : chargé */
 
       iframe.addEventListener('load', function() {{
+        if (iframe.mpState === 'decoding') return;                        /* le « load » du cadre vide, à son insertion : pas encore l'outil */
+        try {{ if (iframe.contentWindow.location.href === 'about:blank') return; }} catch(e) {{}}
+        iframe.mpState = 'ready';
         loading.classList.add('hidden');
         if (typeof suiteOnLoad === 'function') suiteOnLoad(id);
         toastWatch(iframe);
@@ -1495,6 +1532,21 @@ select[data-tbm-src] {{ display: none !important; }}
 
       mv.appendChild(iframe);
       iframes[id] = iframe;
+      /* Le cadre est rangé tout de suite ; l'outil se décode, et srcdoc n'est posé qu'à la résolution (un cadre retiré entre-temps n'est pas rempli) */
+      decodeModule(MODULE_HTML[id]).then(function(html) {{
+        if (iframes[id] !== iframe) return;
+        iframe.mpState = 'loading';
+        iframe.srcdoc = html;
+      }}).catch(function(e) {{
+        console.warn('[M·P] Module ' + id + ' : ' + e);
+        if (iframes[id] === iframe) delete iframes[id];                    /* le cadre vide n'est pas gardé : un autre essai repart de zéro */
+        iframe.remove();
+        if (activeModule === id) showLoadError();
+      }});
+    }} else if (iframes[id].mpState !== 'ready') {{
+      /* Le même outil, rouvert pendant son décodage ou son chargement : un seul cadre, un seul décodage ; « Chargement… » reste à l'écran jusqu'au « load » */
+      iframes[id].style.display = 'block';
+      document.getElementById('module-loading').classList.remove('hidden');
     }} else {{
       iframes[id].style.display = 'block';
       /* La langue suit comme le thème : un module déjà chargé qui n'est pas dans la langue de la suite passe à celle-ci, sans se recharger, par sa propre fonction de langue (celle de son drapeau) */
@@ -1583,6 +1635,9 @@ select[data-tbm-src] {{ display: none !important; }}
   function goHub() {{
     Object.keys(iframes).forEach(function(iid) {{ iframes[iid].style.display = 'none'; }});
     document.getElementById('module-view').style.display = 'none';
+    var ldg = document.getElementById('module-loading');                /* ni « Chargement… » ni le message d'un navigateur trop ancien ne restent sur l'accueil */
+    ldg.classList.add('hidden');
+    if (ldg.hasAttribute('data-err')) {{ ldg.removeAttribute('data-err'); ldg.textContent = t('loading') + '…'; }}
     var landing = document.getElementById('landing');
     landing.style.display = '';
     activeModule = null;
@@ -2105,6 +2160,10 @@ def main():
         raise SystemExit("[ERREUR] init() n'efface plus mission_snapshot_v1 en tête")
     print('  [OK] init() efface mission_snapshot_v1 en tête, avant toute lecture')
 
+    shell_bytes = len(html.encode('utf-8'))
+    if shell_bytes > SHELL_BUDGET:
+        raise SystemExit(f'[ERREUR] Le shell pèse {shell_bytes} octets, au-delà du budget de {SHELL_BUDGET} octets : relever le budget est une décision — build arrêté')
+
     out_path = os.path.join(SCRIPT_DIR, OUT_FILE)
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, 'w', encoding='utf-8') as f:
@@ -2112,7 +2171,7 @@ def main():
 
     size_kb = os.path.getsize(out_path) // 1024
     print(f'\n✓ Fichier généré : {out_path}')
-    print(f'  Taille : {size_kb} Ko')
+    print(f'  Taille : {os.path.getsize(out_path)} octets ({size_kb} Ko), budget {SHELL_BUDGET} octets')
     print('\n=== Build terminé ===')
 
 

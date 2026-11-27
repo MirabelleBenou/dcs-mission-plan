@@ -1,6 +1,7 @@
 """La barre du haut, étapes 7 et 8 (« ⋯ » puis les écarts serrés) : la règle de uiBarFit (texte commun de ui_block, build_bar_js) jouée par node sur une barre fabriquée
 (des enfants à largeur donnée, aucun navigateur, aucun réseau) ; et ce même texte, à l'octet, dans les huit livrables."""
 import base64
+import gzip
 import json
 import re
 import shutil
@@ -225,12 +226,12 @@ def test_le_texte_commun_est_le_meme_dans_les_huit_livrables():
         html = (ROOT / 'dist' / f).read_text(encoding='utf-8')
         assert BAR in html, f
         assert html.count('function uiBarMore(') == 1, f
-    # le shell embarque les outils sous leur forme codée (base64 de leur HTML) : on les décode et le texte y est, une fois par outil (les sept du mur)
+    # le shell embarque les outils sous leur forme codée (gzip, puis base64) : on les décode et le texte y est, une fois par outil (les sept du mur)
     shell = (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
     vus = 0
     for blob in re.findall(r'[A-Za-z0-9+/=]{20000,}', shell):
         try:
-            html = base64.b64decode(blob).decode('utf-8')
+            html = gzip.decompress(base64.b64decode(blob)).decode('utf-8')
         except Exception:
             continue
         if 'function uiBarFit(' in html:
