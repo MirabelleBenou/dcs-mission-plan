@@ -205,3 +205,25 @@ def attendre_barre_stable(pg, delai=DELAI):
     pg.evaluate('() => { window.__banc_barre = null; }')
     attendre_etat(pg, BARRE, 'la barre au repos (décision, classes, largeurs, « ⋯ », menu : deux lectures égales à 100 ms)',
                   lecture='() => ({ sig: UIMORE.sig, classes: document.querySelector(".toolbar").className, derniere_lecture: String(window.__banc_barre).slice(0, 160) })', delai=delai, polling=100)
+
+
+# --- le relief du Route Planner (case Relief, altitude du sol au pointeur) ---
+# la couche suit la case et le théâtre : le théâtre voulu est posé (RE.key) et sa description est arrivée (couche posée) ou a échoué (toast une fois annoncé)
+RELIEF_POSE = "RE.key === (DISP.relief && reliefTheatre(S.theatre) ? S.theatre : '') && (RE.key === '' || !!RE.layer || RE.toasted.has(RE.key))"
+RELIEF_POSE_LU = "[RE.key, DISP.relief, S.theatre, !!RE.layer, [...RE.toasted]]"
+RELIEF_REPOS = """() => { if (RE.raf !== 0 || RE.dwell !== 0 || RE.pend !== '') return false; const b = document.getElementById('rp-alt'), x = document.getElementById('rp-alt-x');
+  const k = JSON.stringify([!!b && !b.hidden, b ? b.textContent : '', !!x && !x.hidden, RE.tiles.size, RE.shown && RE.shown.kind]); const avant = window.__banc_relief; window.__banc_relief = k; return avant === k; }"""
+
+
+def attendre_relief_pose(fr, delai=DELAI):
+    """La couche de relief suit l'état voulu (case, théâtre) : posée, absente, ou en échec annoncé ; puis des images de rendu."""
+    attendre(fr, RELIEF_POSE, 'la couche de relief posée comme la case et le théâtre le veulent (RE)', lu=RELIEF_POSE_LU, delai=delai)
+    attendre_images(fr, 2, delai)
+
+
+def attendre_relief_repos(fr, delai=DELAI):
+    """Le relief au repos après un mouvement du pointeur ou un toucher : l'image de lecture est passée, aucune attente de tuile (RE.dwell), aucune lecture en cours (RE.pend), le cartouche ne change plus."""
+    attendre_images(fr, 2, delai)
+    fr.evaluate('() => { window.__banc_relief = null; }')
+    attendre_etat(fr, RELIEF_REPOS, 'le relief au repos (RE.raf, RE.dwell, RE.pend nuls, cartouche stable sur deux lectures à 100 ms)',
+                  lecture="() => ({ raf: RE.raf, dwell: RE.dwell, pend: RE.pend, derniere_lecture: window.__banc_relief })", delai=delai, polling=100)
