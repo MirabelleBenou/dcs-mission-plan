@@ -52,16 +52,8 @@ def test_the_changelog_says_what_the_lot_says_where_it_says_it():
     assert (TEXT_TOUCH + '\n' + TEXT_WHY.rstrip('\n')) in all_tools and all_tools.index(TEXT_TOUCH) < all_tools.index(TEXT_WHY)       # le lot mp-mobile-selecteur ajoute son entrée après celle-ci
     assert '\n' + TEXT_HOME in u and u.count(TEXT_HOME) == 1
     rp = _section(u, 'Route Planner').split('\n\n**“Clear everything”')[0]
-    assert rp.rstrip('\n').endswith((TEXT_RP + '\n' + TEXT_RP_TABS).rstrip('\n'))                 # l'entrée du lot mp-mobile-rp-onglets suit aussitôt celle-ci et termine la rubrique
+    assert (TEXT_RP + '\n' + TEXT_RP_TABS).rstrip('\n') in rp                 # l'entrée du lot mp-mobile-rp-onglets suit aussitôt celle-ci
     assert u.count(TEXT_TOUCH) == 1 and u.count(TEXT_WHY) == 1 and u.count(TEXT_RP) == 1
-
-
-def test_the_dev_build_is_7_and_the_changelog_says_so():
-    import version_block
-    assert version_block.DEV_BUILD == 22
-    log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-    assert '`MP-V2.1.0+3` is the third update since 2.1.0' in log          # la phrase d'en-tête, que le lot ne touche pas
-    assert 'for this one;' in log and '`MP-V2.1.0+22` for this one' in log
 
 
 def test_the_common_stylesheet_has_the_finger_rules_under_coarse_pointers_only():

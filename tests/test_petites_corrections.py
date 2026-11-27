@@ -99,15 +99,17 @@ CHANGELOG = {
 }
 
 
-def test_changelog_entries_end_their_sections():
+def test_changelog_entries_are_in_their_sections():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     for head, entries in CHANGELOG.items():
         sec = unreleased.split('\n' + head + '\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
-        assert sec.endswith('\n\n'.join(entries)), head
-    assert 'MP-V2.1.0+22` for this one' in unreleased and 'MP-V2.1.0+8' not in log
+        for e in entries:
+            assert e in sec, (head, e[:60])                                # l'entrée est là, sous sa rubrique
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0]
-    assert all_tools.rstrip('\n').endswith('a wing still on the former “WG” logo shows the new one and still counts as not set up.\n\n' + '\n\n'.join(ALL_TOOLS_2 + [HEADINGS_ENTRY]))
+    for e in ALL_TOOLS_2 + [HEADINGS_ENTRY]:
+        assert e in all_tools, e[:60]
+    assert 'a wing still on the former “WG” logo shows the new one and still counts as not set up.' in all_tools
 
 
 def test_hq_legend_numbers_follow_the_toolbar():

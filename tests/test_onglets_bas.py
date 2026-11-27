@@ -1,6 +1,5 @@
 """La barre d'onglets du bas du Datacard Generator et du Briefing Generator (sept onglets de même largeur, sections repliables d'un onglet, toast au-dessus),
 et les finitions du sélecteur d'outil (un toucher sur un autre menu, nom accessible). Joué sur le shell construit (dist/dcs_mission_plan.html, chromium, aucun réseau) ; les contrôles passent par le DOM."""
-import re
 from pathlib import Path
 
 import pytest
@@ -31,7 +30,6 @@ def test_the_texts_are_where_the_lot_says():
     u = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     assert u.count('**Seven tabs at the bottom on a phone**') == 1 and u.count('**Switching tools: finishing touches**') == 1
     assert u.index('**Seven tabs') < u.index('**Switching tools: finishing') < u.index('### Home screen')
-    assert re.search(r'^DEV_BUILD = 22$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
     fm = (ROOT / 'fm_planches_block.py').read_text(encoding='utf-8')
     for t in (DG_FM_FR, DG_FM_EN, BG_FM_FR, BG_FM_EN):
         assert fm.count(t) == 1

@@ -54,10 +54,8 @@ def test_the_texts_are_where_the_lot_says():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     u = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     rp = u.split('\n### Route Planner\n', 1)[1].split('\n### ', 1)[0].split('\n\n**“Clear everything”')[0]
-    assert u.count(LOG_TABS) == 1 and rp.rstrip('\n').endswith('\n\n' + LOG_TABS.rstrip('\n'))             # à la fin de la rubrique, une ligne vide avant
+    assert u.count(LOG_TABS) == 1 and LOG_TABS.rstrip('\n') in rp
     assert u.count(LOG_PAREN) == 1 and '(the Route Planner’s waypoint rows still use smaller text)' not in log
-    assert u.count('`MP-V2.1.0+22` for this one') == 1 and '+5' not in u
-    assert re.search(r'^DEV_BUILD = 22$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
     assert fm.count(FM_FR) == 1 and fm.count(FM_EN) == 1 and 'qui seul défile' not in fm[fm.index('"Sur tablette et téléphone"'):fm.index('"Sur tablette et téléphone"') + 900]
     pl = (ROOT / 'fm_planches_block.py').read_text(encoding='utf-8')

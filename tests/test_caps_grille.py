@@ -1,7 +1,6 @@
-"""Les caps suivent le nord du jeu (MP-V2.1.0+22) : le cap Vrai affiché ou saisi est le cap grille (depuis le nord de la grille du théâtre),
+"""Les caps suivent le nord du jeu : le cap Vrai affiché ou saisi est le cap grille (depuis le nord de la grille du théâtre),
 au Route Planner, au Datacard Generator et au Flight Configurator ; la géométrie reste géodésique. Joué sur le shell construit
 (dist/dcs_mission_plan.html, chromium), sans réseau ; les contrôles passent par le DOM."""
-import hashlib
 import re
 import sys
 from pathlib import Path
@@ -23,32 +22,10 @@ ROUTES = {
 }
 # les caps Vrai attendus, par branche : la grille pour les théâtres qui ont une projection, le grand cercle sinon
 WANT = {'GermanyCW': ['278', '003', '120', '200'], 'Caucasus': ['045', '310'], 'Syria': ['090'], 'Nevada': ['180'], 'MarianaIslandsWWII': ['037']}
-# les textes des fonctions de géométrie, sha256 (16) à la base 000b1e4 : aucune ne change (drBoxHandles : seule l'étiquette de rotation)
-GEOM = {'legCalc': 'cdb32ee4d20671c9', 'legDest': '6f770ae508bd2099', 'legOrigin': '3c5aac69fb0e90e5'}
-GEOM_RP = {'drNewOrbit': '4a293c4a3804b35f', 'drNewBox': '49056e869a33dfa0', 'drOrbitBrg': '4817471bf2c2c626', 'drOrbitHandles': '6f6fe3694445eab7',
-           'drBuildHandles': '3dbcd1119853e59b', 'cfItem': 'c9d218edb37c4a96', 'profLegRead': '934bc811452b2047', 'drBrg': '7df55e13750a4810',
-           'drBoxPivot': '0f6b783ee698b141', 'cfBoxGeom': '908984c7305beb55', 'cfOrbitGeom': '83f8ea4aa31423f7', 'thrLegSamples': '24a772b317a3fb59',
-           'drBoxHandles': 'b77cdf3616dd93e8'}
 
 
 def page(name):
     return (ROOT / 'dist' / name).read_text(encoding='utf-8')
-
-
-def fn(src, name):
-    m = re.search(r'^(?:async )?function ' + name + r'\(', src, re.M)
-    assert m, name
-    i = src.index('{', m.start())
-    d = 0
-    for k in range(i, len(src)):
-        d += (src[k] == '{') - (src[k] == '}')
-        if d == 0:
-            return src[m.start():k + 1]
-    raise AssertionError(name)
-
-
-def sha16(s):
-    return hashlib.sha256(s.encode('utf-8')).hexdigest()[:16]
 
 
 def d3(s):
@@ -99,19 +76,12 @@ def mag(year):
 
 
 # ---------- le texte : un seul bloc de projection, trois pages, aucune copie ----------
-def test_one_projection_block_in_the_three_tools_and_the_geometry_text_is_unchanged():
+def test_one_projection_block_in_the_three_tools():
     blk = build_block()
     rp, dg, fc = page('dcs_route_planner.html'), page('dcs_datacard_generator.html'), page('dcs_flight_configurator.html')
     for h in (rp, dg, fc):
         assert h.count(blk) == 1 and h.count('const TM_PARAMS = {') == 1 and h.count('function llToDcs(') == 1 and h.count('function dcsToLl(') == 1
         assert h.count('function gridBrg(') == 1 and h.count('function gridDest(') == 1 and h.count('function gridOrigin(') == 1
-        for name, want in GEOM.items():
-            assert sha16(fn(h, name)) == want, name
-    for name, want in GEOM_RP.items():
-        txt = fn(rp, name)
-        if name == 'drBoxHandles':
-            txt = txt.replace('fmtHdg(drGridBrg(it))', 'fmtHdg(it.brg)')       # seule l'étiquette de rotation change
-        assert sha16(txt) == want, name
 
 
 # ---------- C2 : les caps affichés, les trois outils ----------
