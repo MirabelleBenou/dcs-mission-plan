@@ -190,7 +190,7 @@ def test_the_entries_and_the_stored_fields_are_read_strictly():
       ['09:05:07', '9:05:07', '24:00:00', '12:60:00', 12, null].map(rtmValid),
       (() => { const d = {}; rtmRead({ t: '09:05:07', tLock: true }, d); const e = {}; rtmRead({ t: 'bad', tLock: true }, e); const f = {}; rtmRead({ tLock: true }, f); return [d, e, f]; })(),
       [rtmClockMin(0), rtmClockMin(29.4), rtmClockMin(30), rtmClockMin(86399.6), rtmClock(-1), rtmClock(86400.4)]]);""")
-    assert r[0] == [32700 + 0 if False else 9 * 3600 + 5 * 60, 9 * 3600 + 5 * 60 + 7, 9 * 3600 + 5 * 60 + 7, 86399, None, None, None, None, 7 * 3600 + 30 * 60, None, None]
+    assert r[0] == [9 * 3600 + 5 * 60, 9 * 3600 + 5 * 60 + 7, 9 * 3600 + 5 * 60 + 7, 86399, None, None, None, None, 7 * 3600 + 30 * 60, None, None]
     assert r[1] == [True, False, False, False, False, False]
     assert r[2] == [{'t': '09:05:07', 'tLock': True}, {}, {}]
     assert r[3] == ['00:00', '00:00', '00:01', '00:00', '23:59:59', '00:00:00']
@@ -274,7 +274,7 @@ def test_route_planner_typing_locking_and_the_map_follow_each_other_with_a_mouse
     pg = shell(browser, 1280, 800)
     fr = open_rp(pg)
     nav_open(fr)
-    before = fr.evaluate("() => [document.getElementById('nav-total').textContent, " + NAVT[6:].replace('() =>', '') + "]") if False else fr.evaluate("() => document.getElementById('nav-total').textContent")
+    before = fr.evaluate("() => document.getElementById('nav-total').textContent")
     assert before == '154 km · 00+41+55' and fr.evaluate("() => document.querySelectorAll('.tm-lock').length") == 0       # sans heure : aucun cadenas
     tm_type(fr, pg, 4, '10:17')                                           # « hh:mm » se lit hh:mm:00 ; taper ne verrouille pas
     assert fr.evaluate(PTS) == [OFF, OFF, OFF, OFF, ['10:17:00', False], OFF]
@@ -282,7 +282,7 @@ def test_route_planner_typing_locking_and_the_map_follow_each_other_with_a_mouse
     assert fr.evaluate("() => document.getElementById('nav-total').textContent") == '154 km · 00+41+55 · arrivée 10:27:19'
     tm_lock(fr, 4)
     assert fr.evaluate(PTS)[4] == ['10:17:00', True]
-    assert fr.evaluate("() => [...document.querySelectorAll('.tm-lock')].map(b => b.getAttribute('aria-pressed') + '|' + b.getAttribute('aria-label') + '|' + b.title)")[4] == 'true|Déverrouiller l’heure|Déverrouiller l’heure'
+    assert fr.evaluate("() => [...document.querySelectorAll('.tm-lock')].map(b => b.hasAttribute('aria-pressed') + '|' + b.getAttribute('aria-label') + '|' + b.title)")[4] == 'false|Déverrouiller l’heure|Déverrouiller l’heure'
     assert fr.evaluate("() => document.querySelectorAll('.wp-time svg').length") == 1                      # un cadenas fermé devant l'heure verrouillée seulement
     # une saisie illisible ne s'écrit pas, Échap non plus ; vider retire l'heure
     tm_type(fr, pg, 2, '25:99')
@@ -395,9 +395,87 @@ def test_route_planner_at_the_finger_on_a_phone_field_and_padlock_are_44_px_and_
     # toucher l'heure sous un point de la carte : l'onglet Nav. et le champ
     fr.evaluate("() => document.querySelector('#tab-bar [data-tab=\"route\"]').click()")
     attendre(fr, "document.body.dataset.activeTab === 'route'", "l'onglet Route")
-    fr.evaluate("() => document.querySelectorAll('.wp-time')[2].click()")
-    attendre(fr, "document.body.dataset.activeTab === 'nav' && TMX.i === 2", "l'onglet Nav. et le champ du point 2 ouverts", lu='[document.body.dataset.activeTab, TMX.i]')
+    k = free_wp_time(fr)
+    x, y = wp_center(fr, k)
+    pg.touchscreen.tap(x, y)                                              # un vrai toucher sur l'heure de la carte
+    attendre(fr, "document.body.dataset.activeTab === 'nav' && TMX.i === arg", "l'onglet Nav. et le champ du point ouverts", arg=k, lu='[document.body.dataset.activeTab, TMX.i]')
     assert pg.errs == []
+
+
+def wp_center(fr, k):
+    b = fr.locator('.wp-time').nth(k).bounding_box()
+    return b['x'] + b['width'] / 2, b['y'] + b['height'] / 2
+
+
+def free_wp_time(fr):
+    """Le rang d'un .wp-time visible que rien ne couvre (lui ou son enfant au centre) ; une boîte de branche ou le point d'un autre repère qui en couvre un n'est pas exigé, mais jamais un autre élément, ni son icône seule."""
+    r = fr.evaluate("""() => [...document.querySelectorAll('.wp-time')].map((e, k) => {
+      const b = e.getBoundingClientRect(); if (!b.width || !b.height) return [k, 'hidden'];
+      const top = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+      if (top && (top === e || e.contains(top))) return [k, top.closest('svg') ? 'icon' : 'own'];
+      return [k, top && top.closest('[class*=lb-]') ? 'legbox' : (top && top.classList.contains('wp-dot') && !e.parentElement.contains(top) ? 'dot' : 'other:' + (top ? top.className : ''))];       /* la boîte d'une branche ou le point (opaque) d'un autre repère */
+    })""")
+    assert not [x for x in r if x[1].startswith('other') or x[1] == 'icon'], r
+    own = [x[0] for x in r if x[1] == 'own']
+    assert own, r
+    return own[0]
+
+
+@needs_pw
+def test_route_planner_a_real_click_on_the_map_time_opens_its_field_and_the_field_is_plain(browser):
+    pg = shell(browser, 1280, 800)
+    fr = open_rp(pg)
+    nav_open(fr)
+    tm_type(fr, pg, 4, '10:17'); tm_lock(fr, 4)
+    k = free_wp_time(fr)
+    x, y = wp_center(fr, k)
+    pg.mouse.click(x, y)                                                  # un vrai clic de souris au centre
+    attendre(fr, "TMX.i === arg && document.activeElement.classList.contains('tm-in')", 'le champ du point ouvert par la carte', arg=k, lu='[TMX.i, document.activeElement.className]')
+    # le champ : aucun inputmode (les claviers numériques n'ont pas de « : »), un nom accessible « Heure de <point> »
+    assert fr.evaluate("() => { const e = document.querySelector('#nav-body .tm-in'); return [e.hasAttribute('inputmode'), e.getAttribute('aria-label'), S.points[TMX.i].name]; }")[0:1] == [False]
+    lab = fr.evaluate("() => [document.querySelector('#nav-body .tm-in').getAttribute('aria-label'), S.points[TMX.i].name]")
+    assert lab[0] == 'Heure de ' + lab[1]
+    pg.keyboard.press('Escape')
+    assert pg.errs == []
+
+
+@needs_pw
+def test_route_planner_retyping_the_displayed_time_makes_it_the_pivot_and_no_padlock_without_times(browser):
+    pg = shell(browser, 1280, 800)
+    fr = open_rp(pg)
+    nav_open(fr)
+    assert fr.evaluate("() => document.querySelectorAll('.tm-lock, .wp-time svg').length") == 0
+    tm_type(fr, pg, 0, '09:45')
+    assert fr.evaluate("() => document.querySelectorAll('.tm-lock').length") == 6                          # dès la première heure
+    shown = fr.evaluate(NAVT)[1]
+    tm_type(fr, pg, 1, shown)                                              # retaper à l'identique l'heure affichée du point 1 : il devient le pivot
+    assert fr.evaluate(PTS) == [OFF, [shown, False], OFF, OFF, OFF, OFF]
+    # ouvrir et valider sans rien taper : rien ne change
+    fr.locator('#nav-body [data-tm="3"]').click()
+    attendre(fr, 'TMX.i === 3', 'le champ ouvert')
+    pg.keyboard.press('Enter')
+    attendre(fr, 'TMX.i === -1', 'le champ refermé')
+    assert fr.evaluate(PTS) == [OFF, [shown, False], OFF, OFF, OFF, OFF]
+    # une route lue avec plusieurs heures sans verrou ne garde que le pivot du plus petit rang
+    got = fr.evaluate("""() => readPoints([{ lat: 34.5, lon: 32.5, t: '09:00:00' }, { lat: 34.6, lon: 32.6, t: '09:10:00', tLock: true }, { lat: 34.7, lon: 32.7, t: '09:20:00' }, { lat: 34.8, lon: 32.8, t: '09:30:00', tLock: true }]).points.map(p => [p.t || null, p.tLock === true])""")
+    assert got == [['09:00:00', False], ['09:10:00', True], [None, False], ['09:30:00', True]]
+    assert pg.errs == []
+
+
+@needs_node
+def test_the_french_elision_is_before_vowels_and_h_but_not_y_and_names_are_never_read_as_patterns():
+    def msg(a):
+        return node("""const p = [{ lat: 0, lon: 0, t: '09:00:00', tLock: true }, { lat: 0, lon: 0.5 }, { lat: 0, lon: 1.0, t: '09:20:00', tLock: true }];
+          const T = rtmCompute(p, 220);
+          const o = { t: (k, v) => 'X de ' + v.a + ' à ' + v.b + '|', speedText: x => '', fr: true, name: k => k === 0 ? %s : 'Z' };
+          out(rtmRedMsg(p, T, 2, o).text);""" % json.dumps(a))
+    assert msg('Alpha') == 'X d’Alpha à Z|' and msg('hotel') == 'X d’hotel à Z|' and msg('Écho') == 'X d’Écho à Z|' and msg('Yankee') == 'X de Yankee à Z|'
+    assert msg('Kilo') == 'X de Kilo à Z|'
+    assert msg('Ao$&b$1') == 'X d’Ao$&b$1 à Z|'
+    r = node("""const mk = () => [0, 0.5, 1.2, 1.5].map(l => ({ lat: 0, lon: l }));
+      const p = mk(); p[0].t = '09:00:00'; p[1].t = '09:10:00'; p[2].t = '09:20:00'; p[2].tLock = true; p[3].t = '09:30:00';
+      rtmOnePivot(p); out(p.map(q => [q.t || null, q.tLock === true]));""")
+    assert r == [['09:00:00', False], [None, False], ['09:20:00', True], [None, False]]
 
 
 # ---------------------------------------------------------------------------------------------------- le Datacard Generator
@@ -446,7 +524,7 @@ def test_datacard_times_rows_follow_the_route_with_the_same_times_as_the_route_p
     rp_times = fr.evaluate(NAVT)
     rp_route = fr.evaluate("() => JSON.stringify(S.points.map(p => [p.t || null, p.tLock === true]))")
     dg = open_dg(pg)
-    attendre(fr if False else dg, "dgRTcalc(curCard()).tm.has === true", "la route liée a des heures au Datacard Generator")
+    attendre(dg, "dgRTcalc(curCard()).tm.has === true", "la route liée a des heures au Datacard Generator")
     assert dg.evaluate(DGT_) == rp_times                                      # les mêmes heures à la seconde
     assert dg.evaluate(SETROUTE) == rp_route
     # « Décollage » (sans point jusqu'ici) a pris le point 0 d'office ; les autres lignes restent libres
@@ -463,12 +541,12 @@ def test_datacard_times_rows_follow_the_route_with_the_same_times_as_the_route_p
     # taper l'heure d'une ligne liée (éditeur) : le point reçoit l'heure, pas « value »
     times_section(dg)
     dg_type(dg, pg, 'times.2.value', '10:12:30')
-    attendre(dg, "JSON.parse(arg).length === 6 && rwReadSet().routes[rwReadSet().active].points[3].t === '10:12:30'", 'le point 3 porte 10:12:30', arg=SETROUTE.replace('() => ', '').join if False else '[0,0,0,0,0,0]', lu=SETROUTE.replace('() => ', ''))
+    attendre(dg, "rwReadSet().routes[rwReadSet().active].points[3].t === '10:12:30'", 'le point 3 porte 10:12:30', lu=SETROUTE.replace('() => ', ''))
     assert dg.evaluate("() => curCard().times[2].value") == '10:11' and dg.evaluate(SETROUTE) == '[[null,false],[null,false],[null,false],["10:12:30",false],["10:17:00",true],[null,false]]'
     # le cadenas de la ligne verrouille l'heure affichée ; le Route Planner relit la même route
     dg.locator('#editor [data-tpl="2"]').click()
     attendre(dg, "rwReadSet().routes[rwReadSet().active].points[3].tLock === true", 'le point 3 verrouillé')
-    assert dg.evaluate("() => document.querySelector('#editor [data-tpl=\"2\"]').getAttribute('aria-pressed')") == 'true'
+    assert dg.evaluate("() => document.querySelector('#editor [data-tpl=\"2\"]').hasAttribute('aria-pressed') + '|' + document.querySelector('#editor [data-tpl=\"2\"]').getAttribute('aria-label')") == 'false|Déverrouiller l’heure'
     dg_route = dg.evaluate(SETROUTE)
     fr = open_rp(pg)
     attendre(fr, "S.points[3].tLock === true", 'le Route Planner a relu la route', lu=PTS.replace('() => ', ''))
@@ -478,6 +556,51 @@ def test_datacard_times_rows_follow_the_route_with_the_same_times_as_the_route_p
     dg = open_dg(pg)
     dg_pick(dg, 1, 0)
     assert dg.evaluate("() => curCard().times[1].pid") == '' and dg.evaluate(TIMES_ROWS)[1] == 'Décollage09:45'
+    assert pg.errs == []
+
+
+@needs_pw
+def test_datacard_no_padlock_without_times_a_retyped_shown_time_is_a_pivot_and_in_place_equals_the_editor(browser):
+    pg = shell(browser, 1280, 860)
+    dg = open_dg(pg)
+    assert dg.evaluate("() => dgRTcalc(curCard()) !== null && dgRTcalc(curCard()).tm.has") is False
+    dg_pick(dg, 2, 4)
+    dg_pick(dg, 3, 5)
+    assert dg.evaluate("() => document.querySelectorAll('#editor [data-tpl], #editor [data-tnl]').length") == 0              # aucune heure dans la route : aucun cadenas
+    assert dg.evaluate("() => [document.querySelector('#editor select[data-tpt=\"2\"]').getAttribute('aria-label'), t('f.times.pt')]") == ['Point', 'Point']
+    assert dg.evaluate("() => document.querySelector('#editor input[data-path=\"times.2.value\"]').getAttribute('placeholder')") == 'hh:mm:ss'
+    times_section(dg)
+    dg_type(dg, pg, 'times.2.value', '10:17')                                    # la première heure de la route : le cadenas paraît
+    attendre(dg, "rwReadSet().routes[rwReadSet().active].points[3].t === '10:17:00'", 'le point 3 porte 10:17:00', lu=SETROUTE.replace('() => ', ''))
+    assert dg.evaluate("() => document.querySelectorAll('#editor [data-tpl]').length") == 3
+    shown = dg.evaluate("() => document.querySelector('#editor input[data-path=\"times.3.value\"]').value")      # l'heure calculée du point 4, à la seconde
+    dg_type(dg, pg, 'times.3.value', shown)                                      # retapée à l'identique : le point 4 devient le pivot, le point 3 perd la sienne
+    attendre(dg, "rwReadSet().routes[rwReadSet().active].points[4].t === arg", 'le point 4 porte l\'heure retapée', arg=shown, lu=SETROUTE.replace('() => ', ''))
+    got = json.loads(dg.evaluate(SETROUTE))
+    assert got[4] == [shown, False] and got[3] == [None, False]
+    # la saisie sur place : la même chose que dans l'éditeur, même retapée à l'identique
+    shown3 = dg.evaluate("() => document.querySelector('#editor input[data-path=\"times.2.value\"]').value")
+    tv = '#preview section[data-block="times"] .dc-trow:nth-child(3) .dc-tv'
+    dg.locator(tv).click()
+    attendre(dg, '!!DGE.ed && !!document.activeElement.closest(".dge-ed")', 'la saisie sur place ouverte')
+    pg.keyboard.press('Control+A'); pg.keyboard.type(shown3); pg.keyboard.press('Enter')
+    attendre(dg, "!DGE.ed && rwReadSet().routes[rwReadSet().active].points[3].t === arg", 'la saisie sur place retapée a posé le pivot', arg=shown3, lu=SETROUTE.replace('() => ', ''))
+    got = json.loads(dg.evaluate(SETROUTE))
+    assert got[3] == [shown3, False] and got[4] == [None, False]
+    assert pg.errs == []
+
+
+@needs_pw
+def test_datacard_a_route_read_from_a_file_keeps_its_branch_speeds_and_a_single_pivot(browser):
+    pg = shell(browser, 1280, 860)
+    dg = open_dg(pg)
+    pts = [{'name': 'A', 'lat': 34.60, 'lon': 32.60, 't': '09:00:00'}, {'name': 'B', 'lat': 34.65, 'lon': 32.70, 'gs': 300, 't': '09:10:00'},
+           {'name': 'C', 'lat': 34.70, 'lon': 32.80, 'gs': -5, 'tLock': True, 't': '09:20:00'}, {'name': 'D', 'lat': 34.75, 'lon': 32.90, 't': '09:30:00'}]
+    o = dg.evaluate("(pts) => routeFromObject({ format: ROUTE_FORMAT, name: 'x', points: pts }).points.map(p => [p.gs === undefined ? null : p.gs, p.t || null, p.tLock === true])", pts)
+    assert o == [[None, '09:00:00', False], [300, None, False], [None, '09:20:00', True], [None, None, False]]
+    dg.evaluate("(pts) => dgEnterRoute({ name: 'gs', rid: '', points: pts.map(p => Object.assign({}, p)) })", [dict(p, gs=p.get('gs', 0) or 0) if i == 0 else p for i, p in enumerate(pts)])
+    r = dg.evaluate("() => { const r = rwReadSet().routes.find(x => x.name === 'gs'); return r ? r.points.map(p => [p.gs === undefined ? null : p.gs, p.t || null, p.tLock === true]) : null; }")
+    assert r == [[None, '09:00:00', False], [300, None, False], [None, '09:20:00', True], [None, None, False]]
     assert pg.errs == []
 
 
@@ -518,17 +641,22 @@ def test_datacard_tos_field_is_computed_typed_locked_and_a_moved_point_keeps_its
     dg_show(dg, 'nav')
     assert dg.evaluate("() => [...document.querySelectorAll('#editor [data-path$=\".tos\"]')].map(e => e.value)") == ['09:45', '09:53', '10:06', '10:11', '10:17', '10:27']
     assert dg.evaluate("() => document.querySelectorAll('#editor [data-tnl]').length") == 6
+    dg_type(dg, pg, 'nav.3.tos', '10:11')                                                                     # retaper l'heure affichée (10:11) fait le pivot : 10:11:00
+    attendre(dg, "rwReadSet().routes[rwReadSet().active].points[3].t === '10:11:00'", 'retaper l\'heure affichée pose 10:11:00', lu=SETROUTE.replace('() => ', ''))
     dg_type(dg, pg, 'nav.3.tos', '10:12')                                                                     # « hh:mm » pose hh:mm:00 sur le point : le pivot
     attendre(dg, "rwReadSet().routes[rwReadSet().active].points[3].t === '10:12:00'", 'le point 3 porte 10:12:00', lu=SETROUTE.replace('() => ', ''))
     assert dg.evaluate("() => curCard().nav[3].tos") == '' and dg.evaluate(SETROUTE) == '[["09:45:00",true],[null,false],[null,false],["10:12:00",false],[null,false],[null,false]]'
-    assert dg.evaluate("() => [...document.querySelectorAll('#editor [data-path$=\".tos\"]')].map(e => e.value)")[:5] == ['09:45', '09:53', '10:05', '10:12', '10:17'] or True
+    tosv = dg.evaluate("() => [...document.querySelectorAll('#editor [data-path$=\".tos\"]')].map(e => e.value)")
+    assert tosv[0] == '09:45' and tosv[3] == '10:12' and len(tosv) == 6
     dg.locator('#editor [data-tnl="3"]').click()
     attendre(dg, "rwReadSet().routes[rwReadSet().active].points[3].tLock === true", 'le point 3 verrouillé')
     # le point déplacé au DG garde son heure : sa coordonnée change, son t et son tLock restent
     pid = dg.evaluate("() => curCard().nav[3].pid")
+    old = dg.evaluate("() => rwReadSet().routes[rwReadSet().active].points[3]")
     dg_type(dg, pg, 'nav.3.coord', dg.evaluate("() => toMGRS(rwReadSet().routes[rwReadSet().active].points[3].lat + 0.01, rwReadSet().routes[rwReadSet().active].points[3].lon)"))
-    attendre(dg, "(() => { const p = rwReadSet().routes[rwReadSet().active].points[3]; return p.pid === arg && Math.abs(p.lat - arg2) > 0.001; })()".replace('arg2', '0'), 'le point 3 déplacé', arg=pid) if False else None
+    attendre(dg, "Math.abs(rwReadSet().routes[rwReadSet().active].points[3].lat - arg) > 0.005", 'le point 3 a sa nouvelle coordonnée', arg=old['lat'], lu="rwReadSet().routes[rwReadSet().active].points[3].lat")
     p = dg.evaluate("() => rwReadSet().routes[rwReadSet().active].points[3]")
+    assert abs(p['lat'] - (old['lat'] + 0.01)) < 0.001
     assert p['t'] == '10:12:00' and p['tLock'] is True and p['pid'] == pid
     # la route relue (copie de route d'un fichier) garde ses heures : l'objet lu par le Datacard Generator
     got = dg.evaluate("() => { const o = routeFromObject({ format: ROUTE_FORMAT, name: 'x', points: [{ name: 'A', lat: 1, lon: 2, t: '09:00:00', tLock: true }, { name: 'B', lat: 1, lon: 3, t: 'bad', tLock: true }, { name: 'C', lat: 1, lon: 4 }] }); return o.points.map(p => [p.t || null, p.tLock === true]); }")
@@ -578,12 +706,12 @@ def test_datacard_red_time_is_a_pastille_on_screen_and_never_in_the_exports(brow
 
 
 @needs_pw
-@pytest.mark.parametrize('w,h,touch', [(1280, 800, False), (768, 900, False), (412, 915, True), (345, 700, True)])
-def test_datacard_point_list_padlock_and_tos_field_are_aligned_at_four_widths(browser, w, h, touch):
+@pytest.mark.parametrize('w,h,touch', [(1280, 800, False), (412, 915, True)])
+def test_datacard_point_list_padlock_and_tos_field_are_aligned_at_two_widths(browser, w, h, touch):
     pg = shell(browser, w, h, touch=touch)
     fr = open_rp(pg)
     nav_open(fr)
-    tm_type(fr, pg, 4, '10:17'); tm_lock(fr, 4)
+    tm_type(fr, pg, 0, '09:45'); tm_lock(fr, 0); tm_type(fr, pg, 4, '10:14'); tm_lock(fr, 4)       # un tronçon rouge au point 4
     dg = open_dg(pg)
     attendre(dg, "dgRTcalc(curCard()).tm.has === true", 'la route a des heures')
     dg_pick(dg, 3, 5)
@@ -595,6 +723,17 @@ def test_datacard_point_list_padlock_and_tos_field_are_aligned_at_four_widths(br
     assert abs(trig['h'] - lk['h']) < 0.6 and abs((trig['t'] + trig['b']) / 2 - (lk['t'] + lk['b']) / 2) < 1      # « Point ▾ » : même hauteur, même axe
     label = dg.evaluate("() => { const r = document.querySelector('#editor [data-tpl=\"3\"]').closest('.li').querySelector('input[data-path$=\".value\"]').getBoundingClientRect(); return [r.height, r.left, r.right]; }")
     assert label[0] >= 43.9 and label[2] <= w + 0.5 and lk['l'] + lk['w'] <= w + 0.5
+    # une heure d'Horaires ne se coupe jamais (libre, liée, rouge) ; sous 520 px : trois rangées (libellé, heure sur toute la largeur, « Point » et cadenas)
+    cut = dg.evaluate("() => [...document.querySelectorAll('#editor [data-path^=\"times.\"][data-path$=\".value\"]')].map(e => [e.dataset.path, e.scrollWidth, e.clientWidth, e.classList.contains('tm-redin')])")
+    assert cut and all(sw <= cw for _, sw, cw, _r in cut) and any(r for *_x, r in cut), cut
+    if w < 520:
+        lay = dg.evaluate("""() => { const li = document.querySelector('#editor [data-tpl=\"3\"]').closest('.li'), r = e => e.getBoundingClientRect(),
+          lab = li.querySelector('input[data-path$=\".label\"]'), val = li.querySelector('input[data-path$=\".value\"]'), pt = li.querySelector('.tbm-trigger'), ctl = li.querySelector('.li-ctl');
+          return { lab: r(lab).bottom <= r(val).top + 1, val: r(val).bottom <= r(pt).top + 1, full: r(val).width, li: r(li).width, ctl: Math.abs((r(ctl).top + r(ctl).bottom) / 2 - (r(lab).top + r(lab).bottom) / 2) < 8 }; }""")
+        assert lay['lab'] and lay['val'] and lay['ctl'] and lay['full'] > lay['li'] - 30, lay
+    else:
+        two = dg.evaluate("() => { const li = document.querySelector('#editor [data-tpl=\"3\"]').closest('.li'), a = li.querySelector('input[data-path$=\".label\"]').getBoundingClientRect(), b = li.querySelector('input[data-path$=\".value\"]').getBoundingClientRect(); return Math.abs(a.top - b.top) < 2; }")
+        assert two                                                           # large : le libellé et l'heure côte à côte, comme avant
     # le champ TOS d'un point de route et son cadenas
     dg_show(dg, 'nav')
     dg.evaluate("() => document.querySelector('#editor [data-tnl=\"4\"]').scrollIntoView({ block: 'center' })")

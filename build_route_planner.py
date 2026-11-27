@@ -1222,8 +1222,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .tm-lock .tm-ico { width: 16px; height: 16px; }
 .tm-lock[aria-pressed="true"] { color: #f0e8d6; background: #1f1c16; }
 .tm-lock:disabled { opacity: .4; cursor: default; }
-.nav-red { box-sizing: border-box; padding: 8px 12px; font-family: var(--f-ui); font-weight: 500; font-size: 12px; line-height: 1.45; letter-spacing: .2px; color: #1f1c16;
-  background: color-mix(in srgb, var(--mp-sig-red) 28%, var(--paper-light)); border-left: 3px solid var(--mp-sig-red); overflow-wrap: anywhere; }
+.nav-red { margin: 0; }
 .nav-red[hidden] { display: none; }
 .nav-red div + div { margin-top: 4px; }
 .nav-red b { font-weight: 700; }
@@ -1442,7 +1441,7 @@ __CSS__
           <p class="dv-src" id="dv-src"></p>
         </div>
         <div class="sheet">
-          <div class="nav-red" id="nav-red" role="status" hidden></div>
+          <div class="ui-bandeau err nav-red" id="nav-red" role="status" hidden></div>
           <div class="sheet-top"><span id="nav-title"></span></div>
           <div class="sheet-top sheet-diss" id="nav-diss" hidden><span id="nav-diss-t"></span></div>
           <table class="nav">
@@ -2337,6 +2336,7 @@ const I18N = {
     't.lock': 'Verrouiller l\u2019heure',
     't.unlock': 'D\u00e9verrouiller l\u2019heure',
     't.ph': 'hh:mm:ss',
+    't.of': 'Heure de {p}',
     'nav.total.arr': '\u00b7 arriv\u00e9e {a}',
     't.red': '{p} \u00e0 {h} intenable\u202f: il faudrait {n} ({v}) de {a} \u00e0 {b}. Aux vitesses de la route\u202f: {r}.',
     't.red.nv': '{p} \u00e0 {h} intenable\u202f: il faudrait {n} de {a} \u00e0 {b}. Aux vitesses de la route\u202f: {r}.',
@@ -2932,6 +2932,7 @@ const I18N = {
     't.lock': 'Lock time',
     't.unlock': 'Unlock time',
     't.ph': 'hh:mm:ss',
+    't.of': 'Time of {p}',
     'nav.total.arr': '\u00b7 arrival {a}',
     't.red': '{p} at {h} cannot be met: it would take {n} ({v}) from {a} to {b}. At the route\u2019s speeds: {r}.',
     't.red.nv': '{p} at {h} cannot be met: it would take {n} from {a} to {b}. At the route\u2019s speeds: {r}.',
@@ -3505,6 +3506,7 @@ function readPoints(list) {
     rtmRead(p, q);       /* l'heure réelle du point (p.t) et son verrou (p.tLock), s'ils sont valides */
     pts.push(q);
   });
+  rtmOnePivot(pts);       /* plusieurs heures sans verrou : le pivot du plus petit rang seul reste */
   assignPids(pts);       /* un point sans pid valide, ou en doublon, en reçoit un neuf (migration silencieuse, écrite au prochain enregistrement) */
   return { points: pts, dropped: dropped };
 }
@@ -3994,11 +3996,6 @@ function fmtEte(s) { const n = secRound(s); return pad2(Math.floor(n / 60)) + ':
 /* Temps écoulé : HH+MM+SS */
 function fmtElapsed(s) { const n = secRound(s); return pad2(Math.floor(n / 3600)) + '+' + pad2(Math.floor(n / 60) % 60) + '+' + pad2(n % 60); }
 
-/* Vitesse (km/h) de la branche qui arrive au point i : la sienne, sinon celle de la route ; le point 0 n'en a pas */
-function legSpeed(i) {
-  const p = S.points[i];
-  return (i > 0 && p && typeof p.gs === 'number' && p.gs > 0) ? p.gs : S.groundSpeed;
-}
 /* km/h → entier dans l'unité affichée (km/h, ou kt quand la distance est en NM) */
 function speedDisp(kmh) { return Math.round(S.units.distance === 'nm' ? kmh / NM_KM : kmh); }
 function speedText(kmh) { return speedDisp(kmh) + ' ' + t(S.units.distance === 'nm' ? 'u.kt' : 'u.kmh'); }
@@ -4012,7 +4009,7 @@ function readSpeed(s) {
 }
 
 /* L'état de la saisie d'une heure : i, le point dont le champ est ouvert (-1 : aucun) ; init, l'heure qu'il montrait ; val, ce qui y est tapé ; plain : l'export (l'heure seule, sans cadenas ni couleur) */
-const TMX = { i: -1, init: '', val: '', plain: false };
+const TMX = { i: -1, init: '', val: '', dirty: false, plain: false };
 
 /* Le minutage de la route : par branche (cap, distance, vitesse, durée non arrondie en secondes) et temps écoulé à chaque point
    (somme non arrondie des durées qui précèdent) */
@@ -8379,13 +8376,13 @@ function rpDissSig() { if (!DISP.diss) return 'off'; const d = rpDiss(); return 
 function navTimeHtml(tm, i) {
   const has = tm.h.has, lk = has && tm.h.lock[i];
   const lbl = esc(t(lk ? 't.unlock' : 't.lock'));
-  const btn = dis => '<button type="button" class="tm-lock" data-tl="' + i + '" aria-pressed="' + (lk ? 'true' : 'false') + '" aria-label="' + lbl + '" title="' + lbl + '"' + (dis ? ' disabled' : '') + '>' + lockSvg(lk) + '</button>';
+  const btn = () => '<button type="button" class="tm-lock" data-tl="' + i + '" aria-label="' + lbl + '" title="' + lbl + '">' + lockSvg(lk) + '</button>';
   if (TMX.i === i) {
-    return '<span class="tm-wrap"><input class="tm-in" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" data-tmi="' + i + '" value="' + esc(TMX.val) + '" placeholder="' + esc(t('t.ph')) + '" aria-label="' + esc(t('t.ph')) + '">' + btn(!has) + '</span>';
+    return '<span class="tm-wrap"><input class="tm-in" type="text" autocomplete="off" spellcheck="false" data-tmi="' + i + '" value="' + esc(TMX.val) + '" placeholder="' + esc(t('t.ph')) + '" aria-label="' + esc(t('t.of', { p: S.points[i].name.trim() !== '' ? S.points[i].name.trim() : String(i) })) + '">' + (has ? btn() : '') + '</span>';
   }
   const red = timeRed(tm, i);
   return '<span class="tm-wrap"><button type="button" class="tm-t' + (red ? ' red' : '') + '" data-tm="' + i + '">' + esc(has ? rtmClock(tm.h.t[i]) : t('nav.t', { t: fmtElapsed(tm.el[i]) })) +
-    (red ? '<span class="tm-warn" aria-hidden="true">⚠</span>' : '') + '</button>' + (has ? btn(false) : '') + '</span>';
+    (red ? '<span class="tm-warn" aria-hidden="true">⚠</span>' : '') + '</button>' + (has ? btn() : '') + '</span>';
 }
 /* Les messages des tronçons intenables (le bloc commun les écrit), en tête du panneau Navigation ; rien sans tronçon rouge */
 function redMsgs(tm) {
@@ -8406,7 +8403,7 @@ function openTimeEdit(i) {
   if (!S.points[i]) return;
   if (TMX.i >= 0 && TMX.i !== i) commitTime(false);
   const tm = timing();
-  TMX.i = i; TMX.init = tm.h.has ? rtmClock(tm.h.t[i]) : ''; TMX.val = TMX.init;
+  TMX.i = i; TMX.init = tm.h.has ? rtmClock(tm.h.t[i]) : ''; TMX.val = TMX.init; TMX.dirty = false;
   const sec = document.querySelector('#panel > .ed-section[data-section="nav"]');
   if (sec && sec.dataset.open !== 'true') sec.dataset.open = 'true';
   rpSetTab('nav');
@@ -8421,9 +8418,10 @@ function commitTime(cancel) {
   const i = TMX.i;
   if (i < 0) return;
   const inp = document.querySelector('#nav-body .tm-in'), val = inp ? inp.value : TMX.val;
-  TMX.i = -1; TMX.val = '';
+  const edited = TMX.dirty || val !== TMX.init;       /* une saisie éditée s'écrit toujours (R3), même égale à l'heure affichée */
+  TMX.i = -1; TMX.val = ''; TMX.dirty = false;
   let changed = false;
-  if (!cancel && S.points[i] && val !== TMX.init) {
+  if (!cancel && S.points[i] && edited) {
     if (val.trim() === '') { if (rtmValid(S.points[i].t)) changed = rtmType(S.points, i, null); }
     else { const sec = rtmParse(val); if (sec !== null) changed = rtmType(S.points, i, sec); }
   }
@@ -8447,6 +8445,7 @@ function bindNavTimes() {
       toggleTimeLock(i);
     } else if (tb) openTimeEdit(parseInt(tb.dataset.tm, 10));
   });
+  nb.addEventListener('input', ev => { if (ev.target.classList && ev.target.classList.contains('tm-in')) { TMX.dirty = true; TMX.val = ev.target.value; } });
   nb.addEventListener('keydown', ev => {
     if (!ev.target.classList || !ev.target.classList.contains('tm-in')) return;
     if (ev.key === 'Enter') { ev.preventDefault(); commitTime(false); }

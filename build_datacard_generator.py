@@ -1082,9 +1082,10 @@ body {
 .tp-in { position: relative; min-width: 0; }
 .tp-in input { width: 100%; }
 .tm-redw { position: relative; }
-.ed-field input.tm-redin { color: #fff; background: var(--mp-sig-red); border-color: var(--mp-sig-red); border-left-color: var(--mp-sig-red); padding-right: 30px; }
+.ed-field input.tm-redin { color: #fff; background: var(--mp-sig-red); border-color: var(--mp-sig-red); border-left-color: var(--mp-sig-red); }
+.ed-field input[type=text].tm-redin, .li-grid .ed-field input[type=text].tm-redin { padding-right: 30px; }       /* la place du ⚠ : plus fort que le serrage des champs au doigt */
 .ed-field input.tm-redin:focus { background: var(--mp-sig-red); }
-.tm-redw .tm-warn, .tp-in .tm-warn { position: absolute; right: 10px; bottom: 14px; margin: 0; font-size: 14px; line-height: 1; color: #fff; pointer-events: none; }
+.tm-redw .tm-warn, .tp-in .tm-warn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); margin: 0; font-size: 14px; line-height: 1; color: #fff; pointer-events: none; }
 .tm-redmsg b { font-weight: 700; }
 .tm-redmsg div + div { margin-top: 4px; }
 
@@ -1362,6 +1363,13 @@ __TAB_SECTION_RULES__
   }
   .toolbar.fade-l::before,
   .toolbar.fade-r::after { opacity: 1; }
+}
+/* heures d'une ligne d'Horaires, sous 520 px : trois rangées (libellé et ↑ ↓ × ; l'heure sur toute la largeur ; « Point » et son cadenas) */
+@media (max-width: 519px) {
+  .tm-top { display: contents; }
+  .tm-top > :first-child { grid-column: 1; grid-row: 1; }
+  .tm-top > :nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+  .tm-top > :nth-child(2) input { min-width: 0; }
 }
 @media (max-width: 600px) {
   .tb-btn { padding: 0 6px; min-width: 38px; height: 38px; }
@@ -3886,13 +3894,15 @@ function dgRedBanner(rt) {
 }
 /* Les noms des points dont l'heure verrouillée n'est pas tenue, sur les cartes des pages choisies (la confirmation avant l'export) */
 function dgRedNames(sel) {
-  const out = [], seen = new Set();
+  const out = [], seen = new Set(), rids = new Set();
   sel.forEach(p => {
     const c = doc.cards[p.card];
     if (!c || seen.has(c)) return;
     seen.add(c);
     const rt = dgRTcalc(c);
-    if (rt && rt.tm.has) rt.tm.red.forEach((r, i) => { if (r) { const n = str(rt.pts[i].name).trim(); out.push(n !== '' ? n : String(i)); } });
+    if (!rt || !rt.tm.has || rids.has(rt.info.rid)) return;       /* deux cartes sur la même route : ses noms une fois */
+    rids.add(rt.info.rid);
+    rt.tm.red.forEach((r, i) => { if (r) { const n = str(rt.pts[i].name).trim(), nm = n !== '' ? n : String(i); if (out.indexOf(nm) < 0) out.push(nm); } });       /* puis un nom une fois */
   });
   return out;
 }
@@ -3901,23 +3911,25 @@ function dgLockSvg(closed) {
   return '<svg class="tm-ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="3" y="7" width="10" height="7" rx="1" fill="currentColor"/>' +
     '<path d="' + (closed ? 'M5 7V5a3 3 0 0 1 6 0v2' : 'M5 7V5a3 3 0 0 1 5.8-1') + '" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
 }
-/* Le cadenas d'un point de la route liée (attr : data-tpl pour une ligne d'Horaires, data-tnl pour une ligne de nav ; i : son rang) ; inactif tant que la route n'a pas d'heure */
+/* Le cadenas d'un point de la route liée (attr : data-tpl pour une ligne d'Horaires, data-tnl pour une ligne de nav ; i : son rang) ; aucun tant que la route n'a pas d'heure */
 function dgLockBtn(attr, i, rt, k) {
-  const lk = rt.tm.has && rt.tm.lock[k], lbl = esc(t(lk ? 't.unlock' : 't.lock'));
-  return '<button type="button" class="tp-lock" ' + attr + '="' + i + '" aria-pressed="' + (lk ? 'true' : 'false') + '" aria-label="' + lbl + '" title="' + lbl + '"' + (rt.tm.has ? '' : ' disabled') + '>' + dgLockSvg(lk) + '</button>';
+  if (!rt.tm.has) return '';       /* sans heure dans la route, pas de cadenas : il paraît dès la première heure */
+  const lk = rt.tm.lock[k], lbl = esc(t(lk ? 't.unlock' : 't.lock'));
+  return '<button type="button" class="tp-lock" ' + attr + '="' + i + '" aria-label="' + lbl + '" title="' + lbl + '">' + dgLockSvg(lk) + '</button>';
 }
 /* Le champ d'une heure calculée : rouge (pastille C13 bis, ⚠) quand le tronçon est intenable */
 function dgTimeInput(path, value, red) {
-  if (!red) return fInputBare(path, value);
-  return '<div class="ed-field tm-redw"><input type="text" data-path="' + path + '" value="' + esc(value) + '"' + phAttr(path) + ' class="tm-redin" aria-invalid="true"><span class="tm-warn" aria-hidden="true">⚠</span></div>';
+  const ph = ' placeholder="' + esc(t('t.ph')) + '"';       /* une ligne liée porte l'heure à la seconde */
+  if (!red) return '<div class="ed-field"><input type="text" data-path="' + path + '" value="' + esc(value) + '"' + ph + '></div>';
+  return '<div class="ed-field tm-redw"><input type="text" data-path="' + path + '" value="' + esc(value) + '"' + ph + ' class="tm-redin" aria-invalid="true"><span class="tm-warn" aria-hidden="true">⚠</span></div>';
 }
 function dgTimesEditor(c) {
   const rt = dgRTcalc(c);
   return listHtml('times', c.times, (x, i) => {
     const k = dgPtOf(rt, x);
-    const h = '<div class="li-grid g2">' + fInputBare('times.' + i + '.label', x.label) + (k >= 0 ? dgTimeInput('times.' + i + '.value', dgTimeVal(x, rt), dgTimeRed(rt, k)) : fInputBare('times.' + i + '.value', x.value)) + '</div>';
+    const h = '<div class="li-grid g2 tm-top">' + fInputBare('times.' + i + '.label', x.label) + (k >= 0 ? dgTimeInput('times.' + i + '.value', dgTimeVal(x, rt), dgTimeRed(rt, k)) : fInputBare('times.' + i + '.value', x.value)) + '</div>';
     if (!rt) return h;
-    const sel = '<div class="ed-field"><label>' + esc(t('f.times.pt')) + '</label><select data-tpt="' + i + '"><option value="">' + esc(t('pt.none')) + '</option>' +
+    const sel = '<div class="ed-field"><label>' + esc(t('f.times.pt')) + '</label><select data-tpt="' + i + '" aria-label="' + esc(t('f.times.pt')) + '"><option value="">' + esc(t('pt.none')) + '</option>' +
       rt.pts.map((p, j) => '<option value="' + esc(p.pid) + '"' + (j === k ? ' selected' : '') + '>' + esc(j + ' · ' + str(p.name)) + '</option>').join('') + '</select></div>';
     return h + '<div class="li-grid tp-row">' + sel + (k >= 0 ? dgLockBtn('data-tpl', i, rt, k) : '<span></span>') + '</div>';
   }, 'add.time');
@@ -3947,9 +3959,9 @@ function dgTimePick(c, i, pid) {
   renderEditor(true);
 }
 /* Une heure saisie (ligne d'Horaires liée ou TOS d'un point de route) : elle va au point, par le bloc d'écriture et les règles du bloc commun ; illisible ou inchangée, le champ reprend l'heure affichée */
-function dgPointTime(c, pid, el, shown) {
+function dgPointTime(c, pid, el, shown, edited) {
   const raw = el.value;
-  if (raw === shown) return;
+  if (raw === shown && !edited) return;       /* une saisie éditée s'écrit toujours (R3), même égale à l'heure affichée */
   let sec = null;
   if (raw.trim() !== '') { sec = rtmParse(raw); if (sec === null) { el.value = shown; return; } }
   const info = dgRouteInfo(c);
@@ -4318,7 +4330,7 @@ function dgLinkCard(c, rid) {
 function dgEnterRoute(r) {
   const rs = dgRouteSet();
   if (r.rid && rs.set && rs.set.routes.some(x => x.rid === r.rid && routeTheatre(x, rwRefTheatre(rs.st)) === dgCommonTheatre())) return { ok: true, rid: r.rid };
-  const pts = r.points.slice(0, RW_MAX_POINTS).map(p => { const o = { name: p.name, lat: dgRound7(p.lat), lon: dgRound7(p.lon), alt: p.alt, altRef: p.altRef }; if (rwPidValid(p.pid)) o.pid = p.pid; rtmRead(p, o); return o; });
+  const pts = rtmOnePivot(r.points.slice(0, RW_MAX_POINTS).map((p, k) => { const o = { name: p.name, lat: dgRound7(p.lat), lon: dgRound7(p.lon), alt: p.alt, altRef: p.altRef }; if (k > 0 && typeof p.gs === 'number' && isFinite(p.gs) && p.gs > 0) o.gs = p.gs; if (rwPidValid(p.pid)) o.pid = p.pid; rtmRead(p, o); return o; }));
   const x = rwCreateRoute({ name: hasText(r.name) ? r.name.trim().slice(0, 60) : '', theatre: dgCommonTheatre(), points: pts, missionDate: r.missionDate });
   return x.ok ? { ok: true, rid: x.rid } : { ok: false, why: x.why };
 }
@@ -6605,6 +6617,7 @@ function dgeEdit(g) {
     const lab = fields[k].closest('.ed-field') && fields[k].closest('.ed-field').querySelector('label');
     el.setAttribute('aria-label', lab ? lab.textContent : p);
     el.style.textAlign = g.align === 'r' && !g.multi ? 'right' : 'left';
+    el.addEventListener('input', () => { if (DGE.ed && DGE.ed.inputs) { const n = DGE.ed.inputs.indexOf(el); if (n >= 0) DGE.ed.dirty[n] = true; } });       /* une frappe : la saisie est éditée */
     box.appendChild(el);
     return el;
   });
@@ -6615,7 +6628,7 @@ function dgeEdit(g) {
   w.appendChild(box);
   w.appendChild(tip);
   /* la carte de la saisie : l'objet, son groupe et son rang (pour la retrouver si le document est relu pendant la frappe) ; la largeur du cadre (seul un changement de largeur valide) */
-  DGE.ed = { g: g, paths: g.paths, orig: fields.map(f => f.value), fields: fields, inputs: inputs, box: box, frame: frame, tip: tip, card: curCard(), gsId: curCard().gsId || '', idx: curIdx, w: window.innerWidth,
+  DGE.ed = { g: g, paths: g.paths, orig: fields.map(f => f.value), dirty: g.paths.map(() => false), fields: fields, inputs: inputs, box: box, frame: frame, tip: tip, card: curCard(), gsId: curCard().gsId || '', idx: curIdx, w: window.innerWidth,
              font: { style: cs.fontStyle, weight: cs.fontWeight, size: parseFloat(cs.fontSize), lh: parseFloat(cs.lineHeight), ls: cs.letterSpacing, family: cs.fontFamily } };
   dgePlace(DGE.ed);
   box.addEventListener('keydown', onDgeKey);
@@ -6648,6 +6661,13 @@ function dgeCardIdx(ed) {
 }
 /* Fermer la saisie sur place : le calque est retiré ; commit : la valeur part dans le champ de l'éditeur de même chemin (input puis change, comme une saisie au clavier), sur la carte où la saisie a été ouverte
    (le champ d'aujourd'hui s'il a été remplacé) ; rien n'est émis pour une valeur inchangée ; une carte qui n'existe plus : la saisie est abandonnée */
+/* Le champ de l'éditeur de ce chemin (Horaires .value, nav .tos) suit-il un point de la route liée (nav : seulement si la route a des heures) ? */
+function dgLinkedPath(c, path) {
+  const m = /^(times|nav)\.(\d+)\.(value|tos)$/.exec(path);
+  if (!m || (m[1] === 'times') !== (m[3] === 'value')) return false;
+  const ln = c[m[1]][parseInt(m[2], 10)], rt = ln ? dgRTcalc(c) : null;
+  return !!rt && dgPtOf(rt, ln) >= 0 && (m[1] === 'times' || rt.tm.has);
+}
 function dgeClose(commit) {
   const ed = DGE.ed;
   if (!ed) return;
@@ -6662,7 +6682,8 @@ function dgeClose(commit) {
   try {
     ed.paths.forEach((p, n) => {
       const v = ed.inputs[n].value;
-      if (getPath(curCard(), p) === v || (/^times\.\d+\.value$/.test(p) && ed.orig[n] === v)) return;       /* la valeur d'une ligne liée est celle du point, calculée : inchangée, rien n'est émis */
+      const lk = dgLinkedPath(curCard(), p);       /* l'heure d'une ligne liée est celle du point, calculée : la valeur de la ligne ne compte pas, seule la valeur ouverte */
+      if (lk ? (ed.orig[n] === v && !ed.dirty[n]) : getPath(curCard(), p) === v) return;       /* inchangée et pas éditée : rien n'est émis */
       const f = ed.fields[n].isConnected ? ed.fields[n] : document.querySelector('#editor [data-path="' + p + '"]');
       if (!f) return;
       f.value = v;
@@ -7376,6 +7397,7 @@ function dgOtherDone() {
 }
 function onEditorKeyDown(e) {
   const el = e.target;
+  if (el && el._dgEd === true && e.key === 'Enter' && el.tagName === 'INPUT') { e.preventDefault(); onEditorInput({ target: el, type: 'commit' }); return; }
   if (!el || !el.dataset || el.dataset.dgOther === undefined || (e.key !== 'Enter' && e.key !== 'Escape')) return;
   e.preventDefault();
   dgOtherDone();
@@ -7415,7 +7437,8 @@ function onEditorInput(e) {
   { /* l'heure d'une ligne d'Horaires liée, ou le TOS d'un point de route quand la route a des heures : elle va au point (au « change »), jamais dans la valeur de la ligne */
     const tm = /^(times|nav)\.(\d+)\.(value|tos)$/.exec(path), cc = tm ? curCard() : null, ln = cc ? cc[tm[1]][parseInt(tm[2], 10)] : null, rtx = ln ? dgRTcalc(cc) : null, kx = dgPtOf(rtx, ln || {});
     if (tm && ((tm[1] === 'times' && tm[3] === 'value') || (tm[1] === 'nav' && tm[3] === 'tos')) && kx >= 0 && (tm[1] === 'times' || rtx.tm.has)) {
-      if (e.type === 'change' && el.tagName === 'INPUT') dgPointTime(cc, ln.pid, el, tm[1] === 'times' ? dgTimeVal(ln, rtx) : rtmClockMin(rtx.tm.t[kx]));
+      if (e.type === 'input') { el._dgEd = true; return; }       /* un drapeau posé à la frappe : retaper l'heure affichée écrit quand même */
+      if ((e.type === 'change' || e.type === 'commit') && el.tagName === 'INPUT') { const ed = el._dgEd === true; el._dgEd = false; dgPointTime(cc, ln.pid, el, tm[1] === 'times' ? dgTimeVal(ln, rtx) : rtmClockMin(rtx.tm.t[kx]), ed); }
       return;
     }
   }
@@ -7466,6 +7489,7 @@ function onEditorFocusOut(e) {
   const el = e.target;
   if (el && el.dataset && el.dataset.rs !== undefined && !DG_UI.rendering) dgTypFlush();       /* la sortie du champ d'un canal écrit sa saisie */
   if (el && el.dataset && el.dataset.dgOther !== undefined) { dgOtherLeave(el); return; }
+  if (el && el._dgEd === true && !DG_UI.rendering) { onEditorInput({ target: el, type: 'commit' }); return; }       /* l'heure d'une ligne liée retapée à l'identique : pas de « change » du navigateur, la sortie du champ l'écrit */
   if (el && el._dgCommit && !DG_UI.rendering) { el._dgCommit = false; onEditorInput({ target: el, type: 'change' }); return; }       /* la saisie gardée à travers un redessin : le « change » du navigateur est parti avec l'ancien champ, on la valide ici */
   if (DG_UI.rendering || !el || !el._dgPend || !el.dataset || !el.dataset.gs) return;
   el._dgPend = false;
@@ -7779,10 +7803,13 @@ function routeFromObject(o) {
         altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
       };
       if (rwPidValid(p.pid)) q.pid = p.pid;
-      if (withT) rtmRead(p, q);       /* l'heure réelle du point et son verrou, s'ils sont valides */
+      if (withT) {
+        rtmRead(p, q);       /* l'heure réelle du point et son verrou, s'ils sont valides */
+        if (out.length > 0 && typeof p.gs === 'number' && isFinite(p.gs) && p.gs > 0) q.gs = p.gs;       /* la vitesse de la branche, comme readPoints au Route Planner */
+      }
       out.push(q);
     });
-    return out;
+    return withT ? rtmOnePivot(out) : out;
   };
   const points = readPts(o.points, true);
   const refs = Array.isArray(o.refs) ? readPts(o.refs, false) : [];

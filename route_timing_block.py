@@ -49,6 +49,16 @@ function rtmClockMin(sec) {
 function rtmRead(src, dst) {
   if (src && rtmValid(src.t)) { dst.t = src.t; if (src.tLock === true) dst.tLock = true; }
 }
+/* Une route lue d'un coup : plusieurs heures sans verrou ne tiennent pas (un seul pivot) ; seule celle du point de plus petit rang reste */
+function rtmOnePivot(points) {
+  let seen = false;
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    if (!p || !rtmValid(p.t) || p.tLock === true) continue;
+    if (seen) { delete p.t; delete p.tLock; } else seen = true;
+  }
+  return points;
+}
 /* Distance (km) d'une branche : la formule de legCalc */
 function rtmKm(a, b) {
   const r = Math.PI / 180;
@@ -137,7 +147,7 @@ function rtmRedMsg(points, tm, i, o) {
   let text = o.t(key, vars);
   if (o.fr) {
     const ap = ' de ' + vars.a + ' à ';
-    if (/^[aeiouyàâäéèêëîïôöùûüœæh]/i.test(vars.a)) text = text.replace(ap, ' d’' + vars.a + ' à ');
+    if (/^[aeiouàâäéèêëîïôöùûüœæh]/i.test(vars.a)) text = text.replace(ap, () => ' d’' + vars.a + ' à ');
   }
   const from = Math.max(0, text.indexOf(vars.h)) + vars.h.length, c = text.slice(from).search(/\u202f?:/);       /* le premier « : » après l'heure du message (l'heure en porte elle-même) */
   return { text: text, head: c < 0 ? '' : text.slice(0, from + c), n: vars.n };
