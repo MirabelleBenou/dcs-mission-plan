@@ -1,0 +1,162 @@
+{
+ "format": "dcs-navaids-v1",
+ "theatre": "Syria",
+ "source": {
+  "beacons": "jeu d'essai du lot (tests/test_dg_balises.py)"
+ },
+ "airdromes": [
+  {
+   "airdromeId": 1,
+   "name": "Alpha",
+   "icao": null,
+   "beacons": [
+    {
+     "type": "ILS_GLIDESLOPE",
+     "callsign": "IAA",
+     "frequency": 110100000,
+     "channel": null,
+     "runway": null
+    },
+    {
+     "type": "ILS_LOCALIZER",
+     "callsign": "IAB",
+     "frequency": 110100000,
+     "channel": null,
+     "runway": "27"
+    },
+    {
+     "type": "ILS_LOCALIZER",
+     "callsign": "IAA",
+     "frequency": 110100000,
+     "channel": null,
+     "runway": "09"
+    },
+    {
+     "type": "ILS_GLIDESLOPE",
+     "callsign": "",
+     "frequency": 108500000,
+     "channel": null,
+     "runway": "27"
+    },
+    {
+     "type": "AIRPORT_HOMER",
+     "callsign": "AL",
+     "frequency": 346500,
+     "channel": null,
+     "runway": null
+    },
+    {
+     "type": "TACAN",
+     "callsign": "ALP",
+     "frequency": null,
+     "channel": 0,
+     "runway": null
+    },
+    {
+     "type": "VORTAC",
+     "callsign": "ALV",
+     "frequency": 113700000,
+     "channel": 84,
+     "runway": null
+    },
+    {
+     "type": "VOR_DME",
+     "callsign": "ALD",
+     "frequency": 112600000,
+     "channel": null,
+     "runway": null
+    },
+    {
+     "type": "DME",
+     "callsign": "",
+     "frequency": null,
+     "channel": 45,
+     "runway": null
+    }
+   ]
+  },
+  {
+   "airdromeId": 2,
+   "name": "Bravo",
+   "icao": "OSBR",
+   "beacons": [
+    {
+     "type": "PRMG_GLIDESLOPE",
+     "callsign": "BR",
+     "frequency": null,
+     "channel": 22,
+     "runway": null
+    },
+    {
+     "type": "PRMG_LOCALIZER",
+     "callsign": "BR",
+     "frequency": null,
+     "channel": 22,
+     "runway": "13"
+    },
+    {
+     "type": "RSBN",
+     "callsign": "BRV",
+     "frequency": null,
+     "channel": 36,
+     "runway": null
+    },
+    {
+     "type": "ILS_FAR_HOMER",
+     "callsign": "B",
+     "frequency": 625000,
+     "channel": null,
+     "runway": "13"
+    },
+    {
+     "type": "ILS_NEAR_HOMER",
+     "callsign": "R",
+     "frequency": 303000,
+     "channel": null,
+     "runway": "13"
+    },
+    {
+     "type": "AIRPORT_HOMER_WITH_MARKER",
+     "callsign": "BM",
+     "frequency": 800000,
+     "channel": null,
+     "runway": null
+    },
+    {
+     "type": "HOMER",
+     "callsign": "BH",
+     "frequency": 1050000,
+     "channel": null,
+     "runway": null
+    },
+    {
+     "type": "AIRPORT_TACAN",
+     "callsign": "BT",
+     "frequency": null,
+     "channel": 99,
+     "runway": null
+    },
+    {
+     "type": "VOR",
+     "callsign": "BV",
+     "frequency": 114300000,
+     "channel": null,
+     "runway": null
+    }
+   ]
+  },
+  {
+   "airdromeId": 3,
+   "name": "Charlie",
+   "icao": null,
+   "beacons": []
+  },
+  {
+   "airdromeId": 4,
+   "name": "Delta",
+   "icao": null,
+   "beacons": null
+  }
+ ],
+ "enroute": []
+}

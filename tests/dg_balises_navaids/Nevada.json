@@ -1,0 +1,16 @@
+{
+ "format": "dcs-navaids-v1",
+ "theatre": "Nevada",
+ "source": {
+  "beacons": "jeu d'essai du lot (tests/test_dg_balises.py)"
+ },
+ "airdromes": [
+  {
+   "airdromeId": 1,
+   "name": "Foxtrot",
+   "icao": "KFOX",
+   "beacons": null
+  }
+ ],
+ "enroute": null
+}

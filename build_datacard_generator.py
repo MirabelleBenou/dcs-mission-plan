@@ -120,6 +120,45 @@ def airfield_icao(facts):
     return d['theatres']
 
 
+BEACONS_PATH = os.path.join(HERE, 'airfield_beacons.json')
+# Les types de balise que le bloc « Balises — terrains » sait écrire (tools/gen_airfield_beacons.py, même liste)
+BEACON_TYPES = ['HOMER', 'AIRPORT_HOMER', 'AIRPORT_HOMER_WITH_MARKER', 'ILS_FAR_HOMER', 'ILS_NEAR_HOMER', 'RSBN', 'PRMG_LOCALIZER', 'PRMG_GLIDESLOPE',
+                'TACAN', 'AIRPORT_TACAN', 'VOR', 'VOR_DME', 'DME', 'VORTAC', 'ILS_LOCALIZER', 'ILS_GLIDESLOPE']
+
+
+def airfield_beacons(facts):
+    """Les balises radio des aérodromes (airfield_beacons.json, format dcs-airfield-beacons-v1, tools/gen_airfield_beacons.py, d'après DCS Airfield Charts) :
+    { théâtre: { nom: [ [type, indicatif, fréquence Hz | null, canal | null, piste | null], … ] } }, vérifiées contre les faits du jeu (facts = airfield_facts()) :
+    chaque théâtre et chaque nom sont dans airfield_facts.json, chaque type est connu, chaque valeur a son type."""
+    if not os.path.isfile(BEACONS_PATH):
+        raise SystemExit(f"[ERREUR] Entrée manquante : {BEACONS_PATH} (airfield_beacons.json attendu à la racine du dépôt)")
+    with open(BEACONS_PATH, encoding='utf-8') as f:
+        d = json.load(f)
+    if (not isinstance(d, dict) or d.get('format') != 'dcs-airfield-beacons-v1' or not isinstance(d.get('theatres'), dict)
+            or not isinstance(d.get('source'), dict) or not isinstance(d['source'].get('repo'), str) or not re.fullmatch(r'[0-9a-f]{40}', str(d['source'].get('commit')))):
+        raise SystemExit("[ERREUR] airfield_beacons.json : le format doit être « dcs-airfield-beacons-v1 » avec une source (repo, commit) et une table « theatres »")
+
+    def is_int(v):
+        return isinstance(v, int) and not isinstance(v, bool)
+    for th, table in d['theatres'].items():
+        if th not in facts:
+            raise SystemExit(f"[ERREUR] airfield_beacons.json : le théâtre « {th} » n'est pas dans airfield_facts.json")
+        if not isinstance(table, dict):
+            raise SystemExit(f"[ERREUR] airfield_beacons.json : la table de {th} est illisible")
+        names = {a[0] for a in facts[th]}
+        for name, rows in table.items():
+            if name not in names:
+                raise SystemExit(f"[ERREUR] airfield_beacons.json : {th} : « {name} » n'est pas un aérodrome de ce théâtre dans airfield_facts.json")
+            if not isinstance(rows, list) or not rows:
+                raise SystemExit(f"[ERREUR] airfield_beacons.json : {th} : « {name} » : la liste des balises est illisible")
+            for b in rows:
+                ok = (isinstance(b, list) and len(b) == 5 and b[0] in BEACON_TYPES and isinstance(b[1], str)
+                      and (b[2] is None or (is_int(b[2]) and b[2] > 0)) and (b[3] is None or (is_int(b[3]) and b[3] >= 0)) and (b[4] is None or isinstance(b[4], str)))
+                if not ok:
+                    raise SystemExit(f"[ERREUR] airfield_beacons.json : {th} : « {name} » : balise illisible : {b!r}")
+    return d['theatres']
+
+
 # Le seul type volable sans pylône dans data/aircraft_pylons.json (un avion d'entraînement sans emport) : sa table de pylônes n'a pas d'entrée.
 NO_PYLON_TYPES = ['TF-51D']
 
@@ -765,6 +804,19 @@ body {
 .preview-wrap::-webkit-scrollbar { width: 12px; height: 12px; }
 .preview-wrap::-webkit-scrollbar-track { background: var(--olive-deep); }
 .preview-wrap::-webkit-scrollbar-thumb { background: var(--khaki); border: 2px solid var(--olive-deep); }
+/* Saisie sur la datacard (lot mp-dg) : rien n'entre dans #preview ; le contour, le ✎, les champs, l'infobulle et le bouton du téléphone sont posés dans .preview-wrap, au-dessus de l'aperçu, puis retirés */
+.preview-wrap { position: relative; }
+@media (min-width: 1101px) { #preview .dc-block, #preview .dc-head, #preview .dc-top { cursor: pointer; } }
+.dge-box { position: absolute; z-index: 5; border: 2px dashed #c0892a; pointer-events: none; box-sizing: border-box; }
+.dge-box.on { border-style: solid; }
+.dge-pen { position: absolute; top: 3px; right: 6px; color: #c0892a; font: 700 15px/1 var(--f-ui); }
+.dge-ed { position: absolute; z-index: 6; display: flex; gap: 6px; box-sizing: border-box; }
+.dge-ed input, .dge-ed textarea { flex: 1 1 0; min-width: 0; height: 100%; box-sizing: border-box; margin: 0; padding: 0 4px; border: 0; border-radius: 0; outline: none; background: #fbf1d2; color: #14130f; box-shadow: inset 0 -2px 0 #c0892a, 0 0 0 1px rgba(192,137,42,.55); }
+.dge-ed textarea { resize: none; padding-top: 2px; white-space: pre-wrap; }
+.dge-tip { position: absolute; z-index: 6; background: #14130f; color: #f1ecdf; border: 1px solid #c0892a; font: 500 11px/1.2 var(--f-ui); letter-spacing: .5px; padding: 4px 7px; white-space: nowrap; pointer-events: none; }
+.dge-go { position: absolute; z-index: 6; min-height: 48px; padding: 0 18px; background: #c0892a; color: #14130f; border: 0; border-radius: 0; font: 700 14px/1 var(--f-ui); letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.5); cursor: pointer; }
+.dge-go:focus-visible { outline: 2px solid #f1ecdf; outline-offset: 2px; }
+#editor .dge-flash { outline: 2px solid #c0892a !important; outline-offset: 1px; }
 .dc-warn {
   margin: 0 auto 14px auto;
   max-width: 1000px;
@@ -1085,6 +1137,10 @@ body {
 .dc-fields:not(.dc-blank) td:nth-child(4) { line-height: 1; }
 .dc-fields:not(.dc-blank) td:nth-child(2) { min-width: calc(4ch + 14px); }       /* un code OACI de quatre lettres ne se coupe jamais */
 .dc-fields:not(.dc-blank) td { font-size: 18px; }       /* une seule taille pour toutes les cellules, l'étiquette comprise */
+/* Balises — terrains (lot mp-dg) : le rôle comme à la boîte Terrains, le nom du terrain comme les noms des tableaux, l'indicatif en gras */
+.dc-bcn td.ro { font-family: var(--dc-fo); font-weight: 500; color: var(--dc-acc); text-transform: uppercase; }
+.dc-bcn td.nm { font-family: var(--dc-fo); font-weight: 500; letter-spacing: .04em; }
+.dc-bcn td.bc { font-family: var(--dc-fo); font-weight: 700; letter-spacing: .06em; }
 .dc-fields:not(.dc-blank) th:nth-child(n+3), .dc-fields:not(.dc-blank) td:nth-child(n+3) { border-left: 1px solid var(--dc-sep); }       /* un filet léger entre le nom, la piste et la fréquence ; aucun entre l'étiquette et l'OACI */
 
 /* Météo : quatre paires sur deux colonnes, valeur calée à droite, filet pointillé dessous */
@@ -1780,6 +1836,10 @@ const I18N = {
     'warn.overflow': 'Contenu tronqué : la page 1 déborde même sans la navigation.',
     'warn.overflow2': 'Contenu tronqué\u202f: la page 2 déborde.',
     'warn.overflowR': 'Contenu tronqué\u202f: la page Radios déborde.',
+    'warn.overflowB': 'Contenu tronqué\u202f: la page des balises déborde.',
+    'dg.edit.tip': 'Entrée : valider · Échap : annuler',
+    'dg.edit.tipm': 'Ctrl+Entrée : valider · Échap : annuler',
+    'dg.edit.go': '✎ Modifier {boîte}',
     'sec.header': 'En-tête',
     'sec.meta': 'Méta',
     'sec.group': 'Groupe et équipage',
@@ -2080,6 +2140,15 @@ const I18N = {
     'dc.role.dep': 'DEP',
     'dc.role.arr': 'ARR',
     'dc.role.alt': 'ALT',
+    'dc.b.beacons': 'BALISES — TERRAINS',
+    'dc.h.bfield': 'TERRAIN',
+    'dc.h.btype': 'TYPE',
+    'dc.h.bcs': 'INDICATIF',
+    'dc.h.bfreq': 'FRÉQ · CANAL',
+    'dc.h.brwy': 'PISTE',
+    'dc.bt.ndb': 'NDB',
+    'dc.bt.far': 'NDB extérieur',
+    'dc.bt.near': 'NDB intérieur',
     'dc.w.wind': 'VENT',
     'dc.w.vis': 'VIS',
     'dc.w.qnh': 'QNH',
@@ -2305,6 +2374,10 @@ const I18N = {
     'warn.overflow': 'Content truncated: page 1 overflows even without navigation.',
     'warn.overflow2': 'Content truncated: page 2 overflows.',
     'warn.overflowR': 'Content truncated: the Radios page overflows.',
+    'warn.overflowB': 'Content truncated: the beacons page overflows.',
+    'dg.edit.tip': 'Enter: confirm · Esc: cancel',
+    'dg.edit.tipm': 'Ctrl+Enter: confirm · Esc: cancel',
+    'dg.edit.go': '✎ Edit {box}',
     'sec.header': 'Header',
     'sec.meta': 'Meta',
     'sec.group': 'Group and crew',
@@ -2605,6 +2678,15 @@ const I18N = {
     'dc.role.dep': 'DEP',
     'dc.role.arr': 'ARR',
     'dc.role.alt': 'ALT',
+    'dc.b.beacons': 'BEACONS — AIRFIELDS',
+    'dc.h.bfield': 'AIRFIELD',
+    'dc.h.btype': 'TYPE',
+    'dc.h.bcs': 'IDENT',
+    'dc.h.bfreq': 'FREQ · CHANNEL',
+    'dc.h.brwy': 'RWY',
+    'dc.bt.ndb': 'NDB',
+    'dc.bt.far': 'Outer NDB',
+    'dc.bt.near': 'Inner NDB',
     'dc.w.wind': 'WIND',
     'dc.w.vis': 'VIS',
     'dc.w.qnh': 'QNH',
@@ -4320,6 +4402,80 @@ function afIcao(th, name) {
   const t = Object.prototype.hasOwnProperty.call(AIRFIELD_ICAO, th) ? AIRFIELD_ICAO[th] : null;
   return t && Object.prototype.hasOwnProperty.call(t, name) ? t[name] : '';
 }
+
+/* ============= BALISES DES TERRAINS (lot mp-dg) =============
+   Les balises que le jeu rattache à chaque aérodrome (airfield_beacons.json, tools/gen_airfield_beacons.py, d'après DCS Airfield Charts) : { théâtre: { nom: [ [type, indicatif, fréquence Hz | null, canal | null, piste | null], … ] } },
+   pour les seuls théâtres où elles sont connues. Le bloc « Balises — terrains » en tire ses lignes ; rien n'est écrit dans l'état. */
+const AIRFIELD_BEACONS = __AIRFIELD_BEACONS__;
+/* L'ordre d'affichage des types (l'ILS et le PRMG assemblés y ont leur rang) */
+const BCN_ORDER = ['HOMER', 'AIRPORT_HOMER', 'AIRPORT_HOMER_WITH_MARKER', 'ILS_FAR_HOMER', 'ILS_NEAR_HOMER', 'RSBN', 'PRMG', 'TACAN', 'AIRPORT_TACAN', 'VOR', 'VOR_DME', 'DME', 'VORTAC', 'ILS'];
+/* Une descente et le type de l'alignement qu'elle rejoint, et la valeur qui doit être la même (ILS : la fréquence ; PRMG : le canal) */
+const BCN_GS = { ILS_GLIDESLOPE: ['ILS_LOCALIZER', 'fq', 'ILS'], PRMG_GLIDESLOPE: ['PRMG_LOCALIZER', 'ch', 'PRMG'] };
+const BCN_LOC = { ILS_LOCALIZER: 'ILS', PRMG_LOCALIZER: 'PRMG' };
+/* Les lignes des balises d'un aérodrome (la liste brute de la pièce) : { t (clé d'ordre), cs, fq, ch, rwy }, vides rendus '' ou null (un canal 0 est un canal absent).
+   Chaque descente rejoint un alignement libre du même terrain (même fréquence pour l'ILS, même canal pour le PRMG) : celui de même piste, sinon de même indicatif, sinon le premier, dans l'ordre des données ;
+   la ligne prend les valeurs de l'alignement, complétées de celles de la descente là où il est vide. Une descente sans alignement fait sa ligne. Puis le tri : type, piste (sans piste en dernier), indicatif, fréquence, canal. */
+function bcnLinesOf(list) {
+  const rows = list.map(b => ({ t: b[0], cs: typeof b[1] === 'string' ? b[1] : '', fq: typeof b[2] === 'number' && b[2] > 0 ? b[2] : null, ch: typeof b[3] === 'number' && b[3] > 0 ? b[3] : null, rwy: typeof b[4] === 'string' ? b[4] : '' }));
+  const used = new Set(), join = new Map(), orphan = new Set();
+  rows.forEach((g, gi) => {
+    const spec = BCN_GS[g.t];
+    if (!spec) return;
+    const cand = [];
+    rows.forEach((r, i) => { if (r.t === spec[0] && !used.has(i) && r[spec[1]] !== null && r[spec[1]] === g[spec[1]]) cand.push(i); });
+    let pick = g.rwy !== '' ? cand.find(i => rows[i].rwy === g.rwy) : undefined;
+    if (pick === undefined && g.cs !== '') pick = cand.find(i => rows[i].cs === g.cs);
+    if (pick === undefined) pick = cand[0];
+    if (pick === undefined) orphan.add(gi);
+    else { used.add(pick); join.set(pick, gi); }
+  });
+  const out = [];
+  rows.forEach((r, i) => {
+    if (BCN_GS[r.t]) { if (orphan.has(i)) out.push({ t: BCN_GS[r.t][2], cs: r.cs, fq: r.fq, ch: r.ch, rwy: r.rwy }); return; }
+    if (BCN_LOC[r.t]) {
+      const g = join.has(i) ? rows[join.get(i)] : null, fill = (a, b, empty) => a === empty && g ? b : a;
+      out.push({ t: BCN_LOC[r.t], cs: fill(r.cs, g && g.cs, ''), fq: fill(r.fq, g && g.fq, null), ch: fill(r.ch, g && g.ch, null), rwy: fill(r.rwy, g && g.rwy, '') });
+      return;
+    }
+    out.push({ t: r.t, cs: r.cs, fq: r.fq, ch: r.ch, rwy: r.rwy });
+  });
+  const cmpS = (a, b, last) => a === b ? 0 : (last && a === '' ? 1 : (last && b === '' ? -1 : (a < b ? -1 : 1)));
+  const cmpN = (a, b) => a === b ? 0 : (a === null ? 1 : (b === null ? -1 : a - b));
+  return out.sort((a, b) => (BCN_ORDER.indexOf(a.t) - BCN_ORDER.indexOf(b.t)) || cmpS(a.rwy, b.rwy, true) || cmpS(a.cs, b.cs, false) || cmpN(a.fq, b.fq) || cmpN(a.ch, b.ch));
+}
+/* Une fréquence de balise (Hz) : sous 3 MHz en kHz, sans zéro inutile (« 365 kHz », « 346.5 kHz ») ; au-dessus en MHz, deux décimales (« 109.70 ») ; le point décimal dans les deux langues */
+function bcnFreq(hz) { return hz < 3e6 ? String(+(hz / 1000).toFixed(3)) + ' kHz' : (hz / 1e6).toFixed(2); }
+/* La valeur d'une ligne : TACAN, RSBN, PRMG le canal seul (à défaut la fréquence) ; NDB et ILS la fréquence seule ; VOR, VOR/DME, DME, VORTAC la fréquence et le canal s'il y en a un ; « — » sans rien */
+function bcnValue(l) {
+  const f = l.fq !== null ? bcnFreq(l.fq) : '', c = l.ch !== null ? String(l.ch) : '';
+  if (['TACAN', 'AIRPORT_TACAN', 'RSBN', 'PRMG'].indexOf(l.t) >= 0) return c || f || '—';
+  if (['VOR', 'VOR_DME', 'DME', 'VORTAC'].indexOf(l.t) >= 0) return f && c ? f + ' · ' + c : (f || c || '—');
+  return f || '—';
+}
+/* Le type affiché */
+function bcnType(k) {
+  if (k === 'HOMER' || k === 'AIRPORT_HOMER' || k === 'AIRPORT_HOMER_WITH_MARKER') return t('dc.bt.ndb');
+  if (k === 'ILS_FAR_HOMER') return t('dc.bt.far');
+  if (k === 'ILS_NEAR_HOMER') return t('dc.bt.near');
+  if (k === 'AIRPORT_TACAN') return 'TACAN';
+  if (k === 'VOR_DME') return 'VOR/DME';
+  return k;
+}
+/* Les lignes du bloc d'une carte : les rangées Terrains dans leur ordre dont le nom est un aérodrome du théâtre qui a des balises, chacun une fois, sous son premier rôle ;
+   chaque ligne : fi (la rangée Terrains), role (texte), name, type, cs, value, rwy (textes), puis la ligne brute. Aucune sur un théâtre sans balises connues. */
+function dgBeaconLines(c) {
+  const th = dgTheatre(), table = Object.prototype.hasOwnProperty.call(AIRFIELD_BEACONS, th) ? AIRFIELD_BEACONS[th] : null;
+  const out = [], seen = [];
+  if (!table) return out;
+  c.fields.forEach((f, fi) => {
+    const row = f ? afFind(f.name) : null;
+    if (!row || !Object.prototype.hasOwnProperty.call(table, row[0]) || seen.indexOf(row[0]) >= 0) return;
+    seen.push(row[0]);
+    const role = ['dep', 'arr', 'alt'].indexOf(f.role) >= 0 ? t('dc.role.' + f.role) : '';
+    bcnLinesOf(table[row[0]]).forEach(l => out.push({ fi: fi, role: role, name: row[0], type: bcnType(l.t), cs: l.cs, value: bcnValue(l), rwy: l.rwy, raw: l }));
+  });
+  return out;
+}
 /* Les sens d'un aérodrome : ses pistes du jeu, dans l'ordre, éclatées en sens (« 04R/22L » → 04R, 22L), sans doublon ; aucun pour un aérodrome sans piste */
 function afEnds(row) {
   const out = [];
@@ -5547,6 +5703,19 @@ function blkRefs(c) {
   return blockHtml('refs', t('dc.b.refs'), refsTable(mode, head, body), 'dc-bbt');
 }
 
+/* Bloc « Balises — terrains » (lot mp-dg) : calculé, pleine largeur, après les points de référence ; il n'existe que si un terrain de la carte a des balises connues, sans lignes à compléter */
+function blkBeacons(c) {
+  const ls = dgBeaconLines(c);
+  if (!ls.length) return '';
+  const body = ls.map(l =>
+    '<tr><td class="ro">' + esc(l.role) + '</td><td class="nm">' + esc(l.name) + '</td><td class="m">' + esc(l.type) + '</td>' +
+    '<td class="bc">' + (hasText(l.cs) ? esc(l.cs) : '—') + '</td><td class="m">' + esc(l.value) + '</td><td class="m">' + (hasText(l.rwy) ? esc(l.rwy) : '—') + '</td></tr>').join('');
+  return blockHtml('beacons', t('dc.b.beacons'),
+    '<table class="dc-tab dc-bcn"><colgroup><col style="width:66px"><col style="width:236px"><col style="width:176px"><col style="width:148px"><col style="width:196px"><col></colgroup>' +
+    '<thead><tr><th></th><th>' + esc(t('dc.h.bfield')) + '</th><th>' + esc(t('dc.h.btype')) + '</th><th>' + esc(t('dc.h.bcs')) + '</th><th>' + esc(t('dc.h.bfreq')) + '</th><th>' + esc(t('dc.h.brwy')) + '</th></tr></thead>' +
+    '<tbody>' + body + '</tbody></table>', 'dc-bbt');
+}
+
 /* Le tableau d'un encadré Radio : une ligne de nom par poste ; rangées alternées recommencées à chaque poste (la 1re surlignée) ;
    filet plein au-dessus du nom de chaque poste sauf le premier (ou de sa 1re rangée s'il n'a pas de nom). */
 function radioTable(radios) {
@@ -5803,9 +5972,9 @@ function headRadios(c) {
     '<div class="dc-hr"><div class="dc-ttl">' + esc(t('dc.pageR')) + '</div></div></div>';
 }
 
-/* Une page de datacard. kind : 'main' (page 1), 'nav' (page de navigation) ou 'radios' (page Radios, la dernière) ; noRadio : la page 1 sans le bloc Radio.
-   withNav : la navigation est sur cette page ; withRefs : les points de référence aussi (après la navigation). */
-function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio) {
+/* Une page de datacard. kind : 'main' (page 1), 'nav' (page de navigation), 'bcn' (page des seules balises, en-tête réduit) ou 'radios' (page Radios, la dernière) ; noRadio : la page 1 sans le bloc Radio.
+   withNav : la navigation est sur cette page ; withRefs : les points de référence aussi (après la navigation) ; withBcn : le bloc des balises aussi (après les références). */
+function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio, withBcn) {
   const cls = esc(classifLabel(c));
   const pg = p + ' / ' + N;
   const top = '<div class="dc-top"><span>' + cls + '</span><span>' + esc(c.meta.docRef.trim()) + '</span><span>' + pg + '</span></div>';
@@ -5816,9 +5985,12 @@ function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio) {
   if (kind === 'radios') {
     head = headRadios(c);
     body = rowHtml('dc-r3', [blkRadioPage(c)]);
+  } else if (kind === 'bcn') {
+    head = headNav(c);
+    body = rowHtml('dc-r3', [blkBeacons(c)]);
   } else if (kind === 'nav') {
     head = headNav(c);
-    body = (withNav ? rowHtml('dc-r3', [blkNav(c) || blkNavBlank(c)]) : '') + (withRefs ? rowHtml('dc-r3', [blkRefs(c) || blkRefsBlank(c)]) : '');
+    body = (withNav ? rowHtml('dc-r3', [blkNav(c) || blkNavBlank(c)]) : '') + (withRefs ? rowHtml('dc-r3', [blkRefs(c) || blkRefsBlank(c)]) : '') + (withBcn ? rowHtml('dc-r3', [blkBeacons(c)]) : '');
   } else {
     head = headMain(c);
     const fields = blkFields(c) || blkFieldsBlank(c), weather = blkWeather(c) || blkWeatherBlank(c);
@@ -5827,6 +5999,7 @@ function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio) {
       rowHtml('dc-r2', [blkCrew(c) || blkCrewBlank(c)]) +
       (withNav ? rowHtml('dc-r3', [blkNav(c) || blkNavBlank(c)]) : '') +
       (withRefs ? rowHtml('dc-r3', [blkRefs(c) || blkRefsBlank(c)]) : '') +
+      (withBcn ? rowHtml('dc-r3', [blkBeacons(c)]) : '') +
       rowHtml('dc-r4', [noRadio ? '' : (blkRadio(c) || blkRadioBlank(c)), col]) +
       rowHtml('dc-r5', [blkFuel(c) || blkFuelBlank(c)]) +
       rowHtml('dc-r6', [blkThreats(c) || blkThreatsBlank(c)]);
@@ -5879,7 +6052,8 @@ function planBase(c, nr) {
 function dgMeasurable() { return document.getElementById('measure-root').getBoundingClientRect().width > 0; }
 function planCard(c) {
   if (!dgMeasurable()) return { split: false, overflow: false, overflow2: false, p2: 'navrefs', radioPage: false, overflowR: false, unmeasured: true };       /* plan provisoire : ni alerte ni cache ; l'aperçu se refait quand le cadre redevient visible */
-  const key = CURRENT_LANG + '|' + JSON.stringify(c);
+  const bcn = dgBeaconLines(c).length > 0;       /* les balises dépendent du théâtre, qui n'est pas dans la carte : il entre dans la clé d'une carte qui en a (sans balises, la clé d'avant) */
+  const key = CURRENT_LANG + '|' + JSON.stringify(c) + (bcn ? '|' + dgTheatre() : '');
   if (layoutCache.has(key)) return layoutCache.get(key);
   let plan = planBase(c, false);
   plan.radioPage = false; plan.overflowR = false;
@@ -5891,8 +6065,24 @@ function planCard(c) {
       plan.overflowR = overflowsHtml(pageHtml(c, 'day', plan.split ? 3 : 2, plan.split ? 3 : 2, 'radios', false, false));
     }
   }
+  if (bcn) planBeacons(c, plan);
   if (layoutCache.size > 80) layoutCache.clear();
   layoutCache.set(key, plan);
+  return plan;
+}
+
+/* La place du bloc des balises (lot mp-dg), quand la carte en a un : il suit les points de référence. Sur le plan d'avant (plan.radioPage : la page 1 sans le bloc Radio) :
+   une page (la page 1 porte navigation et références) : la page 1 avec les balises tient → plan.bcn = 'p1' ; sinon une page 2 ne porte que les balises → 'own' ;
+   deux pages : la page 2 (celle des références) avec les balises tient → 'p2' ; sinon, si elle tient sans elles, les balises forment une page à elles, juste après → 'own' ; sinon elles y restent → 'p2'.
+   plan.overflowB : la page des seules balises déborde. Sans bloc des balises, le plan reste celui d'avant, sans ces clés. */
+function planBeacons(c, plan) {
+  const nr = plan.radioPage;
+  if (!plan.split) plan.bcn = overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, true, nr, true)) ? 'own' : 'p1';
+  else {
+    const nav = plan.p2 !== 'refs';
+    plan.bcn = overflowsHtml(pageHtml(c, 'day', 2, 2, 'nav', nav, true, false, true)) && !overflowsHtml(pageHtml(c, 'day', 2, 2, 'nav', nav, true, false, false)) ? 'own' : 'p2';
+  }
+  plan.overflowB = plan.bcn === 'own' && overflowsHtml(pageHtml(c, 'day', 2, 2, 'bcn', false, false, false, false));
   return plan;
 }
 
@@ -5900,12 +6090,14 @@ function planCard(c) {
 function cardPages(c, mode) {
   const plan = planCard(c);
   const rp = plan.radioPage, nr = rp;
-  const N = (plan.split ? 2 : 1) + (rp ? 1 : 0);
+  const b1 = plan.bcn === 'p1', b2 = plan.bcn === 'p2', bo = plan.bcn === 'own';       /* les balises : en page 1, sur la page des références, ou sur une page à elles juste après */
+  const N = (plan.split ? 2 : 1) + (bo ? 1 : 0) + (rp ? 1 : 0);
   const pages = plan.split
     ? (plan.p2 === 'refs'
-      ? [pageHtml(c, mode, 1, N, 'main', true, false, nr), pageHtml(c, mode, 2, N, 'nav', false, true)]
-      : [pageHtml(c, mode, 1, N, 'main', false, false, nr), pageHtml(c, mode, 2, N, 'nav', true, true)])
-    : [pageHtml(c, mode, 1, N, 'main', true, true, nr)];
+      ? [pageHtml(c, mode, 1, N, 'main', true, false, nr), pageHtml(c, mode, 2, N, 'nav', false, true, false, b2)]
+      : [pageHtml(c, mode, 1, N, 'main', false, false, nr), pageHtml(c, mode, 2, N, 'nav', true, true, false, b2)])
+    : [pageHtml(c, mode, 1, N, 'main', true, true, nr, b1)];
+  if (bo) pages.push(pageHtml(c, mode, pages.length + 1, N, 'bcn', false, false));
   if (rp) pages.push(pageHtml(c, mode, N, N, 'radios', false, false));
   return { plan, pages };
 }
@@ -5919,9 +6111,11 @@ function renderPreview() {
   const warn = document.getElementById('dc-warn');
   if (res.plan.overflow) { warn.textContent = t('warn.overflow'); warn.hidden = false; }
   else if (res.plan.overflow2) { warn.textContent = t('warn.overflow2'); warn.hidden = false; }
+  else if (res.plan.overflowB) { warn.textContent = t('warn.overflowB'); warn.hidden = false; }
   else if (res.plan.overflowR) { warn.textContent = t('warn.overflowR'); warn.hidden = false; }
   else { warn.textContent = ''; warn.hidden = true; }
   applyPreviewScale();
+  dgeRendered();
 }
 
 function dgRelayout() { if (DG_UI.needLayout && dgMeasurable()) renderPreview(); }
@@ -5934,6 +6128,383 @@ function applyPreviewScale() {
   if (!(avail > 0)) return;
   const s = Math.max(0.2, Math.min(1, avail / PAGE_W));
   prev.style.setProperty('--s', s.toFixed(4));
+}
+
+/* ============= SAISIE SUR LA DATACARD (lot mp-dg) =============
+   Le HTML de l'aperçu (#preview) ne porte rien de plus : le lien entre un endroit cliqué et son champ se calcule ici (la boîte data-block, le rang de la ligne, l'élément cliqué).
+   Le contour et le ✎ du survol, les champs de saisie, l'infobulle et le bouton du téléphone sont posés dans .preview-wrap, au-dessus de l'aperçu, et retirés ensuite ;
+   l'export PNG et l'impression refont leurs pages depuis l'état (cardPages) et n'en portent jamais.
+   Côte à côte (DG_TABS ne correspond pas) : une case simple se modifie sur place, la valeur s'écrit dans le champ de l'éditeur (input puis change, comme au clavier) ; tout le reste ouvre sa section au rang cliqué.
+   En onglets : toucher une boîte la marque et fait paraître « ✎ Modifier <boîte> », qui ouvre l'onglet, la section et le champ ; rien ne s'écrit sur place. */
+const DGE = { hov: null, hovEl: null, ed: null, mark: null, flash: null };
+const DGE_AMBER = '#c0892a';
+function dgeWrap() { return document.getElementById('preview-wrap'); }
+/* Le rectangle d'un élément dans la zone défilante de l'aperçu (px de l'écran, défilement compris) */
+function dgeRect(el) {
+  const w = dgeWrap(), wr = w.getBoundingClientRect(), r = el.getBoundingClientRect();
+  return { x: r.left - wr.left - w.clientLeft + w.scrollLeft, y: r.top - wr.top - w.clientTop + w.scrollTop, w: r.width, h: r.height };
+}
+function dgeScale() { const v = parseFloat(document.getElementById('preview').style.getPropertyValue('--s')); return v > 0 ? v : 1; }
+function dgePut(el, x, y, w, h) {
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  if (w != null) el.style.width = w + 'px';
+  if (h != null) el.style.height = h + 'px';
+}
+/* La boîte sous un élément de l'aperçu : un bloc, l'en-tête ou le bandeau du haut d'une page ; null ailleurs (pied, marges) */
+function dgeZone(el) {
+  const prev = document.getElementById('preview');
+  if (!el || !el.closest || !prev.contains(el)) return null;
+  const z = el.closest('.dc-block, .dc-head, .dc-top');
+  return z && prev.contains(z) ? z : null;
+}
+/* Le titre imprimé d'une boîte (le bouton du téléphone) */
+function dgeTitle(z) {
+  if (z.classList.contains('dc-top')) return t('sec.meta');
+  if (z.classList.contains('dc-head')) return t(z.classList.contains('dc-head2') ? 'sec.group' : 'sec.header');
+  const h = z.querySelector(':scope > .dc-bh');
+  return h ? h.textContent : '';
+}
+function dgeIdx(el, sel) { return Array.prototype.indexOf.call(el.parentNode.querySelectorAll(':scope > ' + sel), el); }
+/* Le rang dans la liste de l'état de la k-ième rangée montrée (le rendu saute les rangées vides : elles sont comptées ici) */
+function dgeNth(arr, keep, k) {
+  let n = -1;
+  for (let i = 0; i < arr.length; i++) if (keep(arr[i]) && ++n === k) return i;
+  return -1;
+}
+/* Les chemins des cases de la boîte Carburant, dans l'ordre du rendu (blkFuel) : deux par rangée montrée, null pour une valeur calculée d'après le FC */
+function dgeFuelPaths(c) {
+  const lots = dgFuelView(c), f = c.fuel;
+  const rows = (lots === null ? [{ p: ['fuel.amount', 'fuel.weight'], v: [f.amount, f.weight] }]
+    : lots.map(l => ({ p: [null, null], v: [l.fuel === null ? '' : 'x', l.weight === null ? '' : 'x'] })))
+    .concat([{ p: ['fuel.joker', 'fuel.bingo'], v: [f.joker, f.bingo] }]).filter(r => hasText(r.v[0]) || hasText(r.v[1]));
+  return [].concat.apply([], rows.map(r => r.p));
+}
+/* Les clés des cases de la boîte Météo, dans l'ordre du rendu (blkWeather) */
+function dgeWeatherKeys(c) {
+  const w = c.weather, out = [];
+  if (hasText(w.wind) || hasText(w.visibility)) out.push('wind', 'visibility');
+  if (hasText(w.qnh) || hasText(w.clouds)) out.push('qnh', 'clouds');
+  return out;
+}
+/* Le lien d'un endroit cliqué : { sec, title, zone } et, pour une case simple, paths (les chemins de l'éditeur, dans l'ordre affiché), anchor (l'élément recouvert), align, minW, multi ;
+   sinon sel : le champ de l'éditeur à focaliser (le rang d'une liste : sa ligne .li), ou rien (la section seule) */
+function dgeTarget(el, z) {
+  const c = curCard(), base = { zone: z, title: dgeTitle(z) };
+  const simple = (sec, paths, anchor, align, minW, multi) => Object.assign(base, { sec: sec, paths: paths, anchor: anchor, align: align, minW: minW, multi: !!multi });
+  const sect = (sec, sel) => Object.assign(base, { sec: sec, sel: sel || '' });
+  const li = (list, i) => i < 0 ? '' : '.li[data-list="' + list + '"][data-i="' + i + '"]';
+  const inn = sel => el.closest(sel);
+  if (z.classList.contains('dc-top')) {
+    const sp = inn('.dc-top > span');
+    if (sp && sp !== z.children[1]) return sect('meta', '[data-path="meta.classification"]');
+    return simple('meta', ['meta.docRef'], z.children[1].getBoundingClientRect().width > 0 ? z.children[1] : z, 'c', 260);
+  }
+  if (z.classList.contains('dc-head')) {
+    const gsel = c.gsId ? '[data-gs="name"]' : '[data-path="flight.callsign"]';
+    if (z.classList.contains('dc-head2')) return sect('group', gsel);
+    if (inn('.dc-op')) return simple('header', ['meta.operation', 'meta.mission'], inn('.dc-op'), 'r', 380);
+    if (inn('.dc-dt')) return simple('header', ['meta.date', 'meta.time'], inn('.dc-dt'), 'r', 320);
+    if (inn('.dc-cs')) return sect('group', gsel);
+    if (inn('.dc-sub')) return sect('group', '[data-path="flight.task"]');
+    if (inn('.dc-pill')) return sect('group', '[data-path="flight.threat"]');
+    return sect('header');
+  }
+  const b = z.dataset.block;
+  if (b === 'mission') {
+    if (blkMission(c) === '') return sect('mission');
+    if (inn('.dc-obj')) return simple('mission', ['mission.objective'], inn('.dc-obj'), 'l', 300, true);
+    const st = inn('.dc-steps > li');
+    if (st) return sect('mission', li('mission.execution', dgeNth(c.mission.execution, hasText, dgeIdx(st, 'li'))));
+    return sect('mission');
+  }
+  if (b === 'times') {
+    if (blkTimes(c) === '') return sect('times');
+    const tr = inn('.dc-trow');
+    if (!tr) return sect('times');
+    const i = dgeNth(c.times, x => hasText(x.value), dgeIdx(tr, '.dc-trow'));
+    if (i < 0) return sect('times');
+    if (inn('.dc-tl')) return simple('times', ['times.' + i + '.label'], inn('.dc-tl'), 'l', 150);
+    return simple('times', ['times.' + i + '.value'], tr.querySelector('.dc-tv'), 'r', 130);
+  }
+  if (b === 'crew') {
+    const tr = blkCrew(c) === '' ? null : inn('tbody > tr');
+    const i = tr ? dgeNth(c.crew, r => anyText(r, CREW_KEYS), dgeIdx(tr, 'tr')) : -1;
+    return sect('group', i < 0 ? '' : (c.gsId ? '.li[data-unit="' + i + '"]' : li('crew', i)));
+  }
+  if (b === 'nav') {
+    const tr = blkNav(c) === '' ? null : inn('tbody > tr');
+    return sect('nav', tr ? li('nav', dgeNth(c.nav, r => anyText(r, NAV_KEYS), dgeIdx(tr, 'tr'))) : '');
+  }
+  if (b === 'refs') {
+    const tr = blkRefs(c) === '' ? null : inn('tbody > tr');
+    const r = tr ? refRows(c)[dgeIdx(tr, 'tr')] : null;
+    return sect('refs', r ? li('refs', c.refs.indexOf(r)) : '');
+  }
+  if (b === 'radio') return sect('radio', c.gsId ? '' : dgeRadioSel(c, el, z));
+  if (b === 'fields') {
+    const tr = blkFields(c) === '' ? null : inn('tbody > tr');
+    return sect('fields', tr ? li('fields', dgeNth(c.fields, f => anyText(f, ['icao', 'name', 'runway', 'frequency']), dgeIdx(tr, 'tr'))) : '');
+  }
+  if (b === 'beacons') {
+    const tr = inn('tbody > tr'), l = tr ? dgBeaconLines(c)[dgeIdx(tr, 'tr')] : null;
+    return sect('fields', l ? li('fields', l.fi) : '');
+  }
+  if (b === 'weather') {
+    if (blkWeather(c) === '') return sect('weather');
+    if (inn('.dc-metar')) return simple('weather', ['weather.metar'], inn('.dc-metar'), 'l', 300);
+    const wp = inn('.dc-wgrid > .wp');
+    if (wp) {
+      const k = dgeWeatherKeys(c)[dgeIdx(wp, '.wp')];
+      if (k) return simple('weather', ['weather.' + k], wp.querySelector('.wv') || wp, 'r', 120);
+    }
+    return sect('weather');
+  }
+  if (b === 'fuel') {
+    if (blkFuel(c) === '') return sect('fuel');
+    const cell = inn('.dc-fuel > *');
+    if (cell) {
+      const p = dgeFuelPaths(c)[dgeIdx(cell, '*')];
+      if (p) return simple('fuel', [p], cell.querySelector('.fv') || cell, 'r', 130);
+      return sect('fuel');
+    }
+    const ld = inn('.dc-load > li');
+    if (ld) return sect('fuel', li('loadout', dgeNth(c.loadout, hasText, dgeIdx(ld, 'li'))));
+    return sect('fuel');
+  }
+  if (b === 'threats') {
+    if (blkThreats(c) === '') return sect('threats');
+    const ch = inn('.dc-chips > .dc-chip');
+    if (ch) return sect('threats', li('threats', dgeNth(c.threats, hasText, dgeIdx(ch, '.dc-chip'))));
+    if (inn('.dc-notes')) return simple('threats', ['notes'], inn('.dc-notes'), 'l', 300, true);
+    return sect('threats');
+  }
+  return null;
+}
+/* Le rang d'une ligne de la boîte Radio d'une carte libre (ses postes propres : la dernière boîte Radio de la page 1, ou la page Radios) : le nom du poste ou la ligne du canal */
+function dgeRadioSel(c, el, z) {
+  const own = [];
+  c.radios.forEach((r, i) => {
+    const ch = [];
+    r.channels.forEach((x, j) => { if (anyText(x, ['channel', 'label', 'frequency', 'modulation'])) ch.push(j); });
+    if (hasText(r.name) || ch.length) own.push({ i: i, name: hasText(r.name), ch: ch });
+  });
+  if (!own.length) return '';
+  const nf = dgRadioBoxes(c).reduce((n, b) => n + b.posts.length, 0);
+  const post = (i, j) => j == null ? '[data-path="radios.' + i + '.name"]' : '.li[data-list="radios.' + i + '.channels"][data-i="' + j + '"]';
+  const page = z.querySelector('.dc-rposte');
+  if (page) {       /* la page Radios : les postes du groupe d'abord (figés), puis les propres ; trois colonnes, lues colonne par colonne */
+    const rp = el.closest('.dc-rposte');
+    if (!rp) return '';
+    const k = dgeIdx(rp, '.dc-rposte') - nf, o = own[k];
+    if (!o) return '';
+    const tab = el.closest('.dc-radio3'), tr = el.closest('tbody > tr');
+    if (!tab || !tr) return post(o.i);
+    const col = Array.prototype.indexOf.call(tab.parentNode.children, tab), per = Math.max(1, Math.ceil(o.ch.length / 3));
+    const j = o.ch[col * per + dgeIdx(tr, 'tr')];
+    return post(o.i, j == null ? null : j);
+  }
+  const boxes = z.ownerDocument.querySelectorAll('#preview .dc-page section.dc-block[data-block="radio"]');
+  if (boxes[boxes.length - 1] !== z || blkRadio(c) === '' || !dgRadioOwn(c).length) return '';
+  const tr = el.closest('tbody > tr');
+  if (!tr) return '';
+  const rows = [];       /* les rangées du tableau (radioTable) : le nom de chaque poste qui en a un, puis ses canaux */
+  own.forEach(o => { if (o.name) rows.push(post(o.i)); o.ch.forEach(j => rows.push(post(o.i, j))); });
+  return rows[dgeIdx(tr, 'tr')] || '';
+}
+/* Un champ de l'éditeur, s'il s'écrit : présent, champ texte, ni en lecture seule ni désactivé */
+function dgeField(path) {
+  const el = document.querySelector('#editor [data-path="' + path + '"]');
+  return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && !el.readOnly && !el.disabled ? el : null;
+}
+/* Ce qui reçoit le focus pour un champ : une liste au thème a son bouton (tbm-trigger) devant la liste cachée */
+function dgeFocusable(el) {
+  if (!el) return null;
+  if (el.tagName === 'SELECT' && !el.getClientRects().length) { const b = el.previousElementSibling; return b && b.classList && b.classList.contains('tbm-trigger') ? b : null; }
+  return el.getClientRects().length && !el.disabled ? el : null;
+}
+/* La première saisie d'une ligne ou d'une section */
+function dgeFirstInput(root) {
+  if (!root) return null;
+  const all = root.querySelectorAll('input:not([type="hidden"]), textarea, select, .tbm-trigger');
+  for (const x of all) { if (x.getClientRects().length && !x.disabled) return x; }       /* une liste au thème est cachée : son bouton, qui la précède, est pris */
+  return null;
+}
+/* L'éditeur suit : la section s'ouvre, défile jusqu'à l'élément, qui porte un liseré ambre 1,6 s ; focus : il reçoit le focus */
+function dgeFollow(sec, el, focus) {
+  const d = document.querySelector('#ed-sections > details.ed-section[data-section="' + sec + '"]');
+  if (d && !d.open) d.open = true;
+  const ed = document.getElementById('editor');
+  const tgt = el || (d ? dgeFirstInput(d.querySelector('.ed-content')) : null) || d;
+  if (!tgt) return null;
+  const er = ed.getBoundingClientRect(), r = tgt.getBoundingClientRect();
+  if (ed.scrollHeight > ed.clientHeight + 1) { if (r.top < er.top + 8 || r.bottom > er.bottom - 8) ed.scrollTop += r.top - er.top - Math.max(16, (er.height - r.height) / 3); }
+  else if (tgt.scrollIntoView) tgt.scrollIntoView({ block: 'nearest' });
+  if (DGE.flash) { DGE.flash.el.classList.remove('dge-flash'); clearTimeout(DGE.flash.timer); }
+  if (tgt !== d) {
+    tgt.classList.add('dge-flash');
+    DGE.flash = { el: tgt, timer: setTimeout(() => { tgt.classList.remove('dge-flash'); DGE.flash = null; }, 1600) };
+  }
+  if (focus && tgt !== d) { try { tgt.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+  return tgt;
+}
+/* Ouvrir la section d'une cible, au rang ou au champ (sa première saisie focalisée) */
+function dgeOpen(g, focus) {
+  const d = document.querySelector('#ed-sections > details.ed-section[data-section="' + g.sec + '"]');
+  let el = null;
+  if (g.paths) el = dgeFocusable(document.querySelector('#editor [data-path="' + g.paths[0] + '"]'));
+  else if (g.sel && d) {
+    const x = d.querySelector(g.sel);
+    el = x ? (x.classList.contains('li') ? dgeFirstInput(x) : dgeFocusable(x) || dgeFirstInput(x.closest('.ed-field') || x)) : null;
+  }
+  if (d && !d.open) d.open = true;
+  return dgeFollow(g.sec, el, focus);
+}
+/* ----- le survol (côte à côte, à la souris) ----- */
+function dgeBox(z, on) {
+  const w = dgeWrap(), r = dgeRect(z), b = document.createElement('div');
+  b.className = 'dge-box' + (on ? ' on' : '');
+  b.setAttribute('aria-hidden', 'true');
+  dgePut(b, r.x - 3, r.y - 3, r.w + 6, r.h + 6);
+  if (!on) { const p = document.createElement('span'); p.className = 'dge-pen'; p.textContent = '✎'; b.appendChild(p); }
+  w.appendChild(b);
+  return b;
+}
+function dgeHover(z) {
+  if (DGE.hovEl === z) return;
+  if (DGE.hov) { DGE.hov.remove(); DGE.hov = null; }
+  DGE.hovEl = z;
+  if (z && !DGE.ed) DGE.hov = dgeBox(z, false);
+}
+function onDgeMove(e) {
+  if (DG_TABS.matches || (e.pointerType && e.pointerType !== 'mouse')) return;
+  if (DGE.ed) return;
+  dgeHover(dgeZone(e.target));
+}
+/* ----- la saisie sur place ----- */
+function dgeEdit(g) {
+  const fields = g.paths.map(dgeField);
+  if (fields.some(f => !f)) { dgeOpen(g, false); return; }       /* un champ que l'éditeur ne permet pas d'écrire : la section, comme pour une liste */
+  dgeClose(true);
+  if (DGE.hov) { DGE.hov.remove(); DGE.hov = null; }
+  DGE.hovEl = null;
+  const w = dgeWrap(), s = dgeScale(), a = dgeRect(g.anchor), cs = getComputedStyle(g.anchor), z = g.zone;
+  const fs = parseFloat(cs.fontSize) * s, lh = (parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.25) * s;
+  const ls = cs.letterSpacing === 'normal' ? 'normal' : (parseFloat(cs.letterSpacing) * s) + 'px';
+  const minW = g.minW * s;
+  const wd = Math.max(a.w, minW), ht = g.multi ? Math.max(a.h, lh * 3) : Math.max(a.h, lh);
+  let x = g.align === 'r' ? a.x + a.w - wd : (g.align === 'c' ? a.x + (a.w - wd) / 2 : a.x);
+  x = Math.max(4, Math.min(x, w.scrollWidth - wd - 4));
+  const box = document.createElement('div');
+  box.className = 'dge-ed';
+  dgePut(box, x, a.y + (a.h - Math.max(a.h, ht)) / 2 * (g.multi ? 0 : 1), wd, ht);
+  const inputs = g.paths.map((p, k) => {
+    const el = document.createElement(g.multi ? 'textarea' : 'input');
+    if (!g.multi) el.type = 'text';
+    el.value = fields[k].value;
+    el.setAttribute('autocomplete', 'off');
+    el.setAttribute('spellcheck', 'false');
+    const lab = fields[k].closest('.ed-field') && fields[k].closest('.ed-field').querySelector('label');
+    el.setAttribute('aria-label', lab ? lab.textContent : p);
+    el.style.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + fs + 'px/' + lh + 'px ' + cs.fontFamily;
+    el.style.letterSpacing = ls;
+    el.style.textAlign = g.align === 'r' && !g.multi ? 'right' : 'left';
+    box.appendChild(el);
+    return el;
+  });
+  const frame = dgeBox(z, true), tip = document.createElement('div'), zr = dgeRect(z);
+  tip.className = 'dge-tip';
+  tip.setAttribute('aria-hidden', 'true');
+  tip.textContent = t(g.multi ? 'dg.edit.tipm' : 'dg.edit.tip');
+  w.appendChild(box);
+  w.appendChild(tip);
+  dgePut(tip, 0, zr.y + zr.h + 4);
+  tip.style.left = Math.max(4, zr.x + zr.w - tip.offsetWidth) + 'px';
+  DGE.ed = { g: g, fields: fields, inputs: inputs, box: box, frame: frame, tip: tip };
+  box.addEventListener('keydown', onDgeKey);
+  box.addEventListener('focusout', onDgeOut);
+  dgeFollow(g.sec, fields[0], false);
+  inputs[0].focus({ preventScroll: true });
+  try { inputs[0].setSelectionRange(inputs[0].value.length, inputs[0].value.length); } catch (e) { /* ignore */ }
+}
+/* Fermer la saisie sur place : commit, la valeur part dans le champ de l'éditeur (input puis change, comme une saisie au clavier) ; sinon rien n'est émis */
+function dgeClose(commit) {
+  const ed = DGE.ed;
+  if (!ed) return;
+  DGE.ed = null;
+  ed.box.removeEventListener('focusout', onDgeOut);
+  [ed.box, ed.frame, ed.tip].forEach(x => { if (x.parentNode) x.parentNode.removeChild(x); });
+  if (!commit) return;
+  ed.inputs.forEach((inp, k) => {
+    const f = ed.fields[k];
+    if (!f.isConnected || f.value === inp.value) return;
+    f.value = inp.value;
+    f.dispatchEvent(new Event('input', { bubbles: true }));
+    f.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+/* Une saisie en cours se valide avant un export ou une impression */
+function dgeCommit() { dgeClose(true); }
+function onDgeKey(e) {
+  if (!DGE.ed) return;
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dgeClose(false); return; }
+  if (e.key === 'Enter' && (!DGE.ed.g.multi || e.ctrlKey || e.metaKey)) { e.preventDefault(); e.stopPropagation(); dgeClose(true); }
+}
+function onDgeOut(e) {
+  const ed = DGE.ed;
+  if (!ed || (e.relatedTarget && ed.box.contains(e.relatedTarget))) return;
+  dgeClose(true);       /* quitter le champ valide */
+}
+/* ----- au téléphone et en fenêtre étroite (onglets) : la marque et le bouton ----- */
+function dgeUnmark() {
+  const m = DGE.mark;
+  if (!m) return;
+  DGE.mark = null;
+  [m.frame, m.btn].forEach(x => { if (x.parentNode) x.parentNode.removeChild(x); });
+}
+function dgeMark(g) {
+  dgeUnmark();
+  const w = dgeWrap(), frame = dgeBox(g.zone, true), zr = dgeRect(g.zone), btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'dge-go';
+  btn.textContent = t('dg.edit.go', { 'boîte': g.title, box: g.title });
+  w.appendChild(btn);
+  dgePut(btn, 0, zr.y + zr.h + 6);
+  btn.style.left = Math.max(4, Math.min(zr.x + zr.w - btn.offsetWidth, w.clientWidth - btn.offsetWidth - 4)) + 'px';
+  btn.addEventListener('click', e => { e.stopPropagation(); dgeGo(g); });
+  DGE.mark = { g: g, frame: frame, btn: btn };
+  const br = btn.getBoundingClientRect(), wr = w.getBoundingClientRect();
+  if (br.bottom > wr.bottom - 8) w.scrollTop += br.bottom - wr.bottom + 16;
+}
+function dgeGo(g) {
+  dgeUnmark();
+  const tab = Object.keys(DG_TAB_SECTIONS).find(k => DG_TAB_SECTIONS[k].indexOf(g.sec) >= 0);
+  if (tab) setActiveTab(tab);
+  dgeOpen(g, true);
+}
+/* ----- le clic sur l'aperçu ----- */
+function onDgeClick(e) {
+  const prev = document.getElementById('preview');
+  if (!prev.contains(e.target)) { if (DGE.mark && !(DGE.mark.btn.contains(e.target))) dgeUnmark(); return; }
+  const z = dgeZone(e.target), g = z ? dgeTarget(e.target, z) : null;
+  if (DG_TABS.matches) { if (g) dgeMark(g); else dgeUnmark(); return; }
+  if (!g) return;
+  if (g.paths) dgeEdit(g);
+  else dgeOpen(g, true);
+}
+/* L'aperçu est refait : les éléments marqués ou survolés n'existent plus */
+function dgeRendered() {
+  if (DGE.hov) { DGE.hov.remove(); DGE.hov = null; }
+  DGE.hovEl = null;
+  dgeUnmark();
+}
+function dgeBind() {
+  const w = dgeWrap();
+  w.addEventListener('pointermove', onDgeMove);
+  w.addEventListener('pointerleave', () => dgeHover(null));
+  w.addEventListener('click', onDgeClick);
+  document.addEventListener('click', e => { if (DGE.mark && !w.contains(e.target)) dgeUnmark(); }, true);
+  DG_TABS.addEventListener('change', () => { dgeClose(true); dgeRendered(); });
+  window.addEventListener('resize', () => { if (DGE.ed) dgeClose(true); dgeRendered(); });
 }
 
 /* ============= ÉDITEUR ============= */
@@ -7362,6 +7933,7 @@ function dgExportDefName() {
   return fnDefault('datacard_' + fnPart(slug(curCard().flight.callsign), 'doc'), DGX.stamp);
 }
 function openExportModal() {
+  dgeCommit();       /* une saisie sur la datacard en cours se valide avant l'export */
   DGX.stamp = stamp();
   const pick = document.createElement('div');
   const top = document.createElement('div');
@@ -7575,7 +8147,8 @@ function bindEvents() {
   /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
   window.addEventListener('storage', e => { if (e.key === KEY_THEATRE || e.key === KEY_UNITS || e.key === KEY_NAV) dgFollowDocNow(); if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); if (e.key === KEY_NAV) dgFollowNav(); if (e.key === KEY_STATE) dgFollowDoc(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET || e.key === KEY_NAV || e.key === null) dgRoutesChanged(); if (e.key === 'mission_snapshot_v1') { renderEditor(true); renderPreview(); } dgStorage(e); });
 
-  window.addEventListener('beforeprint', fillPrintRoot);
+  window.addEventListener('beforeprint', () => { dgeCommit(); fillPrintRoot(); });       /* une saisie sur la datacard en cours se valide avant l'impression */
+  dgeBind();
   window.addEventListener('afterprint', clearPrintRoot);
   let rz = null;
   window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(applyPreviewScale, 60); dgRelayout(); });
@@ -7923,6 +8496,8 @@ def build():
     js = js.replace('__AIRFIELD_FACTS__', facts_js)
     icao_js = json.dumps(airfield_icao(_facts), ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = js.replace('__AIRFIELD_ICAO__', icao_js)
+    beacons_js = json.dumps(airfield_beacons(_facts), ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
+    js = js.replace('__AIRFIELD_BEACONS__', beacons_js)
     js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block())
     js = js.replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block()).replace('@@DISS_BLOCK@@\n', build_diss_block())
     html = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)

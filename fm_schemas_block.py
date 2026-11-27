@@ -963,7 +963,12 @@ def build_bg_svg():
 
 def build_dg_anatomy_svg():
     """Datacard Generator — « Anatomie d'une datacard » (viewBox 720 × 420), redessinée : Carburant · Emport pleine largeur, Menaces · Notes dessous,
-    Points de référence avec la navigation."""
+    Points de référence avec la navigation, puis le bloc des balises des terrains (son titre est celui du dictionnaire du Datacard Generator)."""
+    from fm_planches_block import tool_dicts       # ici, à l'appel : fm_planches_block importe ce module
+    dd = tool_dicts('dg')
+    if not dd or 'dc.b.beacons' not in dd[0] or 'dc.b.beacons' not in dd[1]:
+        raise SystemExit("[ERREUR] Field Manual, Fig. 1 du Datacard Generator : le titre « dc.b.beacons » n'est pas dans le dictionnaire du Datacard Generator")
+    bcn_fr, bcn_en = dd[0]['dc.b.beacons'], dd[1]['dc.b.beacons']
     M = 'dga'
     T = sv_text
     o = []
@@ -988,11 +993,12 @@ def build_dg_anatomy_svg():
     blk(274, 96, 106, 44, 'MISSION', 'MISSION')
     blk(384, 96, 62, 44, 'HORAIRES', 'TIMES')
     blk(274, 144, 172, 24, 'ÉQUIPAGES', 'CREW')
-    blk(274, 172, 172, 44, 'NAVIGATION', 'NAVIGATION', True)
-    blk(274, 220, 172, 22, 'POINTS DE RÉFÉRENCE', 'REFERENCE POINTS')
-    blk(274, 246, 90, 50, 'RADIO', 'RADIO')
-    blk(368, 246, 78, 23, 'TERRAINS', 'AIRFIELDS')
-    blk(368, 273, 78, 23, 'MÉTÉO', 'WEATHER')
+    blk(274, 172, 172, 38, 'NAVIGATION', 'NAVIGATION', True)
+    blk(274, 214, 172, 18, 'POINTS DE RÉFÉRENCE', 'REFERENCE POINTS')
+    blk(274, 236, 172, 18, bcn_fr, bcn_en, True)
+    blk(274, 258, 90, 38, 'RADIO', 'RADIO')
+    blk(368, 258, 78, 17, 'TERRAINS', 'AIRFIELDS')
+    blk(368, 279, 78, 17, 'MÉTÉO', 'WEATHER')
     blk(274, 300, 172, 28, 'CARBURANT · EMPORT', 'FUEL · LOADOUT')
     blk(274, 332, 172, 24, 'MENACES · NOTES', 'THREATS · NOTES')
     o.append('          ' + '<path d="M270,50 h180 v318 h-180 z" fill="none" stroke="#4f7a8e" stroke-width="2"/>')
@@ -1001,23 +1007,25 @@ def build_dg_anatomy_svg():
             (84, 'Indicatif · appareil · tâche', 'Callsign · aircraft · task'),
             (118, 'Objectif et étapes', 'Objective and steps'),
             (156, 'Indicatif · pilote · appareil · n°', 'Callsign · pilot · aircraft · no.'),
-            (271, 'Postes et canaux', 'Radios and channels'),
+            (277, 'Postes et canaux', 'Radios and channels'),
             (314, 'Carburant · poids · joker · bingo · emport', 'Fuel · weight · joker · bingo · loadout')]
     for y, fr, en in left:
         o.append('          ' + sv_line(232, y, 270, y, M, op=.55, sw=1))
         o.append('          ' + T(226, y + 4, 11, fr, en, anchor='end'))
     right = [(72, 'Opération · date · menace', 'Operation · date · threat'),
              (118, 'Mise en route → RTB', 'Start-up → RTB'),
-             (231, 'Points de référence', 'Reference points'),
-             (257, 'DEP · ARR · ALT', 'DEP · ARR · ALT'),
-             (284, 'METAR décodé', 'Decoded METAR'),
+             (223, 'Points de référence', 'Reference points'),
+             (266, 'DEP · ARR · ALT', 'DEP · ARR · ALT'),
+             (287, 'METAR décodé', 'Decoded METAR'),
              (344, 'Menaces · notes', 'Threats · notes')]
     for y, fr, en in right:
         o.append('          ' + sv_line(488, y, 450, y, M, op=.55, sw=1))
         o.append('          ' + T(494, y + 4, 11, fr, en, anchor='start'))
-    o.append('          ' + sv_line(488, 194, 450, 194, M, op=.55, sw=1))
-    o.append('          ' + T(494, 191, 11, 'Points, caps, distances', 'Points, headings, distances', anchor='start'))
-    o.append('          ' + T(494, 205, 11, '→ page 2 si elle déborde', '→ page 2 if it overflows', anchor='start'))
+    o.append('          ' + sv_line(488, 190, 450, 190, M, op=.55, sw=1))
+    o.append('          ' + T(494, 187, 11, 'Points, caps, distances', 'Points, headings, distances', anchor='start'))
+    o.append('          ' + T(494, 201, 11, '→ page 2 si elle déborde', '→ page 2 if it overflows', anchor='start'))
+    o.append('          ' + sv_line(488, 245, 450, 245, M, op=.55, sw=1))
+    o.append('          ' + T(494, 249, 11, 'Balises des terrains', 'Airfield beacons', anchor='start'))
     # pied
     o.append('          ' + sv_line(360, 400, 360, 371, M, op=.55, sw=1))
     o.append('          ' + T(360, 414, 11, 'Pied : indicatif · opération · classification · page', 'Footer: callsign · operation · classification · page'))

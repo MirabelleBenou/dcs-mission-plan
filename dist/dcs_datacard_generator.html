@@ -660,6 +660,19 @@ select[data-tbm-src] { display: none !important; }
 .preview-wrap::-webkit-scrollbar { width: 12px; height: 12px; }
 .preview-wrap::-webkit-scrollbar-track { background: var(--olive-deep); }
 .preview-wrap::-webkit-scrollbar-thumb { background: var(--khaki); border: 2px solid var(--olive-deep); }
+/* Saisie sur la datacard (lot mp-dg) : rien n'entre dans #preview ; le contour, le ✎, les champs, l'infobulle et le bouton du téléphone sont posés dans .preview-wrap, au-dessus de l'aperçu, puis retirés */
+.preview-wrap { position: relative; }
+@media (min-width: 1101px) { #preview .dc-block, #preview .dc-head, #preview .dc-top { cursor: pointer; } }
+.dge-box { position: absolute; z-index: 5; border: 2px dashed #c0892a; pointer-events: none; box-sizing: border-box; }
+.dge-box.on { border-style: solid; }
+.dge-pen { position: absolute; top: 3px; right: 6px; color: #c0892a; font: 700 15px/1 var(--f-ui); }
+.dge-ed { position: absolute; z-index: 6; display: flex; gap: 6px; box-sizing: border-box; }
+.dge-ed input, .dge-ed textarea { flex: 1 1 0; min-width: 0; height: 100%; box-sizing: border-box; margin: 0; padding: 0 4px; border: 0; border-radius: 0; outline: none; background: #fbf1d2; color: #14130f; box-shadow: inset 0 -2px 0 #c0892a, 0 0 0 1px rgba(192,137,42,.55); }
+.dge-ed textarea { resize: none; padding-top: 2px; white-space: pre-wrap; }
+.dge-tip { position: absolute; z-index: 6; background: #14130f; color: #f1ecdf; border: 1px solid #c0892a; font: 500 11px/1.2 var(--f-ui); letter-spacing: .5px; padding: 4px 7px; white-space: nowrap; pointer-events: none; }
+.dge-go { position: absolute; z-index: 6; min-height: 48px; padding: 0 18px; background: #c0892a; color: #14130f; border: 0; border-radius: 0; font: 700 14px/1 var(--f-ui); letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.5); cursor: pointer; }
+.dge-go:focus-visible { outline: 2px solid #f1ecdf; outline-offset: 2px; }
+#editor .dge-flash { outline: 2px solid #c0892a !important; outline-offset: 1px; }
 .dc-warn {
   margin: 0 auto 14px auto;
   max-width: 1000px;
@@ -1253,6 +1266,10 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 .dc-fields:not(.dc-blank) td:nth-child(4) { line-height: 1; }
 .dc-fields:not(.dc-blank) td:nth-child(2) { min-width: calc(4ch + 14px); }       /* un code OACI de quatre lettres ne se coupe jamais */
 .dc-fields:not(.dc-blank) td { font-size: 18px; }       /* une seule taille pour toutes les cellules, l'étiquette comprise */
+/* Balises — terrains (lot mp-dg) : le rôle comme à la boîte Terrains, le nom du terrain comme les noms des tableaux, l'indicatif en gras */
+.dc-bcn td.ro { font-family: var(--dc-fo); font-weight: 500; color: var(--dc-acc); text-transform: uppercase; }
+.dc-bcn td.nm { font-family: var(--dc-fo); font-weight: 500; letter-spacing: .04em; }
+.dc-bcn td.bc { font-family: var(--dc-fo); font-weight: 700; letter-spacing: .06em; }
 .dc-fields:not(.dc-blank) th:nth-child(n+3), .dc-fields:not(.dc-blank) td:nth-child(n+3) { border-left: 1px solid var(--dc-sep); }       /* un filet léger entre le nom, la piste et la fréquence ; aucun entre l'étiquette et l'OACI */
 
 /* Météo : quatre paires sur deux colonnes, valeur calée à droite, filet pointillé dessous */
@@ -2149,6 +2166,10 @@ const I18N = {
     'warn.overflow': 'Contenu tronqué : la page 1 déborde même sans la navigation.',
     'warn.overflow2': 'Contenu tronqué\u202f: la page 2 déborde.',
     'warn.overflowR': 'Contenu tronqué\u202f: la page Radios déborde.',
+    'warn.overflowB': 'Contenu tronqué\u202f: la page des balises déborde.',
+    'dg.edit.tip': 'Entrée : valider · Échap : annuler',
+    'dg.edit.tipm': 'Ctrl+Entrée : valider · Échap : annuler',
+    'dg.edit.go': '✎ Modifier {boîte}',
     'sec.header': 'En-tête',
     'sec.meta': 'Méta',
     'sec.group': 'Groupe et équipage',
@@ -2449,6 +2470,15 @@ const I18N = {
     'dc.role.dep': 'DEP',
     'dc.role.arr': 'ARR',
     'dc.role.alt': 'ALT',
+    'dc.b.beacons': 'BALISES — TERRAINS',
+    'dc.h.bfield': 'TERRAIN',
+    'dc.h.btype': 'TYPE',
+    'dc.h.bcs': 'INDICATIF',
+    'dc.h.bfreq': 'FRÉQ · CANAL',
+    'dc.h.brwy': 'PISTE',
+    'dc.bt.ndb': 'NDB',
+    'dc.bt.far': 'NDB extérieur',
+    'dc.bt.near': 'NDB intérieur',
     'dc.w.wind': 'VENT',
     'dc.w.vis': 'VIS',
     'dc.w.qnh': 'QNH',
@@ -2674,6 +2704,10 @@ const I18N = {
     'warn.overflow': 'Content truncated: page 1 overflows even without navigation.',
     'warn.overflow2': 'Content truncated: page 2 overflows.',
     'warn.overflowR': 'Content truncated: the Radios page overflows.',
+    'warn.overflowB': 'Content truncated: the beacons page overflows.',
+    'dg.edit.tip': 'Enter: confirm · Esc: cancel',
+    'dg.edit.tipm': 'Ctrl+Enter: confirm · Esc: cancel',
+    'dg.edit.go': '✎ Edit {box}',
     'sec.header': 'Header',
     'sec.meta': 'Meta',
     'sec.group': 'Group and crew',
@@ -2974,6 +3008,15 @@ const I18N = {
     'dc.role.dep': 'DEP',
     'dc.role.arr': 'ARR',
     'dc.role.alt': 'ALT',
+    'dc.b.beacons': 'BEACONS — AIRFIELDS',
+    'dc.h.bfield': 'AIRFIELD',
+    'dc.h.btype': 'TYPE',
+    'dc.h.bcs': 'IDENT',
+    'dc.h.bfreq': 'FREQ · CHANNEL',
+    'dc.h.brwy': 'RWY',
+    'dc.bt.ndb': 'NDB',
+    'dc.bt.far': 'Outer NDB',
+    'dc.bt.near': 'Inner NDB',
     'dc.w.wind': 'WIND',
     'dc.w.vis': 'VIS',
     'dc.w.qnh': 'QNH',
@@ -8232,6 +8275,80 @@ function afIcao(th, name) {
   const t = Object.prototype.hasOwnProperty.call(AIRFIELD_ICAO, th) ? AIRFIELD_ICAO[th] : null;
   return t && Object.prototype.hasOwnProperty.call(t, name) ? t[name] : '';
 }
+
+/* ============= BALISES DES TERRAINS (lot mp-dg) =============
+   Les balises que le jeu rattache à chaque aérodrome (airfield_beacons.json, tools/gen_airfield_beacons.py, d'après DCS Airfield Charts) : { théâtre: { nom: [ [type, indicatif, fréquence Hz | null, canal | null, piste | null], … ] } },
+   pour les seuls théâtres où elles sont connues. Le bloc « Balises — terrains » en tire ses lignes ; rien n'est écrit dans l'état. */
+const AIRFIELD_BEACONS = {"Caucasus":{"Anapa-Vityazevo":[["ILS_FAR_HOMER","AP",443000,null,"22"],["ILS_NEAR_HOMER","P",215000,null,"22"],["ILS_FAR_HOMER","AN",443000,null,"04"],["ILS_NEAR_HOMER","N",215000,null,"04"]],"Batumi":[["ILS_LOCALIZER","ILU",110300000,null,"13"],["ILS_GLIDESLOPE","ILU",110300000,null,"13"],["TACAN","BTM",977000000,16,null],["AIRPORT_HOMER","LU",430000,null,null]],"Beslan":[["ILS_FAR_HOMER","CX",1050000,null,"10"],["ILS_NEAR_HOMER","C",250000,null,"10"],["ILS_LOCALIZER","ICH",110500000,null,"10"],["ILS_GLIDESLOPE","ICH",110500000,null,"10"]],"Gelendzhik":[["AIRPORT_HOMER","GN",1000000,null,null],["VOR","GN",114300000,90,null]],"Gudauta":[["AIRPORT_HOMER_WITH_MARKER","XC",395000,null,"33"]],"Kobuleti":[["ILS_FAR_HOMER","KT",870000,null,"07"],["ILS_NEAR_HOMER","T",490000,null,"07"],["ILS_LOCALIZER","IKB",111500000,null,"07"],["ILS_GLIDESLOPE","IKB",111500000,null,"07"],["TACAN","KBL",1154000000,67,null]],"Krasnodar-Center":[["ILS_NEAR_HOMER","O",303000,null,"27"],["ILS_NEAR_HOMER","M",303000,null,"09"],["ILS_FAR_HOMER","OC",625000,null,"27"],["PRMG_GLIDESLOPE","MB",null,38,"09"],["PRMG_LOCALIZER","MB",null,38,"09"],["RSBN","MB",null,40,null],["ILS_FAR_HOMER","MB",625000,null,"09"]],"Krasnodar-Pashkovsky":[["ILS_FAR_HOMER","KR",493000,null,null],["ILS_NEAR_HOMER","K",240000,null,null],["ILS_FAR_HOMER","LD",493000,null,null],["ILS_NEAR_HOMER","L",240000,null,null],["VOR","KN",115800000,105,null]],"Krymsk":[["PRMG_LOCALIZER","KW",null,26,"22"],["ILS_FAR_HOMER","KW",408000,null,"22"],["RSBN","KW",null,28,null],["PRMG_LOCALIZER","OX",null,26,"04"],["ILS_NEAR_HOMER","K",803000,null,"22"],["ILS_FAR_HOMER","OX",408000,null,"04"],["PRMG_GLIDESLOPE","KW",null,26,"22"],["PRMG_GLIDESLOPE","OX",null,26,"04"],["ILS_NEAR_HOMER","O",803000,null,"04"]],"Kutaisi":[["ILS_LOCALIZER","IKS",109750000,null,"07"],["ILS_GLIDESLOPE","IKS",109750000,null,"07"],["AIRPORT_HOMER_WITH_MARKER","TI",477000,null,null],["TACAN","KTS",1005000000,44,null],["VOR","KT",113600000,83,null]],"Maykop-Khanskaya":[["RSBN","DG",null,34,null],["PRMG_GLIDESLOPE","DG",null,36,"04"],["ILS_NEAR_HOMER","R",591000,null,"22"],["ILS_FAR_HOMER","RK",289000,null,"22"],["ILS_NEAR_HOMER","D",591000,null,"04"],["ILS_FAR_HOMER","DG",289000,null,"04"],["PRMG_LOCALIZER","DG",null,36,"04"]],"Mineralnye Vody":[["ILS_FAR_HOMER","NR",583000,null,"30"],["ILS_NEAR_HOMER","N",283000,null,"30"],["ILS_LOCALIZER","IMW",109300000,null,"30"],["ILS_GLIDESLOPE","IMW",109300000,null,"30"],["ILS_FAR_HOMER","MD",583000,null,"12"],["ILS_NEAR_HOMER","D",283000,null,"12"],["ILS_LOCALIZER","IMD",111700000,null,"12"],["ILS_GLIDESLOPE","IMD",111700000,null,"12"],["VOR","MN",117100000,118,null]],"Mozdok":[["PRMG_LOCALIZER","MK",null,22,"26"],["PRMG_GLIDESLOPE","MZ",null,22,"08"],["RSBN","MZ",null,20,null],["PRMG_GLIDESLOPE","MK",null,22,"26"],["ILS_NEAR_HOMER","R",1065000,null,"26"],["ILS_NEAR_HOMER","D",1065000,null,"08"],["ILS_FAR_HOMER","DO",525000,null,"08"],["ILS_FAR_HOMER","RM",525000,null,"26"],["PRMG_LOCALIZER","MZ",null,22,"08"]],"Nalchik":[["ILS_FAR_HOMER","NL",718000,null,"24"],["ILS_NEAR_HOMER","N",350000,null,"24"],["ILS_LOCALIZER","INL",110500000,null,"24"],["ILS_GLIDESLOPE","INL",110500000,null,"24"]],"Senaki-Kolkhi":[["ILS_FAR_HOMER","BI",335000,null,"09"],["ILS_NEAR_HOMER","B",688000,null,"09"],["ILS_LOCALIZER","ITS",108900000,null,"09"],["ILS_GLIDESLOPE","ITS",108900000,null,"09"],["TACAN","TSK",992000000,31,null]],"Sochi-Adler":[["AIRPORT_HOMER_WITH_MARKER","CO",761000,null,"06"],["ILS_LOCALIZER","ISO",111100000,null,"06"],["ILS_GLIDESLOPE","ISO",111100000,null,"06"]],"Sukhumi-Babushara":[["ILS_FAR_HOMER","AV",489000,null,"30"],["ILS_NEAR_HOMER","A",995000,null,"30"]],"Tbilisi-Lochini":[["ILS_FAR_HOMER","BP",342000,null,null],["ILS_NEAR_HOMER","B",923000,null,null],["ILS_LOCALIZER","IVP",110300000,null,null],["ILS_GLIDESLOPE","IVP",110300000,null,null],["ILS_FAR_HOMER","NA",211000,null,null],["ILS_NEAR_HOMER","N",435000,null,null],["ILS_LOCALIZER","INA",108900000,null,null],["ILS_GLIDESLOPE","INA",108900000,null,null],["VOR","TB",113700000,84,null],["TACAN","GTB",986000000,25,null]],"Vaziani":[["ILS_LOCALIZER","IVZ",108750000,null,null],["ILS_GLIDESLOPE","IVZ",108750000,null,null],["ILS_LOCALIZER","IVI",108750000,null,null],["ILS_GLIDESLOPE","IVI",108750000,null,null],["TACAN","VAS",983000000,22,null]]},"GermanyCW":{"Allstedt":[["RSBN","AL",null,38,null],["AIRPORT_HOMER","L",740000,0,null],["AIRPORT_HOMER","LU",365000,0,null],["AIRPORT_HOMER","BZ",365000,0,null],["AIRPORT_HOMER","B",740000,0,null],["AIRPORT_HOMER","CLH",419000,null,null]],"Altes Lager":[["ILS_NEAR_HOMER","L",645000,null,null],["ILS_NEAR_HOMER","B",645000,null,null],["ILS_FAR_HOMER","LG",313000,null,null],["RSBN","AR",null,24,null],["ILS_FAR_HOMER","BM",313000,null,null]],"Bindersleben":[["ILS_FAR_HOMER","RF",410000,null,null],["ILS_LOCALIZER","IRF",109900000,null,"28"],["ILS_NEAR_HOMER","R",330000,null,null],["ILS_NEAR_HOMER","F",330000,null,null],["ILS_FAR_HOMER","FR",306000,null,null],["ILS_GLIDESLOPE","IRF",109900000,null,null]],"Bitburg":[["ILS_LOCALIZER","IBIT",111900000,null,"24"],["ILS_GLIDESLOPE","IBIT",111900000,null,"24"],["TACAN","BIT",null,56,null]],"Bornholm":[["VOR","ROE",112000000,null,null],["ILS_GLIDESLOPE","IAR",109350000,null,null],["ILS_LOCALIZER","IAR",109350000,null,"11"],["VOR_DME","IAR",112000000,30,null],["AIRPORT_HOMER","FAU",334000,null,null],["ILS_GLIDESLOPE","IRE",110300000,null,null],["ILS_LOCALIZER","IRE",110300000,null,"29"],["TACAN","ROE",112000000,57,null]],"Brand":[["ILS_FAR_HOMER","ZP",360000,null,null],["ILS_NEAR_HOMER","Z",735000,null,null],["ILS_NEAR_HOMER","D",735000,null,null],["ILS_FAR_HOMER","DW",360000,null,null],["RSBN","ZB",null,5,null]],"Brandis":[["ILS_NEAR_HOMER","C",483000,null,null],["ILS_FAR_HOMER","CZ",980000,null,null]],"Braunschweig":[["ILS_GLIDESLOPE","BWG",111100000,null,null],["ILS_FAR_HOMER","BRU",427000,null,null],["AIRPORT_HOMER","HLI",403500,null,null],["ILS_LOCALIZER","BWG",111100000,null,"26"]],"Bremen":[["ILS_GLIDESLOPE","IBRW",110900000,null,null],["ILS_LOCALIZER","IBRE",110300000,null,"09"],["ILS_FAR_HOMER","BMN",346500,null,null],["VOR_DME","BMN",117450000,121,null],["ILS_LOCALIZER","IBRW",110900000,null,"27"],["ILS_FAR_HOMER","BW",276500,null,null],["ILS_GLIDESLOPE","IBRE",110300000,null,null]],"Briest":[["RSBN","UT",null,9,null]],"Buchel":[["TACAN","BUE",null,118,null]],"Buckeburg":[["AIRPORT_HOMER","BYC",368000,null,null]],"Celle":[["AIRPORT_HOMER","CEL",311000,null,null]],"Chojna":[["ILS_FAR_HOMER","OJ",975000,null,null],["PRMG_LOCALIZER","AJ",null,41,"09"],["PRMG_GLIDESLOPE","AT",null,41,"27"],["PRMG_GLIDESLOPE","AJ",null,41,"09"],["ILS_FAR_HOMER","AT",975000,null,null],["PRMG_LOCALIZER","AT",null,41,"27"],["ILS_NEAR_HOMER","O",480000,null,null],["RSBN","AT",null,43,null],["ILS_NEAR_HOMER","A",480000,null,null]],"Cochstedt":[["ILS_FAR_HOMER","S",950000,null,null],["ILS_NEAR_HOMER","SL",470000,null,null]],"Cologne":[["ILS_LOCALIZER","DLW",109100000,null,"25"],["ILS_GLIDESLOPE","IKEN",111100000,null,null],["ILS_GLIDESLOPE","DLW",109100000,null,null],["ILS_FAR_HOMER","LV",327000,null,null],["VOR_DME","KBO",112150000,null,null],["ILS_FAR_HOMER","LW",467000,null,null],["ILS_LOCALIZER","IKEN",111100000,null,"32R"],["ILS_LOCALIZER","IKES",110900000,null,"14L"],["ILS_FAR_HOMER","LJ",365000,null,null],["ILS_GLIDESLOPE","IKES",110900000,null,null]],"Damgarten":[["ILS_FAR_HOMER","MA",668000,null,null],["ILS_NEAR_HOMER","N",325000,null,null],["PRMG_GLIDESLOPE","MA",null,34,"07"],["PRMG_LOCALIZER","MA",null,34,"07"],["PRMG_LOCALIZER","MO",null,34,"25"],["ILS_NEAR_HOMER","M",325000,null,null],["RSBN","MA",null,32,null],["ILS_FAR_HOMER","NW",668000,null,null],["PRMG_GLIDESLOPE","MO",null,34,"25"]],"Dessau":[["ILS_FAR_HOMER","W",668000,null,null],["ILS_NEAR_HOMER","WN",765000,null,null]],"Dusseldorf":[["ILS_LOCALIZER","IDSW",109900000,null,"23"],["ILS_LOCALIZER","IDSE",111500000,null,"05"],["VOR","DUS",115150000,null,null],["ILS_GLIDESLOPE","IDSW",109900000,null,null],["ILS_FAR_HOMER","LI",417000,null,null],["ILS_FAR_HOMER","DY",284500,null,null],["ILS_GLIDESLOPE","IDSE",111500000,null,null]],"Falkenberg":[["AIRPORT_HOMER","BL",462000,null,null],["RSBN","BL",null,34,null],["AIRPORT_HOMER","B",938000,null,null],["AIRPORT_HOMER","BL",462000,null,null],["AIRPORT_HOMER","S",938000,null,null]],"Fassberg":[["AIRPORT_HOMER","FSB",284000,null,null],["VORTAC","FSB",110000000,95,null]],"Finow":[["ILS_NEAR_HOMER","R",895000,null,null],["ILS_FAR_HOMER","OM",442000,null,null],["ILS_FAR_HOMER","RG",442000,null,null],["ILS_NEAR_HOMER","O",895000,null,null]],"Frankfurt":[["ILS_LOCALIZER","IFM",110700000,null,"07L"],["ILS_GLIDESLOPE","IFM",110100000,null,"25R"],["AIRPORT_HOMER","FR",297000,null,null],["ILS_GLIDESLOPE","DLF",111100000,null,"25L"],["ILS_LOCALIZER","DLF",109500000,null,"07R"],["AIRPORT_HOMER","FW",382000,null,null],["VORTAC","FFM",114200000,89,null],["ILS_GLIDESLOPE","RHM",110700000,null,"07L"],["ILS_LOCALIZER","RHM",110100000,null,"25R"],["ILS_LOCALIZER","IRF",111100000,null,"25L"],["ILS_GLIDESLOPE","IRF",109500000,null,"07R"],["AIRPORT_HOMER","FFM",320000,null,null]],"Fritzlar":[["AIRPORT_HOMER","FTZ",468000,null,null]],"Fulda":[["AIRPORT_HOMER","FDA",441000,null,null]],"Gardelegen":[["RSBN","GN",null,36,null]],"Garz":[["ILS_FAR_HOMER","GZ",679500,null,null],["PRMG_GLIDESLOPE","GZ",null,38,"28"],["PRMG_LOCALIZER","GZ",null,38,"28"],["ILS_NEAR_HOMER","G",330000,null,null],["ILS_FAR_HOMER","ZG",679500,null,null],["ILS_NEAR_HOMER","G",330000,null,null],["PRMG_GLIDESLOPE","GA",null,38,"10"],["PRMG_LOCALIZER","GA",null,38,"10"]],"Gatow":[["ILS_LOCALIZER","GWW",108900000,null,"26"],["VOR_DME","HVL",113300000,null,null],["AIRPORT_HOMER","GW",370500,null,null],["ILS_GLIDESLOPE","SLR",108900000,null,null]],"Giebelstadt":[["TACAN","GBL",null,47,null],["AIRPORT_HOMER","GBL",507000,null,null]],"Gutersloh":[["ILS_LOCALIZER","GS",110700000,null,"27"],["TACAN","GSO",null,108,null],["ILS_GLIDESLOPE","GS",110700000,null,null],["AIRPORT_HOMER","GS",412000,null,null]],"Hahn":[["TACAN","HAH",482000000,24,null],["ILS_FAR_HOMER","HAH",482000,null,null],["ILS_LOCALIZER","IHAW",111300000,null,"21"],["ILS_GLIDESLOPE","IHAW",111300000,null,null],["ILS_LOCALIZER","IHAE",109300000,null,"03"],["ILS_GLIDESLOPE","IHAE",109300000,null,null],["VOR","HAH",113000000,null,null]],"Hamburg":[["ILS_FAR_HOMER","FU",350500,null,null],["ILS_GLIDESLOPE","IHHN",109900000,null,null],["ILS_LOCALIZER","IHHS",111350000,null,"15"],["ILS_FAR_HOMER","GT",323000,null,null],["ILS_LOCALIZER","IHHN",109900000,null,"33"],["ILS_GLIDESLOPE","IHHW",111500000,null,null],["ILS_FAR_HOMER","HAM",339000,null,null],["ILS_GLIDESLOPE","IHHS",111350000,null,null],["VOR_DME","ALF",115800000,105,null],["ILS_LOCALIZER","IHHE",110500000,null,"05"],["ILS_GLIDESLOPE","IHHE",110500000,null,null],["ILS_LOCALIZER","IHHW",111500000,null,"23"]],"Hamburg Finkenwerder":[["ILS_GLIDESLOPE","IHFE",110700000,null,"05"],["ILS_LOCALIZER","IHFE",110700000,null,"23"],["ILS_LOCALIZER","IHFW",108500000,null,"05"],["ILS_GLIDESLOPE","IHFW",108500000,null,"23"]],"Hannover":[["ILS_GLIDESLOPE","SLR",109500000,null,null],["DME","HAD",null,86,null],["AIRPORT_HOMER","HW",358000,null,null],["AIRPORT_HOMER","HA",320000,null,null],["ILS_LOCALIZER","IHSW",109500000,null,"09R"],["ILS_LOCALIZER","IHNW",108900000,null,"09L"],["ILS_LOCALIZER","IHSE",108700000,null,"27L"],["ILS_GLIDESLOPE","PLG",108700000,null,null],["ILS_GLIDESLOPE","SLR",108900000,null,null],["AIRPORT_HOMER","HAE",332000,null,null],["ILS_LOCALIZER","IHNE",108300000,null,"27R"],["ILS_GLIDESLOPE","PLG",108300000,null,null]],"Heidelberg":[["AIRPORT_HOMER","HDL",417000,null,null]],"Holzdorf":[["PRMG_LOCALIZER","HX",null,31,"27"],["RSBN","HX",null,33,null],["ILS_FAR_HOMER","XH",609500,null,null],["PRMG_GLIDESLOPE","HO",null,31,"09"],["ILS_FAR_HOMER","HX",609500,null,null],["PRMG_LOCALIZER","HO",null,31,"09"],["PRMG_GLIDESLOPE","HX",null,31,"27"],["ILS_NEAR_HOMER","X",295000,null,null],["ILS_NEAR_HOMER","H",295000,null,null]],"Kastrup":[["ILS_GLIDESLOPE","OXS",109500000,null,"22L"],["ILS_GLIDESLOPE","KLK",110900000,null,"22R"],["ILS_LOCALIZER","CH",110500000,null,"04L"],["ILS_LOCALIZER","KLK",110900000,null,"22R"],["ILS_LOCALIZER","OY",108900000,null,"30"],["VOR","KAS",112500000,null,null],["ILS_LOCALIZER","KA",109900000,null,"12"],["VORTAC","KAS",112500000,72,null],["ILS_LOCALIZER","OXS",109500000,null,"22L"],["ILS_GLIDESLOPE","NE",109300000,null,"04R"],["ILS_GLIDESLOPE","CH",110500000,null,"04L"],["ILS_GLIDESLOPE","OY",108900000,null,"30"],["AIRPORT_HOMER","KAS",340000,null,null],["ILS_GLIDESLOPE","KA",109900000,null,"12"],["ILS_LOCALIZER","NE",109300000,null,"04R"],["DME","KLK",110900000,46,null],["DME","CH",110500000,42,null],["DME","KA",109900000,36,null],["DME","OXS",110500000,32,null],["DME","OY",108900000,26,null],["DME","NE",109300000,30,null]],"Kiel":[["ILS_LOCALIZER","IKHE",109500000,null,"08"],["DME","KHD",null,109,null],["ILS_GLIDESLOPE","IKHE",109550000,null,"26"],["AIRPORT_HOMER","KIL",383500,null,null],["ILS_LOCALIZER","IKHW",109550000,null,"26"],["ILS_GLIDESLOPE","IKHW",109500000,null,"08"]],"Kothen":[["ILS_FAR_HOMER","GX",350000,null,null],["RSBN","KT",null,35,null],["ILS_FAR_HOMER","RC",350000,null,null],["ILS_NEAR_HOMER","R",718000,null,null],["ILS_NEAR_HOMER","G",718000,null,null]],"Laage":[["ILS_NEAR_HOMER","R",976000,null,null],["ILS_FAR_HOMER","RL",1247000,null,null],["PRMG_LOCALIZER","LR",null,38,null],["ILS_NEAR_HOMER","L",976000,null,null],["RSBN","LR",null,40,null],["PRMG_GLIDESLOPE","LR",null,38,null],["ILS_FAR_HOMER","LR",1247000,null,null]],"Larz":[["ILS_NEAR_HOMER","U",476000,null,null],["ILS_FAR_HOMER","BA",965000,null,null],["RSBN","LZ",null,37,null],["PRMG_LOCALIZER","BA",null,39,"26"],["ILS_NEAR_HOMER","B",476000,null,null],["PRMG_LOCALIZER","LZ",null,39,"08"],["PRMG_GLIDESLOPE","LZ",null,39,"08"],["ILS_FAR_HOMER","UK",965000,null,null],["PRMG_GLIDESLOPE","BA",null,39,"26"]],"Leipzig Mockau":[["ILS_FAR_HOMER","LG",335000,null,null],["ILS_NEAR_HOMER","G",426000,null,null],["ILS_NEAR_HOMER","L",426000,null,null]],"Lubeck":[["AIRPORT_HOMER","LYE",394000,null,null]],"Mahlwinkel":[["PRMG_LOCALIZER","ML",null,8,"27"],["PRMG_GLIDESLOPE","ML",null,8,"27"],["PRMG_LOCALIZER","MK",null,8,"09"],["ILS_FAR_HOMER","NU",620000,null,null],["PRMG_GLIDESLOPE","MK",null,8,"09"],["RSBN","MK",null,6,null],["ILS_FAR_HOMER","ZW",620000,null,null],["ILS_NEAR_HOMER","Z",300000,null,null],["ILS_NEAR_HOMER","Z",300000,null,null]],"Mainz Finthen":[["AIRPORT_HOMER","FY",470000,null,null]],"Marxwalde":[["AIRPORT_HOMER","BU",472000,0,null],["PRMG_GLIDESLOPE","NE",null,29,null],["PRMG_LOCALIZER","BU",null,29,null],["PRMG_GLIDESLOPE","BU",110900000,29,null],["AIRPORT_HOMER","U",958000,0,null],["AIRPORT_HOMER","UB",472000,0,null],["RSBN","BU",null,31,null],["AIRPORT_HOMER","B",958000,0,null],["PRMG_LOCALIZER","NE",null,29,null]],"Mendig":[["AIRPORT_HOMER","NMN",331000,null,null]],"Merseburg":[["PRMG_LOCALIZER","DG",null,25,"26"],["ILS_FAR_HOMER","DK",398000,null,null],["ILS_NEAR_HOMER","K",810000,null,null],["RSBN","DK",null,23,null],["PRMG_GLIDESLOPE","DG",null,25,"26"],["ILS_NEAR_HOMER","D",810000,null,null],["PRMG_LOCALIZER","DK",null,25,"08"],["ILS_FAR_HOMER","KD",398000,null,null],["PRMG_GLIDESLOPE","DK",null,25,"08"]],"Neubrandenburg":[["ILS_FAR_HOMER","T",950000,null,null],["ILS_FAR_HOMER","DT",950000,null,null],["ILS_NEAR_HOMER","T",460000,null,null],["ILS_NEAR_HOMER","D",460000,null,null]],"Neuruppin":[["ILS_FAR_HOMER","GK",842000,null,null],["ILS_FAR_HOMER","WO",842000,null,null],["ILS_NEAR_HOMER","W",412000,null,null],["ILS_NEAR_HOMER","G",412000,null,null]],"Nordholz":[["ILS_LOCALIZER","",111900000,null,"26"],["AIRPORT_TACAN","NDO",null,118,null],["ILS_GLIDESLOPE","",111900000,null,null],["AIRPORT_HOMER","NDO",372000,null,null]],"Norvenich":[["VORTAC","NOR",116200000,77,null]],"Obermehler Schlotheim":[["ILS_FAR_HOMER","QI",445000,null,null],["ILS_NEAR_HOMER","Q",217000,null,null]],"Oranienburg":[["ILS_NEAR_HOMER","H",286000,null,null],["ILS_FAR_HOMER","HL",589000,null,null]],"Parchim":[["ILS_FAR_HOMER","UU",376000,null,null],["RSBN","PM",null,20,null],["ILS_NEAR_HOMER","A",766000,null,null],["ILS_FAR_HOMER","AS",376000,null,null],["ILS_NEAR_HOMER","U",766000,null,null]],"Peenemunde":[["ILS_NEAR_HOMER","N",867000,null,null],["ILS_NEAR_HOMER","E",867000,null,null],["RSBN","NE",null,16,null],["ILS_FAR_HOMER","NE",423000,null,null],["ILS_FAR_HOMER","EN",423000,null,null]],"Pferdsfeld":[["TACAN","PFF",null,77,null],["AIRPORT_HOMER","PFF",394000,null,null]],"Ramstein":[["ILS_GLIDESLOPE","IRWR",110750000,null,null],["ILS_GLIDESLOPE","IREL",111500000,null,null],["TACAN","RMS",null,81,null],["ILS_LOCALIZER","IRWR",110750000,null,"27"],["ILS_LOCALIZER","IREL",111500000,null,"09"]],"Schkeuditz":[["ILS_GLIDESLOPE","IMA",110300000,null,null],["ILS_FAR_HOMER","SK",446000,null,null],["ILS_LOCALIZER","IMA",110300000,null,"29"],["ILS_NEAR_HOMER","M",425000,null,null],["ILS_NEAR_HOMER","S",425000,null,null],["ILS_FAR_HOMER","MA",357000,null,null]],"Schonefeld":[["ILS_GLIDESLOPE","MVR",110700000,null,"07R"],["ILS_GLIDESLOPE","SLR",110300000,null,"25R"],["ILS_NEAR_HOMER","M",430000,null,null],["ILS_LOCALIZER","SLL",110300000,null,"25R"],["ILS_LOCALIZER","MVR",110700000,null,"07R"],["ILS_FAR_HOMER","MV",309000,null,null],["ILS_FAR_HOMER","SL",299000,null,null],["ILS_GLIDESLOPE","SLL",109900000,null,"25L"],["ILS_NEAR_HOMER","S",430000,null,null],["ILS_LOCALIZER","SLL",109900000,null,"25L"]],"Schweinfurt":[["AIRPORT_HOMER","SCF",363000,null,null]],"Sembach":[["AIRPORT_HOMER","SEX",428000,null,null],["TACAN","SEM",null,28,null]],"Spangdahlem":[["ILS_LOCALIZER","ISPE",109150000,null,"05"],["ILS_LOCALIZER","ISPA",108100000,null,"23"],["ILS_GLIDESLOPE","ISPA",108100000,null,null],["ILS_GLIDESLOPE","ISPE",109150000,null,null],["TACAN","SPA",null,32,null]],"Sperenberg":[["AIRPORT_HOMER","ChC",221000,null,null],["AIRPORT_HOMER","CH",254000,null,null],["AIRPORT_HOMER","N",254000,null,null],["AIRPORT_HOMER","NZ",221000,null,null],["RSBN","SR",null,28,null]],"Stendal":[["ILS_NEAR_HOMER","U",449000,null,null],["ILS_FAR_HOMER","UK",910000,null,null]],"Sturup":[["ILS_LOCALIZER","SMS",111900000,null,"17"],["VOR","SUP",113000000,77,null],["ILS_GLIDESLOPE","NM",111900000,null,null],["AIRPORT_HOMER","NS",351000,null,null],["ILS_LOCALIZER","SMS",108100000,null,"35"],["ILS_GLIDESLOPE","SM",108100000,null,null],["AIRPORT_HOMER","SS",420000,null,null]],"Szczecin-Goleniow":[["ILS_NEAR_HOMER","C",285000,null,null],["ILS_NEAR_HOMER","C",285000,null,null],["ILS_FAR_HOMER","CL",589000,null,null],["ILS_FAR_HOMER","CL",589000,null,null]],"Tegel":[["ILS_GLIDESLOPE","ITGE",108500000,null,null],["ILS_GLIDESLOPE","ITGW",109300000,null,null],["AIRPORT_HOMER","RW",392000,null,null],["ILS_LOCALIZER","ITGE",108500000,null,"08R"],["ILS_GLIDESLOPE","ITLE",109100000,null,null],["AIRPORT_HOMER","GL",321500,null,null],["VORTAC","TGL",112300000,70,null],["ILS_LOCALIZER","ITLE",109100000,null,"08L"],["ILS_LOCALIZER","ITLW",110100000,null,"26R"],["AIRPORT_HOMER","DLS",413500,null,null],["ILS_LOCALIZER","ITGW",109300000,null,"26L"],["ILS_GLIDESLOPE","ITLW",110100000,null,"26R"]],"Tempelhof":[["ILS_LOCALIZER","IDBR",109700000,null,"09R"],["VORTAC","TOF",114100000,88,null],["ILS_FAR_HOMER","DBR",347000,null,null],["ILS_GLIDESLOPE","IDLB",109500000,null,"27L"],["ILS_GLIDESLOPE","IDBR",109700000,null,"09R"],["ILS_FAR_HOMER","DIP",327000,null,null],["ILS_LOCALIZER","IDLB",109500000,null,"27L"]],"Templin":[["ILS_NEAR_HOMER","P",219000,null,null],["RSBN","LD",null,15,null],["PRMG_LOCALIZER","IK",null,17,"27"],["PRMG_LOCALIZER","PG",null,17,"09"],["ILS_FAR_HOMER","PG",451000,null,null],["PRMG_GLIDESLOPE","PG",null,17,"09"],["ILS_FAR_HOMER","IK",451000,null,null],["PRMG_GLIDESLOPE","IK",null,17,"27"],["ILS_NEAR_HOMER","I",219000,null,null]],"Tutow":[["ILS_FAR_HOMER","Y",398000,null,null],["ILS_NEAR_HOMER","YC",803000,null,null]],"Werneuchen":[["RSBN","WC",null,4,null]],"Wiesbaden":[["AIRPORT_HOMER","WIB",399000,null,null],["TACAN","WBD",null,88,null]],"Wittstock":[["ILS_NEAR_HOMER","G",205000,null,null],["ILS_FAR_HOMER","GJ",421000,null,null],["PRMG_GLIDESLOPE","GJ",null,24,"26"],["RSBN","GJ",null,22,null],["ILS_NEAR_HOMER","O",205000,null,null],["PRMG_LOCALIZER","GO",null,24,"08"],["ILS_FAR_HOMER","OR",421000,null,null],["PRMG_LOCALIZER","GJ",null,24,"26"],["PRMG_GLIDESLOPE","GO",null,24,"08"]],"Wunstorf":[["ILS_LOCALIZER","WUH",109700000,null,"26"],["TACAN","WUN",114850000,116,null],["AIRPORT_HOMER","WUN",419000,null,null],["ILS_GLIDESLOPE","WUH",109700000,null,"26"]],"Zerbst":[["PRMG_LOCALIZER","ZB",null,19,null],["ILS_NEAR_HOMER","Z",345000,null,null],["PRMG_GLIDESLOPE","ZB",null,19,null],["ILS_FAR_HOMER","KJ",708000,null,null],["PRMG_LOCALIZER","KJ",null,19,null],["ILS_NEAR_HOMER","K",345000,null,null],["ILS_FAR_HOMER","ZB",708000,null,null],["RSBN","KJ",null,17,null],["PRMG_GLIDESLOPE","KJ",null,19,null]],"Zweibrucken":[["TACAN","ZBU",362300000,48,null],["ILS_LOCALIZER","IZBU",111100000,null,"03"],["ILS_GLIDESLOPE","IZBU",111100000,null,null]]},"Syria":{"Adana Sakirpasa":[["ILS_LOCALIZER","IADA",108700000,null,"05"],["ILS_GLIDESLOPE","IADA",108700000,null,"05"],["AIRPORT_HOMER_WITH_MARKER","ADN",395000,null,null],["VOR_DME","ADA",112700000,null,null]],"Adiyaman":[["ILS_GLIDESLOPE","KHD",113600000,null,"04"],["ILS_LOCALIZER","KHD",113600000,null,"04"]],"Akrotiri":[["ILS_LOCALIZER","IAK",109700000,null,"28"],["ILS_GLIDESLOPE","IAK",109700000,null,"28"],["TACAN","AKR",116000000,107,null],["AIRPORT_HOMER","AK",365000,null,null]],"Aleppo":[["AIRPORT_HOMER","ALE",396000,null,null],["AIRPORT_HOMER","MER",365000,null,null],["VOR_DME","ALE",114500000,null,null]],"Bassel Al-Assad":[["ILS_GLIDESLOPE","IBA",109100000,null,"17R"],["ILS_LOCALIZER","IBA",109100000,null,"17R"],["VOR_DME","LTK",114800000,null,null],["HOMER","LTK",414000,null,null],["RSBN","LTK",null,7,null],["DME","IBA",109100000,null,null],["PRMG_LOCALIZER","LTK",null,9,"35R"],["PRMG_GLIDESLOPE","LTK",null,9,"35R"]],"Beirut-Rafic Hariri":[["VOR_DME","KAD",112600000,null,null],["ILS_GLIDESLOPE","IBB",110100000,null,"16"],["ILS_LOCALIZER","IKK",110700000,null,null],["ILS_LOCALIZER","BIL",109500000,null,null],["ILS_LOCALIZER","IBB",110100000,null,"16"],["ILS_GLIDESLOPE","BIL",109500000,null,null],["ILS_GLIDESLOPE","IKK",110700000,null,null],["AIRPORT_HOMER_WITH_MARKER","BOD",351000,null,null]],"Ben Gurion":[["ILS_LOCALIZER","BG",110300000,null,"12"],["ILS_GLIDESLOPE","GP",110900000,null,"08"],["VOR_DME","BGN",113500000,null,null],["ILS_GLIDESLOPE","BD",111900000,null,"30"],["ILS_GLIDESLOPE","GP",108700000,null,"26"],["ILS_LOCALIZER","BA",110900000,null,"26"],["ILS_LOCALIZER","BN",109700000,null,"21"],["ILS_GLIDESLOPE","GP",110300000,null,"12"],["ILS_GLIDESLOPE","GP",109700000,null,"21"],["ILS_LOCALIZER","BA",108700000,null,"26"],["ILS_LOCALIZER","BD",111900000,null,"30"]],"Chukurova":[["ILS_LOCALIZER","ICKR",333950000,null,null],["ILS_GLIDESLOPE","ICKU",329750000,null,"21L"],["ILS_GLIDESLOPE","ICKR",333950000,null,"03R"],["VOR_DME","CKR",113700000,null,null],["HOMER","CKR",320000,null,null],["ILS_LOCALIZER","ICKU",329750000,null,null]],"Damascus":[["ILS_GLIDESLOPE","IDA",109900000,null,"23R"],["ILS_LOCALIZER","IDA",109900000,null,"23R"],["VOR_DME","DAM",116000000,null,null],["ILS_LOCALIZER","DAML",111100000,null,"05R"],["AIRPORT_HOMER","DAL",342000,null,null],["AIRPORT_HOMER","ABD",264000,null,null],["ILS_GLIDESLOPE","DAML",111100000,null,"05R"]],"Deir ez-Zor":[["AIRPORT_HOMER","DRZ",295000,null,null],["VOR_DME","DRZ",117000000,null,null]],"Diyarbakir":[["ILS_GLIDESLOPE","IDD",109400000,null,"16L"],["ILS_GLIDESLOPE","IDI",109200000,null,"34R"],["TACAN","DIY",110000000,37,null],["ILS_LOCALIZER","IDD",109400000,null,"16L"],["ILS_LOCALIZER","IDI",109200000,null,"34R"],["AIRPORT_HOMER","DYB",330000,null,null]],"Ercan":[["ILS_LOCALIZER","IECR",108300000,null,"29"],["ILS_GLIDESLOPE","IECR",108300000,null,"29"],["VOR_DME","ECN",117000000,null,null]],"Gaziantep":[["ILS_LOCALIZER","IGNP",109100000,null,null],["ILS_GLIDESLOPE","IGNP",109100000,null,null],["AIRPORT_HOMER","GAZ",432000,null,null],["VOR_DME","GAZ",116700000,null,null]],"Gazipasa":[["ILS_GLIDESLOPE","IGZP",108500000,null,"08"],["ILS_LOCALIZER","IGZP",108500000,null,"08"],["VOR_DME","GZP",114200000,89,null],["AIRPORT_HOMER","GZP",316000,null,null]],"Gecitkale":[["VOR_DME","GKE",114300000,null,null],["AIRPORT_HOMER","GKE",435000,null,null]],"Hatay":[["VOR_DME","HTY",112050000,null,null],["ILS_LOCALIZER","IHAT",108900000,null,null],["ILS_GLIDESLOPE","IHAT",108900000,null,null],["AIRPORT_HOMER","HTY",336000,null,null]],"Hatzerim":[["VORTAC","BRA",114900000,96,null]],"Hatzor":[["ILS_GLIDESLOPE","HZR",108500000,0,null],["ILS_LOCALIZER","HZR",108500000,null,null],["VORTAC","HZR",115900000,106,null]],"Incirlik":[["TACAN","DAN",null,21,null],["ILS_LOCALIZER","IDAN",109300000,null,"05"],["ILS_GLIDESLOPE","IDAN",109300000,null,"05"],["ILS_GLIDESLOPE","IDNA",111700000,null,"23"],["ILS_LOCALIZER","IDNA",111700000,null,"23"]],"King Abdullah II":[["ILS_GLIDESLOPE","",109100000,null,null],["ILS_LOCALIZER","",109100000,null,null]],"Konya":[["VOR_DME","KNY",111200000,49,null],["ILS_LOCALIZER","IKNY",108900000,null,"01L"],["AIRPORT_HOMER","KNY",390000,null,null],["ILS_GLIDESLOPE","IKNY",108900000,null,"01L"],["DME","IKNY",108900000,26,"01L"],["TACAN","KON",114100000,88,null]],"Larnaca":[["ILS_LOCALIZER","ILC",110300000,null,"22"],["VOR_DME","LCA",112800000,null,null],["ILS_GLIDESLOPE","ILC",110300000,null,"22"],["HOMER","LCA",432000,null,null]],"Marka":[["ILS_LOCALIZER","IAMN",109500000,null,null],["ILS_GLIDESLOPE","IAMN",109500000,null,null]],"Mezzeh":[["AIRPORT_HOMER","MEZ",358000,null,null]],"Muwaffaq Salti":[["ILS_LOCALIZER","IGHI",108900000,null,"31"],["ILS_LOCALIZER","IGHS",109700000,null,"26"],["ILS_GLIDESLOPE","IGHI",108900000,null,"31"],["ILS_GLIDESLOPE","IGHS",109700000,null,"26"]],"Nevatim":[["VOR_DME","NGV",111500000,null,null],["ILS_LOCALIZER","GR",108300000,null,"08L"],["ILS_GLIDESLOPE","NGV",111500000,null,"25"],["ILS_LOCALIZER","GR",111500000,null,"07"],["ILS_GLIDESLOPE","NEV",108300000,null,"26R"],["VOR_DME","BSA",114300000,null,null]],"Palmyra":[["AIRPORT_HOMER","PLR",363000,null,null],["AIRPORT_HOMER","PAL",337000,null,null]],"Paphos":[["AIRPORT_HOMER","PHA",328000,null,null],["ILS_GLIDESLOPE","IPA",108900000,null,"29"],["ILS_LOCALIZER","IPA",108900000,null,"29"],["DME","IPA",108900000,null,null],["VOR_DME","PHA",117900000,null,null],["TACAN","PHA",null,79,null]],"Prince Hassan":[["ILS_LOCALIZER","ABC",111700000,null,null],["VORTAC","ABC",115900000,106,null],["ILS_GLIDESLOPE","ABC",111700000,null,null]],"Ramat David":[["AIRPORT_HOMER","RMD",368000,null,null],["VORTAC","RMD",113700000,84,null],["ILS_LOCALIZER","RMD",111100000,null,"33"],["ILS_GLIDESLOPE","RMD",111100000,null,"33"]],"Rosh Pina":[["VOR_DME","ROP",115300000,null,null]],"Sanliurfa":[["VOR_DME","GAP",113200000,79,null],["AIRPORT_HOMER","GAP",391000,null,null],["ILS_GLIDESLOPE","ISUR",111900000,null,null],["ILS_LOCALIZER","ISUR",111900000,null,null]],"Tel Nof":[["TACAN","AKR",null,87,null],["ILS_LOCALIZER","AKR",109100000,null,"36"],["ILS_GLIDESLOPE","AKR",109100000,null,"36"]],"Teyman":[["VOR_DME","BSA",114300000,null,null]],"Wujah Al Hajar":[["VOR_DME","CAK",116200000,null,null]]}};
+/* L'ordre d'affichage des types (l'ILS et le PRMG assemblés y ont leur rang) */
+const BCN_ORDER = ['HOMER', 'AIRPORT_HOMER', 'AIRPORT_HOMER_WITH_MARKER', 'ILS_FAR_HOMER', 'ILS_NEAR_HOMER', 'RSBN', 'PRMG', 'TACAN', 'AIRPORT_TACAN', 'VOR', 'VOR_DME', 'DME', 'VORTAC', 'ILS'];
+/* Une descente et le type de l'alignement qu'elle rejoint, et la valeur qui doit être la même (ILS : la fréquence ; PRMG : le canal) */
+const BCN_GS = { ILS_GLIDESLOPE: ['ILS_LOCALIZER', 'fq', 'ILS'], PRMG_GLIDESLOPE: ['PRMG_LOCALIZER', 'ch', 'PRMG'] };
+const BCN_LOC = { ILS_LOCALIZER: 'ILS', PRMG_LOCALIZER: 'PRMG' };
+/* Les lignes des balises d'un aérodrome (la liste brute de la pièce) : { t (clé d'ordre), cs, fq, ch, rwy }, vides rendus '' ou null (un canal 0 est un canal absent).
+   Chaque descente rejoint un alignement libre du même terrain (même fréquence pour l'ILS, même canal pour le PRMG) : celui de même piste, sinon de même indicatif, sinon le premier, dans l'ordre des données ;
+   la ligne prend les valeurs de l'alignement, complétées de celles de la descente là où il est vide. Une descente sans alignement fait sa ligne. Puis le tri : type, piste (sans piste en dernier), indicatif, fréquence, canal. */
+function bcnLinesOf(list) {
+  const rows = list.map(b => ({ t: b[0], cs: typeof b[1] === 'string' ? b[1] : '', fq: typeof b[2] === 'number' && b[2] > 0 ? b[2] : null, ch: typeof b[3] === 'number' && b[3] > 0 ? b[3] : null, rwy: typeof b[4] === 'string' ? b[4] : '' }));
+  const used = new Set(), join = new Map(), orphan = new Set();
+  rows.forEach((g, gi) => {
+    const spec = BCN_GS[g.t];
+    if (!spec) return;
+    const cand = [];
+    rows.forEach((r, i) => { if (r.t === spec[0] && !used.has(i) && r[spec[1]] !== null && r[spec[1]] === g[spec[1]]) cand.push(i); });
+    let pick = g.rwy !== '' ? cand.find(i => rows[i].rwy === g.rwy) : undefined;
+    if (pick === undefined && g.cs !== '') pick = cand.find(i => rows[i].cs === g.cs);
+    if (pick === undefined) pick = cand[0];
+    if (pick === undefined) orphan.add(gi);
+    else { used.add(pick); join.set(pick, gi); }
+  });
+  const out = [];
+  rows.forEach((r, i) => {
+    if (BCN_GS[r.t]) { if (orphan.has(i)) out.push({ t: BCN_GS[r.t][2], cs: r.cs, fq: r.fq, ch: r.ch, rwy: r.rwy }); return; }
+    if (BCN_LOC[r.t]) {
+      const g = join.has(i) ? rows[join.get(i)] : null, fill = (a, b, empty) => a === empty && g ? b : a;
+      out.push({ t: BCN_LOC[r.t], cs: fill(r.cs, g && g.cs, ''), fq: fill(r.fq, g && g.fq, null), ch: fill(r.ch, g && g.ch, null), rwy: fill(r.rwy, g && g.rwy, '') });
+      return;
+    }
+    out.push({ t: r.t, cs: r.cs, fq: r.fq, ch: r.ch, rwy: r.rwy });
+  });
+  const cmpS = (a, b, last) => a === b ? 0 : (last && a === '' ? 1 : (last && b === '' ? -1 : (a < b ? -1 : 1)));
+  const cmpN = (a, b) => a === b ? 0 : (a === null ? 1 : (b === null ? -1 : a - b));
+  return out.sort((a, b) => (BCN_ORDER.indexOf(a.t) - BCN_ORDER.indexOf(b.t)) || cmpS(a.rwy, b.rwy, true) || cmpS(a.cs, b.cs, false) || cmpN(a.fq, b.fq) || cmpN(a.ch, b.ch));
+}
+/* Une fréquence de balise (Hz) : sous 3 MHz en kHz, sans zéro inutile (« 365 kHz », « 346.5 kHz ») ; au-dessus en MHz, deux décimales (« 109.70 ») ; le point décimal dans les deux langues */
+function bcnFreq(hz) { return hz < 3e6 ? String(+(hz / 1000).toFixed(3)) + ' kHz' : (hz / 1e6).toFixed(2); }
+/* La valeur d'une ligne : TACAN, RSBN, PRMG le canal seul (à défaut la fréquence) ; NDB et ILS la fréquence seule ; VOR, VOR/DME, DME, VORTAC la fréquence et le canal s'il y en a un ; « — » sans rien */
+function bcnValue(l) {
+  const f = l.fq !== null ? bcnFreq(l.fq) : '', c = l.ch !== null ? String(l.ch) : '';
+  if (['TACAN', 'AIRPORT_TACAN', 'RSBN', 'PRMG'].indexOf(l.t) >= 0) return c || f || '—';
+  if (['VOR', 'VOR_DME', 'DME', 'VORTAC'].indexOf(l.t) >= 0) return f && c ? f + ' · ' + c : (f || c || '—');
+  return f || '—';
+}
+/* Le type affiché */
+function bcnType(k) {
+  if (k === 'HOMER' || k === 'AIRPORT_HOMER' || k === 'AIRPORT_HOMER_WITH_MARKER') return t('dc.bt.ndb');
+  if (k === 'ILS_FAR_HOMER') return t('dc.bt.far');
+  if (k === 'ILS_NEAR_HOMER') return t('dc.bt.near');
+  if (k === 'AIRPORT_TACAN') return 'TACAN';
+  if (k === 'VOR_DME') return 'VOR/DME';
+  return k;
+}
+/* Les lignes du bloc d'une carte : les rangées Terrains dans leur ordre dont le nom est un aérodrome du théâtre qui a des balises, chacun une fois, sous son premier rôle ;
+   chaque ligne : fi (la rangée Terrains), role (texte), name, type, cs, value, rwy (textes), puis la ligne brute. Aucune sur un théâtre sans balises connues. */
+function dgBeaconLines(c) {
+  const th = dgTheatre(), table = Object.prototype.hasOwnProperty.call(AIRFIELD_BEACONS, th) ? AIRFIELD_BEACONS[th] : null;
+  const out = [], seen = [];
+  if (!table) return out;
+  c.fields.forEach((f, fi) => {
+    const row = f ? afFind(f.name) : null;
+    if (!row || !Object.prototype.hasOwnProperty.call(table, row[0]) || seen.indexOf(row[0]) >= 0) return;
+    seen.push(row[0]);
+    const role = ['dep', 'arr', 'alt'].indexOf(f.role) >= 0 ? t('dc.role.' + f.role) : '';
+    bcnLinesOf(table[row[0]]).forEach(l => out.push({ fi: fi, role: role, name: row[0], type: bcnType(l.t), cs: l.cs, value: bcnValue(l), rwy: l.rwy, raw: l }));
+  });
+  return out;
+}
 /* Les sens d'un aérodrome : ses pistes du jeu, dans l'ordre, éclatées en sens (« 04R/22L » → 04R, 22L), sans doublon ; aucun pour un aérodrome sans piste */
 function afEnds(row) {
   const out = [];
@@ -9459,6 +9576,19 @@ function blkRefs(c) {
   return blockHtml('refs', t('dc.b.refs'), refsTable(mode, head, body), 'dc-bbt');
 }
 
+/* Bloc « Balises — terrains » (lot mp-dg) : calculé, pleine largeur, après les points de référence ; il n'existe que si un terrain de la carte a des balises connues, sans lignes à compléter */
+function blkBeacons(c) {
+  const ls = dgBeaconLines(c);
+  if (!ls.length) return '';
+  const body = ls.map(l =>
+    '<tr><td class="ro">' + esc(l.role) + '</td><td class="nm">' + esc(l.name) + '</td><td class="m">' + esc(l.type) + '</td>' +
+    '<td class="bc">' + (hasText(l.cs) ? esc(l.cs) : '—') + '</td><td class="m">' + esc(l.value) + '</td><td class="m">' + (hasText(l.rwy) ? esc(l.rwy) : '—') + '</td></tr>').join('');
+  return blockHtml('beacons', t('dc.b.beacons'),
+    '<table class="dc-tab dc-bcn"><colgroup><col style="width:66px"><col style="width:236px"><col style="width:176px"><col style="width:148px"><col style="width:196px"><col></colgroup>' +
+    '<thead><tr><th></th><th>' + esc(t('dc.h.bfield')) + '</th><th>' + esc(t('dc.h.btype')) + '</th><th>' + esc(t('dc.h.bcs')) + '</th><th>' + esc(t('dc.h.bfreq')) + '</th><th>' + esc(t('dc.h.brwy')) + '</th></tr></thead>' +
+    '<tbody>' + body + '</tbody></table>', 'dc-bbt');
+}
+
 /* Le tableau d'un encadré Radio : une ligne de nom par poste ; rangées alternées recommencées à chaque poste (la 1re surlignée) ;
    filet plein au-dessus du nom de chaque poste sauf le premier (ou de sa 1re rangée s'il n'a pas de nom). */
 function radioTable(radios) {
@@ -9715,9 +9845,9 @@ function headRadios(c) {
     '<div class="dc-hr"><div class="dc-ttl">' + esc(t('dc.pageR')) + '</div></div></div>';
 }
 
-/* Une page de datacard. kind : 'main' (page 1), 'nav' (page de navigation) ou 'radios' (page Radios, la dernière) ; noRadio : la page 1 sans le bloc Radio.
-   withNav : la navigation est sur cette page ; withRefs : les points de référence aussi (après la navigation). */
-function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio) {
+/* Une page de datacard. kind : 'main' (page 1), 'nav' (page de navigation), 'bcn' (page des seules balises, en-tête réduit) ou 'radios' (page Radios, la dernière) ; noRadio : la page 1 sans le bloc Radio.
+   withNav : la navigation est sur cette page ; withRefs : les points de référence aussi (après la navigation) ; withBcn : le bloc des balises aussi (après les références). */
+function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio, withBcn) {
   const cls = esc(classifLabel(c));
   const pg = p + ' / ' + N;
   const top = '<div class="dc-top"><span>' + cls + '</span><span>' + esc(c.meta.docRef.trim()) + '</span><span>' + pg + '</span></div>';
@@ -9728,9 +9858,12 @@ function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio) {
   if (kind === 'radios') {
     head = headRadios(c);
     body = rowHtml('dc-r3', [blkRadioPage(c)]);
+  } else if (kind === 'bcn') {
+    head = headNav(c);
+    body = rowHtml('dc-r3', [blkBeacons(c)]);
   } else if (kind === 'nav') {
     head = headNav(c);
-    body = (withNav ? rowHtml('dc-r3', [blkNav(c) || blkNavBlank(c)]) : '') + (withRefs ? rowHtml('dc-r3', [blkRefs(c) || blkRefsBlank(c)]) : '');
+    body = (withNav ? rowHtml('dc-r3', [blkNav(c) || blkNavBlank(c)]) : '') + (withRefs ? rowHtml('dc-r3', [blkRefs(c) || blkRefsBlank(c)]) : '') + (withBcn ? rowHtml('dc-r3', [blkBeacons(c)]) : '');
   } else {
     head = headMain(c);
     const fields = blkFields(c) || blkFieldsBlank(c), weather = blkWeather(c) || blkWeatherBlank(c);
@@ -9739,6 +9872,7 @@ function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio) {
       rowHtml('dc-r2', [blkCrew(c) || blkCrewBlank(c)]) +
       (withNav ? rowHtml('dc-r3', [blkNav(c) || blkNavBlank(c)]) : '') +
       (withRefs ? rowHtml('dc-r3', [blkRefs(c) || blkRefsBlank(c)]) : '') +
+      (withBcn ? rowHtml('dc-r3', [blkBeacons(c)]) : '') +
       rowHtml('dc-r4', [noRadio ? '' : (blkRadio(c) || blkRadioBlank(c)), col]) +
       rowHtml('dc-r5', [blkFuel(c) || blkFuelBlank(c)]) +
       rowHtml('dc-r6', [blkThreats(c) || blkThreatsBlank(c)]);
@@ -9791,7 +9925,8 @@ function planBase(c, nr) {
 function dgMeasurable() { return document.getElementById('measure-root').getBoundingClientRect().width > 0; }
 function planCard(c) {
   if (!dgMeasurable()) return { split: false, overflow: false, overflow2: false, p2: 'navrefs', radioPage: false, overflowR: false, unmeasured: true };       /* plan provisoire : ni alerte ni cache ; l'aperçu se refait quand le cadre redevient visible */
-  const key = CURRENT_LANG + '|' + JSON.stringify(c);
+  const bcn = dgBeaconLines(c).length > 0;       /* les balises dépendent du théâtre, qui n'est pas dans la carte : il entre dans la clé d'une carte qui en a (sans balises, la clé d'avant) */
+  const key = CURRENT_LANG + '|' + JSON.stringify(c) + (bcn ? '|' + dgTheatre() : '');
   if (layoutCache.has(key)) return layoutCache.get(key);
   let plan = planBase(c, false);
   plan.radioPage = false; plan.overflowR = false;
@@ -9803,8 +9938,24 @@ function planCard(c) {
       plan.overflowR = overflowsHtml(pageHtml(c, 'day', plan.split ? 3 : 2, plan.split ? 3 : 2, 'radios', false, false));
     }
   }
+  if (bcn) planBeacons(c, plan);
   if (layoutCache.size > 80) layoutCache.clear();
   layoutCache.set(key, plan);
+  return plan;
+}
+
+/* La place du bloc des balises (lot mp-dg), quand la carte en a un : il suit les points de référence. Sur le plan d'avant (plan.radioPage : la page 1 sans le bloc Radio) :
+   une page (la page 1 porte navigation et références) : la page 1 avec les balises tient → plan.bcn = 'p1' ; sinon une page 2 ne porte que les balises → 'own' ;
+   deux pages : la page 2 (celle des références) avec les balises tient → 'p2' ; sinon, si elle tient sans elles, les balises forment une page à elles, juste après → 'own' ; sinon elles y restent → 'p2'.
+   plan.overflowB : la page des seules balises déborde. Sans bloc des balises, le plan reste celui d'avant, sans ces clés. */
+function planBeacons(c, plan) {
+  const nr = plan.radioPage;
+  if (!plan.split) plan.bcn = overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, true, nr, true)) ? 'own' : 'p1';
+  else {
+    const nav = plan.p2 !== 'refs';
+    plan.bcn = overflowsHtml(pageHtml(c, 'day', 2, 2, 'nav', nav, true, false, true)) && !overflowsHtml(pageHtml(c, 'day', 2, 2, 'nav', nav, true, false, false)) ? 'own' : 'p2';
+  }
+  plan.overflowB = plan.bcn === 'own' && overflowsHtml(pageHtml(c, 'day', 2, 2, 'bcn', false, false, false, false));
   return plan;
 }
 
@@ -9812,12 +9963,14 @@ function planCard(c) {
 function cardPages(c, mode) {
   const plan = planCard(c);
   const rp = plan.radioPage, nr = rp;
-  const N = (plan.split ? 2 : 1) + (rp ? 1 : 0);
+  const b1 = plan.bcn === 'p1', b2 = plan.bcn === 'p2', bo = plan.bcn === 'own';       /* les balises : en page 1, sur la page des références, ou sur une page à elles juste après */
+  const N = (plan.split ? 2 : 1) + (bo ? 1 : 0) + (rp ? 1 : 0);
   const pages = plan.split
     ? (plan.p2 === 'refs'
-      ? [pageHtml(c, mode, 1, N, 'main', true, false, nr), pageHtml(c, mode, 2, N, 'nav', false, true)]
-      : [pageHtml(c, mode, 1, N, 'main', false, false, nr), pageHtml(c, mode, 2, N, 'nav', true, true)])
-    : [pageHtml(c, mode, 1, N, 'main', true, true, nr)];
+      ? [pageHtml(c, mode, 1, N, 'main', true, false, nr), pageHtml(c, mode, 2, N, 'nav', false, true, false, b2)]
+      : [pageHtml(c, mode, 1, N, 'main', false, false, nr), pageHtml(c, mode, 2, N, 'nav', true, true, false, b2)])
+    : [pageHtml(c, mode, 1, N, 'main', true, true, nr, b1)];
+  if (bo) pages.push(pageHtml(c, mode, pages.length + 1, N, 'bcn', false, false));
   if (rp) pages.push(pageHtml(c, mode, N, N, 'radios', false, false));
   return { plan, pages };
 }
@@ -9831,9 +9984,11 @@ function renderPreview() {
   const warn = document.getElementById('dc-warn');
   if (res.plan.overflow) { warn.textContent = t('warn.overflow'); warn.hidden = false; }
   else if (res.plan.overflow2) { warn.textContent = t('warn.overflow2'); warn.hidden = false; }
+  else if (res.plan.overflowB) { warn.textContent = t('warn.overflowB'); warn.hidden = false; }
   else if (res.plan.overflowR) { warn.textContent = t('warn.overflowR'); warn.hidden = false; }
   else { warn.textContent = ''; warn.hidden = true; }
   applyPreviewScale();
+  dgeRendered();
 }
 
 function dgRelayout() { if (DG_UI.needLayout && dgMeasurable()) renderPreview(); }
@@ -9846,6 +10001,383 @@ function applyPreviewScale() {
   if (!(avail > 0)) return;
   const s = Math.max(0.2, Math.min(1, avail / PAGE_W));
   prev.style.setProperty('--s', s.toFixed(4));
+}
+
+/* ============= SAISIE SUR LA DATACARD (lot mp-dg) =============
+   Le HTML de l'aperçu (#preview) ne porte rien de plus : le lien entre un endroit cliqué et son champ se calcule ici (la boîte data-block, le rang de la ligne, l'élément cliqué).
+   Le contour et le ✎ du survol, les champs de saisie, l'infobulle et le bouton du téléphone sont posés dans .preview-wrap, au-dessus de l'aperçu, et retirés ensuite ;
+   l'export PNG et l'impression refont leurs pages depuis l'état (cardPages) et n'en portent jamais.
+   Côte à côte (DG_TABS ne correspond pas) : une case simple se modifie sur place, la valeur s'écrit dans le champ de l'éditeur (input puis change, comme au clavier) ; tout le reste ouvre sa section au rang cliqué.
+   En onglets : toucher une boîte la marque et fait paraître « ✎ Modifier <boîte> », qui ouvre l'onglet, la section et le champ ; rien ne s'écrit sur place. */
+const DGE = { hov: null, hovEl: null, ed: null, mark: null, flash: null };
+const DGE_AMBER = '#c0892a';
+function dgeWrap() { return document.getElementById('preview-wrap'); }
+/* Le rectangle d'un élément dans la zone défilante de l'aperçu (px de l'écran, défilement compris) */
+function dgeRect(el) {
+  const w = dgeWrap(), wr = w.getBoundingClientRect(), r = el.getBoundingClientRect();
+  return { x: r.left - wr.left - w.clientLeft + w.scrollLeft, y: r.top - wr.top - w.clientTop + w.scrollTop, w: r.width, h: r.height };
+}
+function dgeScale() { const v = parseFloat(document.getElementById('preview').style.getPropertyValue('--s')); return v > 0 ? v : 1; }
+function dgePut(el, x, y, w, h) {
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  if (w != null) el.style.width = w + 'px';
+  if (h != null) el.style.height = h + 'px';
+}
+/* La boîte sous un élément de l'aperçu : un bloc, l'en-tête ou le bandeau du haut d'une page ; null ailleurs (pied, marges) */
+function dgeZone(el) {
+  const prev = document.getElementById('preview');
+  if (!el || !el.closest || !prev.contains(el)) return null;
+  const z = el.closest('.dc-block, .dc-head, .dc-top');
+  return z && prev.contains(z) ? z : null;
+}
+/* Le titre imprimé d'une boîte (le bouton du téléphone) */
+function dgeTitle(z) {
+  if (z.classList.contains('dc-top')) return t('sec.meta');
+  if (z.classList.contains('dc-head')) return t(z.classList.contains('dc-head2') ? 'sec.group' : 'sec.header');
+  const h = z.querySelector(':scope > .dc-bh');
+  return h ? h.textContent : '';
+}
+function dgeIdx(el, sel) { return Array.prototype.indexOf.call(el.parentNode.querySelectorAll(':scope > ' + sel), el); }
+/* Le rang dans la liste de l'état de la k-ième rangée montrée (le rendu saute les rangées vides : elles sont comptées ici) */
+function dgeNth(arr, keep, k) {
+  let n = -1;
+  for (let i = 0; i < arr.length; i++) if (keep(arr[i]) && ++n === k) return i;
+  return -1;
+}
+/* Les chemins des cases de la boîte Carburant, dans l'ordre du rendu (blkFuel) : deux par rangée montrée, null pour une valeur calculée d'après le FC */
+function dgeFuelPaths(c) {
+  const lots = dgFuelView(c), f = c.fuel;
+  const rows = (lots === null ? [{ p: ['fuel.amount', 'fuel.weight'], v: [f.amount, f.weight] }]
+    : lots.map(l => ({ p: [null, null], v: [l.fuel === null ? '' : 'x', l.weight === null ? '' : 'x'] })))
+    .concat([{ p: ['fuel.joker', 'fuel.bingo'], v: [f.joker, f.bingo] }]).filter(r => hasText(r.v[0]) || hasText(r.v[1]));
+  return [].concat.apply([], rows.map(r => r.p));
+}
+/* Les clés des cases de la boîte Météo, dans l'ordre du rendu (blkWeather) */
+function dgeWeatherKeys(c) {
+  const w = c.weather, out = [];
+  if (hasText(w.wind) || hasText(w.visibility)) out.push('wind', 'visibility');
+  if (hasText(w.qnh) || hasText(w.clouds)) out.push('qnh', 'clouds');
+  return out;
+}
+/* Le lien d'un endroit cliqué : { sec, title, zone } et, pour une case simple, paths (les chemins de l'éditeur, dans l'ordre affiché), anchor (l'élément recouvert), align, minW, multi ;
+   sinon sel : le champ de l'éditeur à focaliser (le rang d'une liste : sa ligne .li), ou rien (la section seule) */
+function dgeTarget(el, z) {
+  const c = curCard(), base = { zone: z, title: dgeTitle(z) };
+  const simple = (sec, paths, anchor, align, minW, multi) => Object.assign(base, { sec: sec, paths: paths, anchor: anchor, align: align, minW: minW, multi: !!multi });
+  const sect = (sec, sel) => Object.assign(base, { sec: sec, sel: sel || '' });
+  const li = (list, i) => i < 0 ? '' : '.li[data-list="' + list + '"][data-i="' + i + '"]';
+  const inn = sel => el.closest(sel);
+  if (z.classList.contains('dc-top')) {
+    const sp = inn('.dc-top > span');
+    if (sp && sp !== z.children[1]) return sect('meta', '[data-path="meta.classification"]');
+    return simple('meta', ['meta.docRef'], z.children[1].getBoundingClientRect().width > 0 ? z.children[1] : z, 'c', 260);
+  }
+  if (z.classList.contains('dc-head')) {
+    const gsel = c.gsId ? '[data-gs="name"]' : '[data-path="flight.callsign"]';
+    if (z.classList.contains('dc-head2')) return sect('group', gsel);
+    if (inn('.dc-op')) return simple('header', ['meta.operation', 'meta.mission'], inn('.dc-op'), 'r', 380);
+    if (inn('.dc-dt')) return simple('header', ['meta.date', 'meta.time'], inn('.dc-dt'), 'r', 320);
+    if (inn('.dc-cs')) return sect('group', gsel);
+    if (inn('.dc-sub')) return sect('group', '[data-path="flight.task"]');
+    if (inn('.dc-pill')) return sect('group', '[data-path="flight.threat"]');
+    return sect('header');
+  }
+  const b = z.dataset.block;
+  if (b === 'mission') {
+    if (blkMission(c) === '') return sect('mission');
+    if (inn('.dc-obj')) return simple('mission', ['mission.objective'], inn('.dc-obj'), 'l', 300, true);
+    const st = inn('.dc-steps > li');
+    if (st) return sect('mission', li('mission.execution', dgeNth(c.mission.execution, hasText, dgeIdx(st, 'li'))));
+    return sect('mission');
+  }
+  if (b === 'times') {
+    if (blkTimes(c) === '') return sect('times');
+    const tr = inn('.dc-trow');
+    if (!tr) return sect('times');
+    const i = dgeNth(c.times, x => hasText(x.value), dgeIdx(tr, '.dc-trow'));
+    if (i < 0) return sect('times');
+    if (inn('.dc-tl')) return simple('times', ['times.' + i + '.label'], inn('.dc-tl'), 'l', 150);
+    return simple('times', ['times.' + i + '.value'], tr.querySelector('.dc-tv'), 'r', 130);
+  }
+  if (b === 'crew') {
+    const tr = blkCrew(c) === '' ? null : inn('tbody > tr');
+    const i = tr ? dgeNth(c.crew, r => anyText(r, CREW_KEYS), dgeIdx(tr, 'tr')) : -1;
+    return sect('group', i < 0 ? '' : (c.gsId ? '.li[data-unit="' + i + '"]' : li('crew', i)));
+  }
+  if (b === 'nav') {
+    const tr = blkNav(c) === '' ? null : inn('tbody > tr');
+    return sect('nav', tr ? li('nav', dgeNth(c.nav, r => anyText(r, NAV_KEYS), dgeIdx(tr, 'tr'))) : '');
+  }
+  if (b === 'refs') {
+    const tr = blkRefs(c) === '' ? null : inn('tbody > tr');
+    const r = tr ? refRows(c)[dgeIdx(tr, 'tr')] : null;
+    return sect('refs', r ? li('refs', c.refs.indexOf(r)) : '');
+  }
+  if (b === 'radio') return sect('radio', c.gsId ? '' : dgeRadioSel(c, el, z));
+  if (b === 'fields') {
+    const tr = blkFields(c) === '' ? null : inn('tbody > tr');
+    return sect('fields', tr ? li('fields', dgeNth(c.fields, f => anyText(f, ['icao', 'name', 'runway', 'frequency']), dgeIdx(tr, 'tr'))) : '');
+  }
+  if (b === 'beacons') {
+    const tr = inn('tbody > tr'), l = tr ? dgBeaconLines(c)[dgeIdx(tr, 'tr')] : null;
+    return sect('fields', l ? li('fields', l.fi) : '');
+  }
+  if (b === 'weather') {
+    if (blkWeather(c) === '') return sect('weather');
+    if (inn('.dc-metar')) return simple('weather', ['weather.metar'], inn('.dc-metar'), 'l', 300);
+    const wp = inn('.dc-wgrid > .wp');
+    if (wp) {
+      const k = dgeWeatherKeys(c)[dgeIdx(wp, '.wp')];
+      if (k) return simple('weather', ['weather.' + k], wp.querySelector('.wv') || wp, 'r', 120);
+    }
+    return sect('weather');
+  }
+  if (b === 'fuel') {
+    if (blkFuel(c) === '') return sect('fuel');
+    const cell = inn('.dc-fuel > *');
+    if (cell) {
+      const p = dgeFuelPaths(c)[dgeIdx(cell, '*')];
+      if (p) return simple('fuel', [p], cell.querySelector('.fv') || cell, 'r', 130);
+      return sect('fuel');
+    }
+    const ld = inn('.dc-load > li');
+    if (ld) return sect('fuel', li('loadout', dgeNth(c.loadout, hasText, dgeIdx(ld, 'li'))));
+    return sect('fuel');
+  }
+  if (b === 'threats') {
+    if (blkThreats(c) === '') return sect('threats');
+    const ch = inn('.dc-chips > .dc-chip');
+    if (ch) return sect('threats', li('threats', dgeNth(c.threats, hasText, dgeIdx(ch, '.dc-chip'))));
+    if (inn('.dc-notes')) return simple('threats', ['notes'], inn('.dc-notes'), 'l', 300, true);
+    return sect('threats');
+  }
+  return null;
+}
+/* Le rang d'une ligne de la boîte Radio d'une carte libre (ses postes propres : la dernière boîte Radio de la page 1, ou la page Radios) : le nom du poste ou la ligne du canal */
+function dgeRadioSel(c, el, z) {
+  const own = [];
+  c.radios.forEach((r, i) => {
+    const ch = [];
+    r.channels.forEach((x, j) => { if (anyText(x, ['channel', 'label', 'frequency', 'modulation'])) ch.push(j); });
+    if (hasText(r.name) || ch.length) own.push({ i: i, name: hasText(r.name), ch: ch });
+  });
+  if (!own.length) return '';
+  const nf = dgRadioBoxes(c).reduce((n, b) => n + b.posts.length, 0);
+  const post = (i, j) => j == null ? '[data-path="radios.' + i + '.name"]' : '.li[data-list="radios.' + i + '.channels"][data-i="' + j + '"]';
+  const page = z.querySelector('.dc-rposte');
+  if (page) {       /* la page Radios : les postes du groupe d'abord (figés), puis les propres ; trois colonnes, lues colonne par colonne */
+    const rp = el.closest('.dc-rposte');
+    if (!rp) return '';
+    const k = dgeIdx(rp, '.dc-rposte') - nf, o = own[k];
+    if (!o) return '';
+    const tab = el.closest('.dc-radio3'), tr = el.closest('tbody > tr');
+    if (!tab || !tr) return post(o.i);
+    const col = Array.prototype.indexOf.call(tab.parentNode.children, tab), per = Math.max(1, Math.ceil(o.ch.length / 3));
+    const j = o.ch[col * per + dgeIdx(tr, 'tr')];
+    return post(o.i, j == null ? null : j);
+  }
+  const boxes = z.ownerDocument.querySelectorAll('#preview .dc-page section.dc-block[data-block="radio"]');
+  if (boxes[boxes.length - 1] !== z || blkRadio(c) === '' || !dgRadioOwn(c).length) return '';
+  const tr = el.closest('tbody > tr');
+  if (!tr) return '';
+  const rows = [];       /* les rangées du tableau (radioTable) : le nom de chaque poste qui en a un, puis ses canaux */
+  own.forEach(o => { if (o.name) rows.push(post(o.i)); o.ch.forEach(j => rows.push(post(o.i, j))); });
+  return rows[dgeIdx(tr, 'tr')] || '';
+}
+/* Un champ de l'éditeur, s'il s'écrit : présent, champ texte, ni en lecture seule ni désactivé */
+function dgeField(path) {
+  const el = document.querySelector('#editor [data-path="' + path + '"]');
+  return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && !el.readOnly && !el.disabled ? el : null;
+}
+/* Ce qui reçoit le focus pour un champ : une liste au thème a son bouton (tbm-trigger) devant la liste cachée */
+function dgeFocusable(el) {
+  if (!el) return null;
+  if (el.tagName === 'SELECT' && !el.getClientRects().length) { const b = el.previousElementSibling; return b && b.classList && b.classList.contains('tbm-trigger') ? b : null; }
+  return el.getClientRects().length && !el.disabled ? el : null;
+}
+/* La première saisie d'une ligne ou d'une section */
+function dgeFirstInput(root) {
+  if (!root) return null;
+  const all = root.querySelectorAll('input:not([type="hidden"]), textarea, select, .tbm-trigger');
+  for (const x of all) { if (x.getClientRects().length && !x.disabled) return x; }       /* une liste au thème est cachée : son bouton, qui la précède, est pris */
+  return null;
+}
+/* L'éditeur suit : la section s'ouvre, défile jusqu'à l'élément, qui porte un liseré ambre 1,6 s ; focus : il reçoit le focus */
+function dgeFollow(sec, el, focus) {
+  const d = document.querySelector('#ed-sections > details.ed-section[data-section="' + sec + '"]');
+  if (d && !d.open) d.open = true;
+  const ed = document.getElementById('editor');
+  const tgt = el || (d ? dgeFirstInput(d.querySelector('.ed-content')) : null) || d;
+  if (!tgt) return null;
+  const er = ed.getBoundingClientRect(), r = tgt.getBoundingClientRect();
+  if (ed.scrollHeight > ed.clientHeight + 1) { if (r.top < er.top + 8 || r.bottom > er.bottom - 8) ed.scrollTop += r.top - er.top - Math.max(16, (er.height - r.height) / 3); }
+  else if (tgt.scrollIntoView) tgt.scrollIntoView({ block: 'nearest' });
+  if (DGE.flash) { DGE.flash.el.classList.remove('dge-flash'); clearTimeout(DGE.flash.timer); }
+  if (tgt !== d) {
+    tgt.classList.add('dge-flash');
+    DGE.flash = { el: tgt, timer: setTimeout(() => { tgt.classList.remove('dge-flash'); DGE.flash = null; }, 1600) };
+  }
+  if (focus && tgt !== d) { try { tgt.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+  return tgt;
+}
+/* Ouvrir la section d'une cible, au rang ou au champ (sa première saisie focalisée) */
+function dgeOpen(g, focus) {
+  const d = document.querySelector('#ed-sections > details.ed-section[data-section="' + g.sec + '"]');
+  let el = null;
+  if (g.paths) el = dgeFocusable(document.querySelector('#editor [data-path="' + g.paths[0] + '"]'));
+  else if (g.sel && d) {
+    const x = d.querySelector(g.sel);
+    el = x ? (x.classList.contains('li') ? dgeFirstInput(x) : dgeFocusable(x) || dgeFirstInput(x.closest('.ed-field') || x)) : null;
+  }
+  if (d && !d.open) d.open = true;
+  return dgeFollow(g.sec, el, focus);
+}
+/* ----- le survol (côte à côte, à la souris) ----- */
+function dgeBox(z, on) {
+  const w = dgeWrap(), r = dgeRect(z), b = document.createElement('div');
+  b.className = 'dge-box' + (on ? ' on' : '');
+  b.setAttribute('aria-hidden', 'true');
+  dgePut(b, r.x - 3, r.y - 3, r.w + 6, r.h + 6);
+  if (!on) { const p = document.createElement('span'); p.className = 'dge-pen'; p.textContent = '✎'; b.appendChild(p); }
+  w.appendChild(b);
+  return b;
+}
+function dgeHover(z) {
+  if (DGE.hovEl === z) return;
+  if (DGE.hov) { DGE.hov.remove(); DGE.hov = null; }
+  DGE.hovEl = z;
+  if (z && !DGE.ed) DGE.hov = dgeBox(z, false);
+}
+function onDgeMove(e) {
+  if (DG_TABS.matches || (e.pointerType && e.pointerType !== 'mouse')) return;
+  if (DGE.ed) return;
+  dgeHover(dgeZone(e.target));
+}
+/* ----- la saisie sur place ----- */
+function dgeEdit(g) {
+  const fields = g.paths.map(dgeField);
+  if (fields.some(f => !f)) { dgeOpen(g, false); return; }       /* un champ que l'éditeur ne permet pas d'écrire : la section, comme pour une liste */
+  dgeClose(true);
+  if (DGE.hov) { DGE.hov.remove(); DGE.hov = null; }
+  DGE.hovEl = null;
+  const w = dgeWrap(), s = dgeScale(), a = dgeRect(g.anchor), cs = getComputedStyle(g.anchor), z = g.zone;
+  const fs = parseFloat(cs.fontSize) * s, lh = (parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.25) * s;
+  const ls = cs.letterSpacing === 'normal' ? 'normal' : (parseFloat(cs.letterSpacing) * s) + 'px';
+  const minW = g.minW * s;
+  const wd = Math.max(a.w, minW), ht = g.multi ? Math.max(a.h, lh * 3) : Math.max(a.h, lh);
+  let x = g.align === 'r' ? a.x + a.w - wd : (g.align === 'c' ? a.x + (a.w - wd) / 2 : a.x);
+  x = Math.max(4, Math.min(x, w.scrollWidth - wd - 4));
+  const box = document.createElement('div');
+  box.className = 'dge-ed';
+  dgePut(box, x, a.y + (a.h - Math.max(a.h, ht)) / 2 * (g.multi ? 0 : 1), wd, ht);
+  const inputs = g.paths.map((p, k) => {
+    const el = document.createElement(g.multi ? 'textarea' : 'input');
+    if (!g.multi) el.type = 'text';
+    el.value = fields[k].value;
+    el.setAttribute('autocomplete', 'off');
+    el.setAttribute('spellcheck', 'false');
+    const lab = fields[k].closest('.ed-field') && fields[k].closest('.ed-field').querySelector('label');
+    el.setAttribute('aria-label', lab ? lab.textContent : p);
+    el.style.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + fs + 'px/' + lh + 'px ' + cs.fontFamily;
+    el.style.letterSpacing = ls;
+    el.style.textAlign = g.align === 'r' && !g.multi ? 'right' : 'left';
+    box.appendChild(el);
+    return el;
+  });
+  const frame = dgeBox(z, true), tip = document.createElement('div'), zr = dgeRect(z);
+  tip.className = 'dge-tip';
+  tip.setAttribute('aria-hidden', 'true');
+  tip.textContent = t(g.multi ? 'dg.edit.tipm' : 'dg.edit.tip');
+  w.appendChild(box);
+  w.appendChild(tip);
+  dgePut(tip, 0, zr.y + zr.h + 4);
+  tip.style.left = Math.max(4, zr.x + zr.w - tip.offsetWidth) + 'px';
+  DGE.ed = { g: g, fields: fields, inputs: inputs, box: box, frame: frame, tip: tip };
+  box.addEventListener('keydown', onDgeKey);
+  box.addEventListener('focusout', onDgeOut);
+  dgeFollow(g.sec, fields[0], false);
+  inputs[0].focus({ preventScroll: true });
+  try { inputs[0].setSelectionRange(inputs[0].value.length, inputs[0].value.length); } catch (e) { /* ignore */ }
+}
+/* Fermer la saisie sur place : commit, la valeur part dans le champ de l'éditeur (input puis change, comme une saisie au clavier) ; sinon rien n'est émis */
+function dgeClose(commit) {
+  const ed = DGE.ed;
+  if (!ed) return;
+  DGE.ed = null;
+  ed.box.removeEventListener('focusout', onDgeOut);
+  [ed.box, ed.frame, ed.tip].forEach(x => { if (x.parentNode) x.parentNode.removeChild(x); });
+  if (!commit) return;
+  ed.inputs.forEach((inp, k) => {
+    const f = ed.fields[k];
+    if (!f.isConnected || f.value === inp.value) return;
+    f.value = inp.value;
+    f.dispatchEvent(new Event('input', { bubbles: true }));
+    f.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+/* Une saisie en cours se valide avant un export ou une impression */
+function dgeCommit() { dgeClose(true); }
+function onDgeKey(e) {
+  if (!DGE.ed) return;
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dgeClose(false); return; }
+  if (e.key === 'Enter' && (!DGE.ed.g.multi || e.ctrlKey || e.metaKey)) { e.preventDefault(); e.stopPropagation(); dgeClose(true); }
+}
+function onDgeOut(e) {
+  const ed = DGE.ed;
+  if (!ed || (e.relatedTarget && ed.box.contains(e.relatedTarget))) return;
+  dgeClose(true);       /* quitter le champ valide */
+}
+/* ----- au téléphone et en fenêtre étroite (onglets) : la marque et le bouton ----- */
+function dgeUnmark() {
+  const m = DGE.mark;
+  if (!m) return;
+  DGE.mark = null;
+  [m.frame, m.btn].forEach(x => { if (x.parentNode) x.parentNode.removeChild(x); });
+}
+function dgeMark(g) {
+  dgeUnmark();
+  const w = dgeWrap(), frame = dgeBox(g.zone, true), zr = dgeRect(g.zone), btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'dge-go';
+  btn.textContent = t('dg.edit.go', { 'boîte': g.title, box: g.title });
+  w.appendChild(btn);
+  dgePut(btn, 0, zr.y + zr.h + 6);
+  btn.style.left = Math.max(4, Math.min(zr.x + zr.w - btn.offsetWidth, w.clientWidth - btn.offsetWidth - 4)) + 'px';
+  btn.addEventListener('click', e => { e.stopPropagation(); dgeGo(g); });
+  DGE.mark = { g: g, frame: frame, btn: btn };
+  const br = btn.getBoundingClientRect(), wr = w.getBoundingClientRect();
+  if (br.bottom > wr.bottom - 8) w.scrollTop += br.bottom - wr.bottom + 16;
+}
+function dgeGo(g) {
+  dgeUnmark();
+  const tab = Object.keys(DG_TAB_SECTIONS).find(k => DG_TAB_SECTIONS[k].indexOf(g.sec) >= 0);
+  if (tab) setActiveTab(tab);
+  dgeOpen(g, true);
+}
+/* ----- le clic sur l'aperçu ----- */
+function onDgeClick(e) {
+  const prev = document.getElementById('preview');
+  if (!prev.contains(e.target)) { if (DGE.mark && !(DGE.mark.btn.contains(e.target))) dgeUnmark(); return; }
+  const z = dgeZone(e.target), g = z ? dgeTarget(e.target, z) : null;
+  if (DG_TABS.matches) { if (g) dgeMark(g); else dgeUnmark(); return; }
+  if (!g) return;
+  if (g.paths) dgeEdit(g);
+  else dgeOpen(g, true);
+}
+/* L'aperçu est refait : les éléments marqués ou survolés n'existent plus */
+function dgeRendered() {
+  if (DGE.hov) { DGE.hov.remove(); DGE.hov = null; }
+  DGE.hovEl = null;
+  dgeUnmark();
+}
+function dgeBind() {
+  const w = dgeWrap();
+  w.addEventListener('pointermove', onDgeMove);
+  w.addEventListener('pointerleave', () => dgeHover(null));
+  w.addEventListener('click', onDgeClick);
+  document.addEventListener('click', e => { if (DGE.mark && !w.contains(e.target)) dgeUnmark(); }, true);
+  DG_TABS.addEventListener('change', () => { dgeClose(true); dgeRendered(); });
+  window.addEventListener('resize', () => { if (DGE.ed) dgeClose(true); dgeRendered(); });
 }
 
 /* ============= ÉDITEUR ============= */
@@ -11274,6 +11806,7 @@ function dgExportDefName() {
   return fnDefault('datacard_' + fnPart(slug(curCard().flight.callsign), 'doc'), DGX.stamp);
 }
 function openExportModal() {
+  dgeCommit();       /* une saisie sur la datacard en cours se valide avant l'export */
   DGX.stamp = stamp();
   const pick = document.createElement('div');
   const top = document.createElement('div');
@@ -11487,7 +12020,8 @@ function bindEvents() {
   /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
   window.addEventListener('storage', e => { if (e.key === KEY_THEATRE || e.key === KEY_UNITS || e.key === KEY_NAV) dgFollowDocNow(); if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); if (e.key === KEY_NAV) dgFollowNav(); if (e.key === KEY_STATE) dgFollowDoc(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET || e.key === KEY_NAV || e.key === null) dgRoutesChanged(); if (e.key === 'mission_snapshot_v1') { renderEditor(true); renderPreview(); } dgStorage(e); });
 
-  window.addEventListener('beforeprint', fillPrintRoot);
+  window.addEventListener('beforeprint', () => { dgeCommit(); fillPrintRoot(); });       /* une saisie sur la datacard en cours se valide avant l'impression */
+  dgeBind();
   window.addEventListener('afterprint', clearPrintRoot);
   let rz = null;
   window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(applyPreviewScale, 60); dgRelayout(); });

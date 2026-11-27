@@ -1,0 +1,24 @@
+{
+ "format": "dcs-navaids-v1",
+ "theatre": "Caucasus",
+ "source": {
+  "beacons": "jeu d'essai du lot (tests/test_dg_balises.py)"
+ },
+ "airdromes": [
+  {
+   "airdromeId": 1,
+   "name": "Echo",
+   "icao": null,
+   "beacons": [
+    {
+     "type": "HOMER",
+     "callsign": "E",
+     "frequency": 400000,
+     "channel": null,
+     "runway": null
+    }
+   ]
+  }
+ ],
+ "enroute": []
+}
