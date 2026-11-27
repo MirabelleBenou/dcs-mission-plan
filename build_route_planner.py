@@ -27,6 +27,7 @@ from projection_block import build_block as build_projection_block
 from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
 from route_timing_block import build_block as build_route_timing_block
+from route_turns_block import build_block as build_route_turns_block
 from route_write_block import build_block as build_route_write_block
 from group_store_block import build_block as build_group_store_block
 from public_host_block import build_block as build_public_host_block
@@ -389,6 +390,13 @@ button, input, select { font: inherit; }
 .rp-prof-dot { box-sizing: border-box; width: 14px; height: 14px; border-radius: 50%; background: #ffd400; border: 2px solid #1a1c14; }
 table.nav tr.prof td { background: rgba(192,137,42,.16); color: #1f1c16; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: .3px; white-space: normal; overflow-wrap: anywhere; }
 table.nav tr.prof b { font-weight: 700; }
+/* les virages à l'inclinaison choisie : la ligne sous le point, la pastille orange (C13 bis : par les variables communes), la note du panneau */
+table.nav tr.nav-turn td { background: rgba(192,137,42,.16); color: #1f1c16; font-family: var(--f-ui); font-weight: 500; font-size: 11.5px; letter-spacing: .3px; white-space: normal; overflow-wrap: anywhere; }
+.trn-bad { display: inline-block; padding: 1px 6px; color: var(--ink); background: var(--mp-sig-orange); }
+#trn-note { margin: 8px 0 12px; }
+.trn-warn { display: block; margin-top: 4px; color: var(--mp-sig-orange); }
+.trn-warn[hidden] { display: none; }
+path.rp-turn-bad { stroke: var(--mp-sig-orange-line); }
 #map.grid-only { background:
   radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35), transparent 60%),
   repeating-linear-gradient(0deg, rgba(120,100,60,.035) 0 2px, transparent 2px 5px), #e6dcc2; }
@@ -1456,8 +1464,10 @@ __CSS__
           <div class="gs"><label class="lbl" for="mg-def" id="mg-lbl" data-i18n="nav.margin">Marge (± %)</label><input class="in" id="mg-def" type="text" inputmode="numeric" autocomplete="off" spellcheck="false"></div>
           <div><div class="lbl" data-i18n="f.trace">Tracé</div><span class="tb-group" role="group" data-i18n-aria-label="f.trace" aria-label="Tracé"><button type="button" class="tb-btn" data-trc="route" aria-pressed="true" data-i18n="col.route">Couleur</button><button type="button" class="tb-btn" data-trc="black" aria-pressed="false" data-i18n="col.black">Noir</button></span></div>
           <div><div class="lbl" data-i18n="f.ticks">Traits des minutes</div><span class="tb-group" role="group" data-i18n-aria-label="f.ticks" aria-label="Traits des minutes"><button type="button" class="tb-btn" data-tck="route" aria-pressed="true" data-i18n="col.route">Couleur</button><button type="button" class="tb-btn" data-tck="black" aria-pressed="false" data-i18n="col.black">Noir</button></span></div>
+          <div><div class="lbl" data-i18n="f.turns">Virages (inclinaison)</div><span class="tb-group" role="group" data-i18n-aria-label="f.turns" aria-label="Virages (inclinaison)"><button type="button" class="tb-btn" data-trn="0" aria-pressed="true" data-i18n="trn.none">Aucun</button><button type="button" class="tb-btn" data-trn="15" aria-pressed="false">15°</button><button type="button" class="tb-btn" data-trn="30" aria-pressed="false">30°</button><button type="button" class="tb-btn" data-trn="45" aria-pressed="false">45°</button></span></div>
         </div>
         <p class="ui-note" id="mg-note" data-i18n="nav.margin.n">Marge : variation permise des vitesses pour tenir les heures verrouillées.</p>
+        <p class="ui-note" id="trn-note" hidden><span id="trn-help" data-i18n="trn.help"></span><span class="trn-warn" id="trn-warn" hidden></span></p>
         <div id="nav-amb" role="status"></div>
         <div class="hdg">
           <div><div class="lbl" data-i18n="f.ref">Cap</div><span class="tb-group" role="group"><button type="button" class="tb-btn" data-ref="true" aria-pressed="true" data-i18n="ref.true">Vrai</button><button type="button" class="tb-btn" data-ref="mag" aria-pressed="false" data-i18n="ref.mag">Magnétique</button></span></div>
@@ -2378,6 +2388,15 @@ const I18N = {
     't.amb.1': 'Heures verrouillées {a} {ha} → {b} {hb} : tenues à {n} ({v}) sur la branche, dans la marge ±{m} %.',
     't.apply': 'Appliquer',
     't.leg': '→ {v} ({n})',
+    'f.turns': 'Virages (inclinaison)',
+    'trn.none': 'Aucun',
+    'trn.help': 'Rayon d\u2019après la vitesse sol de la branche qui arrive et l\u2019inclinaison\u202f; le minutage reste de point à point.',
+    'trn.warn.1': '\u26a0 1 virage trop large pour sa branche, cerclé en orange.',
+    'trn.warn.n': '\u26a0 {n} virages trop larges pour leur branche, cerclés en orange.',
+    'trn.row': '\u21b1 virage de {a}° à droite · rayon {r} · commencer {d} avant {name}',
+    'trn.row.l': '\u21b0 virage de {a}° à gauche · rayon {r} · commencer {d} avant {name}',
+    'trn.row.bad': '\u26a0 virage de {a}° à droite\u202f: {d} d\u2019anticipation, la branche ne suffit pas',
+    'trn.row.bad.l': '\u26a0 virage de {a}° à gauche\u202f: {d} d\u2019anticipation, la branche ne suffit pas',
     't.red.m': '{p} à {h} intenable : il faudrait {n} ({v}) de {a} à {b}, au-delà de la marge de ±{m} %. Aux vitesses de la route : {r}.',
     't.red.lk': '{p} à {h} intenable : toutes les vitesses de {a} à {b} sont verrouillées. Aux vitesses de la route : {r}.',
     't.red.lt': '{p} à {h} intenable : les branches verrouillées de {a} à {b} prennent déjà {d}. Aux vitesses de la route : {r}.',
@@ -2983,6 +3002,15 @@ const I18N = {
     't.amb.1': 'Locked times {a} {ha} → {b} {hb}: met at {n} ({v}) on the leg, within the ±{m}% margin.',
     't.apply': 'Apply',
     't.leg': '→ {v} ({n})',
+    'f.turns': 'Turns (bank)',
+    'trn.none': 'None',
+    'trn.help': 'Radius from the incoming leg\u2019s ground speed and the bank angle; timings stay point to point.',
+    'trn.warn.1': '\u26a0 1 turn too wide for the leg, circled in orange.',
+    'trn.warn.n': '\u26a0 {n} turns too wide for their legs, circled in orange.',
+    'trn.row': '\u21b1 {a}° right turn · radius {r} · start {d} before {name}',
+    'trn.row.l': '\u21b0 {a}° left turn · radius {r} · start {d} before {name}',
+    'trn.row.bad': '\u26a0 {a}° right turn: needs {d} lead, the leg is too short',
+    'trn.row.bad.l': '\u26a0 {a}° left turn: needs {d} lead, the leg is too short',
     't.red.m': '{p} at {h} cannot be met: it would take {n} ({v}) from {a} to {b}, beyond the ±{m}% margin. At the route’s speeds: {r}.',
     't.red.lk': '{p} at {h} cannot be met: every speed from {a} to {b} is locked. At the route’s speeds: {r}.',
     't.red.lt': '{p} at {h} cannot be met: the locked legs from {a} to {b} already take {d}. At the route’s speeds: {r}.',
@@ -3451,6 +3479,7 @@ const $ = id => document.getElementById(id);
 /* Recopié à l'identique du Datacard Generator : constantes WGS84, UTM, MGRS, lectures, DMS, cap et distance. */
 @@GEO_BLOCK@@
 @@ROUTE_TIMING_BLOCK@@
+@@ROUTE_TURNS_BLOCK@@
 @@READNUM_BLOCK@@
 
 @@MAGVAR_BLOCK@@
@@ -3461,7 +3490,7 @@ function defaultState() {
     format: FORMAT_ID, name: '', theatre: 'Caucasus',
     units: { distance: 'km', altitude: 'm' },
     navDisplay: { ref: 'true', decl: '', mode: 'calc', year: '', force: false },
-    groundSpeed: GS_DEFAULT, speedMargin: RTM_MARGIN_DEFAULT, legBoxes: 'full',
+    groundSpeed: GS_DEFAULT, speedMargin: RTM_MARGIN_DEFAULT, legBoxes: 'full', turnBank: 0,
     points: [],
     refs: [],
     ui: { layer: 'topo', grid: true, places: false, towns: true, airfields: true, trace: 'route', ticks: 'route' }
@@ -3580,6 +3609,7 @@ function parseRoute(src) {
     groundSpeed: (typeof src.groundSpeed === 'number' && isFinite(src.groundSpeed) && src.groundSpeed > 0) ? src.groundSpeed : GS_DEFAULT,
     speedMargin: rtmMargin(src.speedMargin),
     legBoxes: LEGBOX_IDS.indexOf(src.legBoxes) !== -1 ? src.legBoxes : 'full',
+    turnBank: rtnBank(src.turnBank),
     points: [],
     refs: []
   };
@@ -6115,6 +6145,29 @@ function updateTimes() {
   });
 }
 
+/* Les virages à l'inclinaison choisie (route active seulement, jamais les autres routes) : un virage qui tient a son arc (un liseré papier, puis un pointillé de la couleur de la route) et un point là où commencer à tourner ;
+   un virage trop large est cerclé d'orange autour de son marqueur (le cercle n'est jamais exporté : TMX.plain). Au-dessus du tracé, sous les marqueurs ; refaits pendant le glisser d'un point. */
+let turnLayers = [];
+function drawTurns() {
+  turnLayers.forEach(l => { if (routeGroup) routeGroup.removeLayer(l); });
+  turnLayers = [];
+  if (!routeGroup || S.turnBank === 0 || !routeShown() || S.points.length < 3) return;
+  const tn = turnsOf(timing());
+  const col = S.ui.trace === 'black' ? '#1f1c16' : routeColor();
+  const add = l => { l.addTo(routeGroup); turnLayers.push(l); };
+  tn.forEach(o => {
+    if (!o || !o.turn) return;
+    if (o.wide) {
+      if (!TMX.plain) add(L.circleMarker([S.points[o.i].lat, S.points[o.i].lon], { radius: 19, weight: 3, color: 'var(--mp-sig-orange-line)', opacity: 1, fill: false, dashArray: '6 4', interactive: false, className: 'rp-turn-bad' }));
+      return;
+    }
+    const arc = rtnArc(o);
+    add(L.polyline(arc, { color: '#f0e8d6', weight: 5, opacity: 0.8, lineCap: 'round', lineJoin: 'round', interactive: false, className: 'rp-turn-halo' }));
+    add(L.polyline(arc, { color: col, weight: 2.4, opacity: 1, dashArray: '5 4', lineCap: 'butt', lineJoin: 'round', interactive: false, className: 'rp-turn-arc' }));
+    add(L.circleMarker(o.t1, { radius: 4, weight: 2, color: '#f0e8d6', opacity: 1, fillColor: col, fillOpacity: 1, interactive: false, className: 'rp-turn-dot' }));
+  });
+}
+
 function drawRoute() {
   if (!routeGroup) return;
   routeGroup.clearLayers();
@@ -6135,6 +6188,8 @@ function drawRoute() {
                            : { color: routeColor(), weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(routeGroup)
     ];
   }
+  turnLayers = [];
+  drawTurns();
   for (let i = 1; i < pts.length; i++) {
     const a = pts[i - 1], b = pts[i];
     const pa = map.latLngToContainerPoint([a.lat, a.lon]), pb = map.latLngToContainerPoint([b.lat, b.lon]);
@@ -6156,6 +6211,7 @@ function drawRoute() {
       const q = ev.target.getLatLng();
       p.lat = r7(q.lat); p.lon = r7(q.lng);
       if (linePair) { const l2 = S.points.map(x => [x.lat, x.lon]); linePair.forEach(pl => pl.setLatLngs(l2)); }
+      drawTurns();
       renderNav();
       drawDecor();
       updateTimes();
@@ -8546,6 +8602,35 @@ function bindNavTimes() {
   });
 }
 
+/* ============= VIRAGES (INCLINAISON) ============= */
+/* Les virages de la route : le calcul est celui du bloc route_turns_block.py, sur la vitesse sol de la branche qui arrive à chaque point (timing().legs[i].v) ; rien sans inclinaison */
+function turnsOf(tm) {
+  const sp = [null];
+  for (let i = 1; i < S.points.length; i++) sp.push(tm.legs[i].v);
+  return rtnCompute(S.points, sp, S.turnBank);
+}
+/* Une distance au sol (mètres) d'un virage : en mètres arrondis à 10 m (milliers séparés par une espace fine insécable en français, une virgule en anglais), ou en NM à deux décimales quand la route est en NM */
+function fmtTurnDist(m) {
+  if (S.units.distance === 'nm') return decimal((m / 1852).toFixed(2)) + ' ' + t('u.nm');
+  const r = Math.round(m / 10) * 10;
+  return String(r).replace(/\B(?=(\d{3})+(?!\d))/g, CURRENT_LANG === 'fr' ? ' ' : ',') + ' ' + t('u.m');
+}
+/* La ligne du tableau sous un point dont le virage est de 10° ou plus : le virage qui tient, ou le trop large dans sa pastille orange */
+function turnNavRow(o) {
+  if (!o || !o.turn || Math.abs(o.delta) < 10) return '';
+  const nm = S.points[o.i].name.trim() !== '' ? S.points[o.i].name.trim() : String(o.i);
+  const txt = t((o.wide ? 'trn.row.bad' : 'trn.row') + (o.side === 'left' ? '.l' : ''), { a: Math.round(Math.abs(o.delta)), r: fmtTurnDist(o.R), d: fmtTurnDist(o.d), name: nm });
+  return '<tr class="nav-turn' + (o.wide ? ' bad' : '') + '"><td></td><td colspan="3">' + (o.wide ? '<span class="trn-bad">' + esc(txt) + '</span>' : esc(txt)) + '</td></tr>';
+}
+/* La note du panneau : l'aide quand il y a une inclinaison, puis, s'il y a des virages trop larges, leur nombre sur la ligne suivante */
+function trnNoteRender(tn) {
+  const on = S.turnBank !== 0, w = on ? tn.filter(o => o && o.wide).length : 0;
+  $('trn-note').hidden = !on;
+  const el = $('trn-warn');
+  el.hidden = w === 0;
+  el.textContent = w ? t(w === 1 ? 'trn.warn.1' : 'trn.warn.n', { n: w }) : '';
+}
+
 function renderNav() {
   $('nav-title').textContent = navTitle();
   /* DISS-15 : sous le titre, la ligne du nord et de la valeur à régler (ou la raison du refus) ; sous chaque point, ses deux valeurs */
@@ -8562,6 +8647,8 @@ function renderNav() {
     $('nav-diss-t').textContent = t('nav.diss.' + dsd.kind + (d0 == null ? '0' : ''), { d: d0 == null ? '' : fmtVar(d0) });
   }
   const tm = timing();
+  const tn = turnsOf(tm);
+  trnNoteRender(tn);
   const calc = navIsCalc(), ys = calc ? navYear() : null;
   const oldIn = document.querySelector('#nav-body .tm-in');
   const hadFocus = !!oldIn && document.activeElement === oldIn;
@@ -8575,7 +8662,7 @@ function renderNav() {
     rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + navTimeHtml(tm, i) + '</span>' +
       (calc ? '<span class="co alt dv-leg">' + esc(t('nav.var', { v: fmtVar(declAt(p, ys)) })) + '</span>' : '') + '</td>' +
       '<td colspan="2"><span class="co">' + esc(toMGRS(p.lat, p.lon)) + '</span><span class="co dms">' + esc(toDMS(p.lat, p.lon)) + '</span>' +
-      (dv && dv[i] ? '<span class="co diss"><span class="dv">' + esc(dv[i].fwd) + '</span> · <span class="dv">' + esc(dv[i].right) + '</span></span>' : '') + '</td></tr>';
+      (dv && dv[i] ? '<span class="co diss"><span class="dv">' + esc(dv[i].fwd) + '</span> · <span class="dv">' + esc(dv[i].right) + '</span></span>' : '') + '</td></tr>' + turnNavRow(tn[i]);
   });
   $('nav-body').innerHTML = rows;
   if (TMX.i >= 0) {
@@ -8627,6 +8714,7 @@ function syncControls() {
   mark('data-ref', S.navDisplay.ref);
   mark('data-diss', DISP.diss ? 'on' : 'off');
   mark('data-lbx', S.legBoxes);
+  mark('data-trn', String(S.turnBank));
   mark('data-trc', S.ui.trace);
   mark('data-tck', S.ui.ticks);
   $('gs-lbl').textContent = t('f.gs', { u: t(S.units.distance === 'nm' ? 'u.kt' : 'u.kmh') });
@@ -9340,6 +9428,7 @@ function setRoute(route, noKey) {
   S.groundSpeed = route.groundSpeed;
   S.speedMargin = route.speedMargin;
   S.legBoxes = route.legBoxes;
+  S.turnBank = route.turnBank;
   S.points = route.points;
   S.refs = route.refs;
   const ar = RSET.routes[RSET.active];       /* la date de la route lue (fichier) passe à la route active ; sans date : aucune (une route remplacée ne garde pas celle de la précédente) */
@@ -9702,7 +9791,7 @@ function openAsRoute(route, msgFn) {
       S.name = ''; S.points = nb.points;
     }
     /* route de plus : son nom, ses points et ses références viennent du fichier, les unités et les réglages restent ceux du RP ; route active vide remplacée : tout le fichier, comme avant */
-    setRoute(empty ? route : Object.assign(uiCopy(route), { units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, speedMargin: S.speedMargin, legBoxes: S.legBoxes }));
+    setRoute(empty ? route : Object.assign(uiCopy(route), { units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, speedMargin: S.speedMargin, legBoxes: S.legBoxes, turnBank: S.turnBank }));
     return true;
   };
   if (!replacing) { go(); if (msgFn) showToast(msgFn(), { type: 'ok' }); return true; }
@@ -10777,7 +10866,7 @@ function rtOpenGo() {
     pts.push({ name: p.name !== '' ? p.name : nextName(pts, pts.length), lat: r7(ll.lat), lon: r7(ll.lon), alt: p.alt, altRef: p.altRef });
   });
   rtHide('rt-open-modal');
-  openAsRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, speedMargin: S.speedMargin, legBoxes: S.legBoxes, points: pts, refs: [] },
+  openAsRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, speedMargin: S.speedMargin, legBoxes: S.legBoxes, turnBank: S.turnBank, points: pts, refs: [] },
     () => t('toast.rtOpened') + (dropped ? ' · ' + t('toast.dropped', { n: dropped }) : ''));
 }
 
@@ -11845,7 +11934,7 @@ async function expRun() {
   let sw = null, out = null, partial = false;
   try {
     if (typeof html2canvas !== 'function') throw new Error('html2canvas absent');
-    TMX.plain = true; updateTimes(); drawDecorNow();       /* l'image porte l'heure seule : ni cadenas, ni couleur, ni ⚠, ni orange (contour, étiquette, pastille) */
+    TMX.plain = true; updateTimes(); drawDecorNow(); drawTurns();       /* l'image porte l'heure seule : ni cadenas, ni couleur, ni ⚠, ni orange (contour, étiquette, pastille) */
     map.closePopup();
     partial = expForeignTiles(rect);
     await expPrepFonts();
@@ -11860,7 +11949,7 @@ async function expRun() {
     out = null;
   } finally {
     if (sw) { try { expRestorePaths(sw); } catch (e) { console.warn('[export carte] retour au SVG', e); } }
-    TMX.plain = false; updateTimes(); drawDecorNow();
+    TMX.plain = false; updateTimes(); drawDecorNow(); drawTurns();
     EXP.busy = false;
     $('export-layer').classList.remove('busy');
     $('exp-go').disabled = false;
@@ -11972,6 +12061,10 @@ function bindEvents() {
   document.querySelectorAll('[data-lbx]').forEach(b => b.addEventListener('click', () => {
     S.legBoxes = LEGBOX_IDS.indexOf(b.dataset.lbx) !== -1 ? b.dataset.lbx : 'full';
     persistState(); drawDecor(); syncControls();
+  }));
+  document.querySelectorAll('[data-trn]').forEach(b => b.addEventListener('click', () => {
+    S.turnBank = rtnBank(parseInt(b.dataset.trn, 10));
+    persistState(); drawRoute(); renderNav(); syncControls();
   }));
   document.querySelectorAll('[data-trc]').forEach(b => b.addEventListener('click', () => {
     S.ui.trace = b.dataset.trc === 'black' ? 'black' : 'route';
@@ -12191,7 +12284,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@PROJECTION_BLOCK@@\n', build_projection_block()).replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@ROUTE_TIMING_BLOCK@@\n', build_route_timing_block()).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@PUBLIC_HOST_BLOCK@@\n', build_public_host_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
+    js = js.replace('@@PROJECTION_BLOCK@@\n', build_projection_block()).replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@ROUTE_TIMING_BLOCK@@\n', build_route_timing_block()).replace('@@ROUTE_TURNS_BLOCK@@\n', build_route_turns_block()).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@PUBLIC_HOST_BLOCK@@\n', build_public_host_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     js = js.replace('@@TBM_JS@@\n', build_tbm_block())
     js = js.replace('@@THREATS_BLOCK@@\n', threats_block.build_block())
     if '@@' in js:
