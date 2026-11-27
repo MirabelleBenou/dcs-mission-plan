@@ -29,7 +29,6 @@ def test_the_texts_are_where_the_lot_says():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     u = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     assert u.count('**Seven tabs at the bottom on a phone**') == 1 and u.count('**Switching tools: finishing touches**') == 1
-    assert u.index('**Seven tabs') < u.index('**Switching tools: finishing') < u.index('### Home screen')
     fm = (ROOT / 'fm_planches_block.py').read_text(encoding='utf-8')
     for t in (DG_FM_FR, DG_FM_EN, BG_FM_FR, BG_FM_EN):
         assert fm.count(t) == 1

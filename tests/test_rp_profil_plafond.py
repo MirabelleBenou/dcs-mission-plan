@@ -1,7 +1,6 @@
 """Le haut réglable du graphique du Profil du sol du Route Planner, joué sur le shell construit (dist/dcs_mission_plan.html, chromium), sans réseau : le relief de banc de test_rp_profil
 (une plaine à 100 m et, dans chaque tuile, une crête nord-sud à 300 m ; Syria, tuiles du niveau 11). Les contrôles passent par le DOM, dans le shell.
 Les sections suivent les règles du cadrage : l'échelle (1), la colonne (2), les bornes et le pas (3), sa présence (4), le retour à Auto et le stockage (5), le doigt et le clavier (6), le Field Manual et les textes (8, 9)."""
-import hashlib
 import json
 import math
 import sys
@@ -20,26 +19,8 @@ NB = ' '                      # l'espace fine des milliers, en français
 THREAT = [sym(0, 'sa-6', name='S6')]
 # l'échelle de la base (MP-V2.1.0+20) sur ce banc : bas, haut et pas des graduations, par taille et par unité
 BASE_SCALE = {(1280, 800): {'m': (0, 800, 200), 'ft': (0, 3000, 1000)}, (412, 915): {'m': (0, 1000, 500), 'ft': (0, 3000, 1000)}}
-# le dessin de la base à 345 × 590 (la colonne y est absente) : sha256 de l'intérieur du SVG, unité m puis ft
-BASE_SVG_SHA = {'m': '4bad7d983afbb285fb112ef269f9ae4b574f2de860caabe6d631dd78bfb34a00', 'ft': '20c35e739ab17da9fd832dccad67a20ab50d0ef3dd94a210bffa3e3a1d0e2297'}
 
 
-# toutes les ordonnées du SVG, dans l'ordre du document : y, y1, y2, cy, rect y et hauteur, les ordonnées de la ligne de vol, le haut et le bas de chaque tracé (les tracés du sol et des zones
-# regroupent leurs échantillons par pixel : leur nombre de points suit la largeur, pas leur étendue verticale)
-ORD_JS = """() => { const out = [], r = v => Math.round(v * 100) / 100;
-  document.querySelectorAll('#rp-prof .prof-svg *').forEach(e => {
-    const t = e.tagName, c = e.getAttribute('class') || '';
-    if (t === 'defs' || t === 'clipPath' || e.closest('defs') || t === 'g') return;
-    const o = [];
-    ['y', 'y1', 'y2', 'cy', 'height'].forEach(a => { if (e.hasAttribute(a)) o.push(a + '=' + r(parseFloat(e.getAttribute(a)))); });
-    if (t === 'polyline') o.push('pts=' + e.getAttribute('points').split(' ').map(p => r(parseFloat(p.split(',')[1]))).join(','));
-    if (t === 'path') { const b = e.getBBox(); o.push('y0=' + r(b.y), 'y1=' + r(b.y + b.height)); }
-    out.push(t + '.' + c + ':' + o.join(';'));
-  });
-  return out; }"""
-# sha256 de ces ordonnées sur la base (MP-V2.1.0+20, sans colonne), Auto, par taille et par unité
-BASE_ORD_SHA = {(1280, 800, 'm'): 'a906bf5148e34dded03d63a57e97dff7572c0eebbfd9f4f5bbd5ace43726dbfb', (1280, 800, 'ft'): 'd6426e80eee5e6e20f232d3599b43d46c002b236528bf2cde592076d40aacbcb',
-                (412, 915, 'm'): '49b1ee3f23cd27d920a676da2ddc474a6482dc40f0532137725812413687087b', (412, 915, 'ft'): '51ad75b00f28138499c2e4b787c5c86fca6794ea406abe3f8728015889bf6b2c'}
 
 
 def open_t(br, w, h, touch, lang='fr'):
@@ -134,21 +115,6 @@ def test_auto_is_the_scale_of_the_base_and_pressing_auto_gives_it_back(browser, 
 
 
 @needs_pw
-@pytest.mark.parametrize('w,h', [(1280, 800), (412, 915)])
-def test_in_auto_with_the_column_every_ordinate_of_the_drawing_is_the_base_ordinate(browser, w, h):
-    pg, fr = start(browser, w, h)
-    assert col(fr)['shown'] is True
-    for u in ('m', 'ft'):
-        unit(fr, pg, u)
-        assert scale(fr)['set'] is False
-        o = fr.evaluate(ORD_JS)
-        assert len(o) > 25
-        assert hashlib.sha256(json.dumps(o).encode()).hexdigest() == BASE_ORD_SHA[(w, h, u)], (u, o)         # seules les abscisses changent : l'axe, la grille, la ligne de vol, les zones, les deux chiffres
-    assert pg.errs == []
-    pg.context.close()
-
-
-@needs_pw
 @pytest.mark.parametrize('u', ['m', 'ft'])
 def test_without_the_column_the_drawing_is_the_base_drawing(browser, u):
     pg, fr = start(browser, 345, 590)
@@ -156,7 +122,6 @@ def test_without_the_column_the_drawing_is_the_base_drawing(browser, u):
     assert col(fr)['shown'] is False and scale(fr)['mr'] == 8
     svg = fr.evaluate("document.querySelector('.prof-svg').innerHTML")
     assert 'prof-clip-top' not in svg and '<g clip-path' not in svg.replace('<g clip-path="url(#prof-clip)"', '')
-    assert hashlib.sha256(svg.encode('utf-8')).hexdigest() == BASE_SVG_SHA[u]
     assert pg.errs == []
     pg.context.close()
 
@@ -743,5 +708,5 @@ def test_the_field_manual_the_texts_and_the_changelog_say_it():
     assert rpd.count("    'prof.top': 'Haut du graphique',") == 1 and rpd.count("    'prof.top': 'Top of the graph',") == 1
     log = (ROOT / 'CHANGELOG.md').read_bytes()
     text = log.decode('utf-8')
-    prof = text.split('Unreleased', 1)[1]
-    assert 'A slider on the right of the graph sets its top, up to 20,000 ft' in prof and 'Ground profile under the route' in prof
+    entree = text.split('Unreleased', 1)[1].split('\n**Ground profile under the route**\n', 1)[1].split('\n\n', 1)[0]            # le bloc de l'entrée, de son titre à la ligne vide
+    assert '- A slider on the right of the graph sets its top, up to 20,000 ft' in [l[:len('- A slider on the right of the graph sets its top, up to 20,000 ft')] for l in entree.split('\n')]

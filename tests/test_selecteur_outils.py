@@ -49,8 +49,8 @@ def test_texts_are_where_the_lot_says():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
-    for e in (CHANGELOG_ENTRY, ENTRY_TABS, ENTRY_TOUCHES, ENTRY_KEYBOARD, ENTRY_INSIGNIA, ENTRY_NARROW, ENTRY_MENUS, ENTRY_LOT3.strip('\n'), HEADINGS_ENTRY):
-        assert e in all_tools, e[:60]       # chaque entrée est là, sous la rubrique
+    for e in (CHANGELOG_ENTRY, ENTRY_TABS, ENTRY_TOUCHES, ENTRY_KEYBOARD, ENTRY_INSIGNIA, ENTRY_NARROW, ENTRY_MENUS, *ENTRY_LOT3.strip('\n').split('\n\n'), HEADINGS_ENTRY):
+        assert all_tools.count(e) == 1, e[:60]       # chaque entrée est là, sous la rubrique
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
     i = fm.index('"La barre du haut", "The top bar"')
     j = fm.index('"Lire ce manuel au téléphone"', i)

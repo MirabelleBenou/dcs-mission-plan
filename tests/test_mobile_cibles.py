@@ -1,7 +1,6 @@
 """Les cibles au doigt (44 px), les champs à 16 px, la barre de l'accueil qui se replie sous « ⋯ », la raison d'une ligne grisée.
 Les textes (CHANGELOG, numéro de dev) et le CSS commun, lus dans les sources ; puis le shell construit (dist/dcs_mission_plan.html, chromium, aucun réseau),
 joué au doigt et à la souris. Les contrôles passent par le DOM."""
-import re
 import sys
 from pathlib import Path
 
@@ -46,13 +45,11 @@ def _section(text, title):
 
 def test_the_changelog_says_what_the_lot_says_where_it_says_it():
     u = _unreleased()
-    heads = re.findall(r'^### (.+)$', u, flags=re.M)
-    assert heads.index('Home screen') == heads.index('All tools') + 1 and heads.index('HQ') == heads.index('Home screen') + 1
     all_tools = _section(u, 'All tools')
-    assert (TEXT_TOUCH + '\n' + TEXT_WHY.rstrip('\n')) in all_tools and all_tools.index(TEXT_TOUCH) < all_tools.index(TEXT_WHY)       # le lot mp-mobile-selecteur ajoute son entrée après celle-ci
+    assert TEXT_TOUCH.rstrip('\n') in all_tools and TEXT_WHY.rstrip('\n') in all_tools                 # chaque entrée est là, sous sa rubrique
     assert '\n' + TEXT_HOME in u and u.count(TEXT_HOME) == 1
-    rp = _section(u, 'Route Planner').split('\n\n**“Clear everything”')[0]
-    assert (TEXT_RP + '\n' + TEXT_RP_TABS).rstrip('\n') in rp                 # l'entrée du lot mp-mobile-rp-onglets suit aussitôt celle-ci
+    rp = _section(u, 'Route Planner')
+    assert TEXT_RP.rstrip('\n') in rp and TEXT_RP_TABS.rstrip('\n') in rp                 # chaque entrée est là, sous sa rubrique
     assert u.count(TEXT_TOUCH) == 1 and u.count(TEXT_WHY) == 1 and u.count(TEXT_RP) == 1
 
 

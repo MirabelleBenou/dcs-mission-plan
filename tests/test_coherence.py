@@ -16,8 +16,13 @@ def test_the_dev_build_number_is_the_same_in_the_code_the_changelog_and_the_home
     suite = re.search(r'^SUITE_VERSION = [\'"]([^\'"]+)[\'"]', version, re.M).group(1)
     log = _lire('CHANGELOG.md')
     dites = re.findall(r'`MP-V' + re.escape(suite) + r'\+(\d+)` for this one', log)
+    accueil = _lire('dist', 'dcs_mission_plan.html')
+    if build == 0:                                                                      # l'état de release : le pied est `v<suite>`, sans `+n`, et le CHANGELOG n'a pas de ligne « Build number »
+        assert dites == [], dites
+        assert '<span id="foot-version">v%s</span>' % suite in accueil and 'data-dev-build' not in accueil
+        return
     assert dites == [str(build)], (build, dites)                                        # la ligne « Build number on the hosted version » du CHANGELOG, une seule fois
-    pied = re.search(r'<span id="foot-version" data-dev-build>MP-V' + re.escape(suite) + r'\+(\d+)</span>', _lire('dist', 'dcs_mission_plan.html'))
+    pied = re.search(r'<span id="foot-version" data-dev-build>MP-V' + re.escape(suite) + r'\+(\d+)</span>', accueil)
     assert pied and int(pied.group(1)) == build, (build, pied and pied.group(1))        # le numéro du pied de l'accueil construit
 
 

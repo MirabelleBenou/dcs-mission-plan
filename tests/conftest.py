@@ -7,9 +7,9 @@ import pytest
 @pytest.fixture(autouse=True)
 def _ferme_les_contextes(request):
     yield
-    if 'browser' not in request.fixturenames:
+    br = request.node.funcargs.get('browser') if hasattr(request.node, 'funcargs') else None
+    if br is None:        # pas de navigateur dans ce test, ou il ne s'est pas lancé : rien à fermer
         return
-    br = request.getfixturevalue('browser')
     for ctx in list(br.contexts):
         try:
             ctx.close()

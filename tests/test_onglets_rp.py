@@ -53,7 +53,7 @@ LOG_PAREN = '(between 520 and 760 px wide, the Route Planner’s waypoint rows s
 def test_the_texts_are_where_the_lot_says():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     u = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
-    rp = u.split('\n### Route Planner\n', 1)[1].split('\n### ', 1)[0].split('\n\n**“Clear everything”')[0]
+    rp = u.split('\n### Route Planner\n', 1)[1].split('\n### ', 1)[0]
     assert u.count(LOG_TABS) == 1 and LOG_TABS.rstrip('\n') in rp
     assert u.count(LOG_PAREN) == 1 and '(the Route Planner’s waypoint rows still use smaller text)' not in log
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')

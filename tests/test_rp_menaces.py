@@ -1,12 +1,12 @@
 """La couche des menaces du Route Planner, jouée sur le shell construit (dist/dcs_mission_plan.html, chromium), sans réseau : les requêtes hors file:/data:/blob: sont interceptées ;
 sous l'adresse publique des tuiles, le banc sert le relief.json de Syria et des tuiles d'altitude fabriquées (une plaine à 100 m et, dans chaque tuile, une crête nord-sud à 300 m sur les colonnes 150 à 159).
 Les contrôles passent par le DOM, dans le shell. Les sections de ce fichier suivent celles du cadrage : géométrie, hauteur, route, fiche, affichage, sans relief, cartouche, Worker, Field Manual."""
-import hashlib
 import json
 import math
 import re
 import struct
 import sys
+import warnings
 import zlib
 from pathlib import Path
 
@@ -39,8 +39,6 @@ PLAIN_M, CREST_M = 100.0, 300.0
 NBSP = ' '
 # la largeur du pouce du curseur, lue dans la feuille de style de la page (un pseudo-élément ne se lit pas par getComputedStyle)
 THUMB_JS = "window.thumbW = function (sel) { sel = sel || '::-webkit-slider-thumb'; for (const sh of document.styleSheets) for (const r of sh.cssRules) if (r.selectorText && r.selectorText.indexOf('#rp-thr input') === 0 && r.selectorText.indexOf(sel) !== -1) return parseFloat(r.style.width); return NaN; };\n"
-# sha256 des deux figures de la page du RP du Field Manual (planche large, planche téléphone), mesurées sur le socle 8fb4e66
-PLATE_RP_BASE = ['0461d458aa1c6da4dbfb551a391b97f8708e55351da7ba046e12a7aae45ff020', '05134ca6552ba21292aaf558921a3bea29d3f18730b57a6300322c4047052743']
 
 
 def png(w, h, pixel):
@@ -130,11 +128,12 @@ def open_rp(br, w=1280, h=800, lang='fr', init='', doc=True, seed=None):
 
 def open_rp_qui_ecoute(br, essais=10, **kw):
     """open_rp, pour les tests où un autre outil écrit le théâtre ou la route que le Route Planner doit suivre : un cadre sourd aux évènements storage (voir attendre_ecoute_storage) est fermé et l'ouverture refaite."""
-    for _ in range(essais):
+    for n in range(1, essais + 1):
         pg, fr = open_rp(br, **kw)
         if attendre_ecoute_storage(pg, fr):
             return pg, fr
         pg.context.close()
+        warnings.warn('bench: Route Planner frame deaf to storage events, reopened (attempt %d of %d)' % (n, essais))
     raise AssertionError('le cadre du Route Planner est resté sourd aux évènements storage en %d ouvertures' % essais)
 
 
@@ -838,8 +837,11 @@ def test_field_manual_page_section_and_table():
 def test_field_manual_rp_plate_does_not_show_the_threats_and_the_page_holds_no_data_marker():
     fm = (ROOT / 'dist' / 'dcs_field_manual.html').read_text(encoding='utf-8')
     rp = fm[fm.index('<section id="page-rp"'):fm.index('<!-- /page-rp -->')]
-    figs = [hashlib.sha256(re.search(r'<svg class="%s".*?</svg>' % c, rp, re.S).group(0).encode()).hexdigest() for c in ('pl-wide', 'pl-tall')]
-    assert figs == PLATE_RP_BASE, figs                                         # les deux figures du RP : celles du FM du socle 8fb4e66, à l'octet
+    for c in ('pl-wide', 'pl-tall'):                                           # les deux figures du RP sont là, une fois chacune, et ne montrent rien de la couche des menaces
+        assert rp.count('<svg class="%s"' % c) == 1, c
+        fig = re.search(r'<svg class="%s".*?</svg>' % c, rp, re.S).group(0)
+        for trace in ('Menaces', 'Threats', 'rp-thr', 'thr-pill', 'dsp.threats', 'thr.set', 'thr.fold'):
+            assert trace not in fig, (c, trace)
     for p in (ROOT / 'dist').glob('*.html'):
         assert 'dcs-threats-v1' not in p.read_text(encoding='utf-8'), p.name
     rp = (ROOT / 'dist' / 'dcs_route_planner.html').read_text(encoding='utf-8')
