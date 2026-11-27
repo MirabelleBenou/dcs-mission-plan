@@ -814,6 +814,10 @@ body {
 .dge-ed input, .dge-ed textarea { flex: 1 1 0; min-width: 0; height: 100%; box-sizing: border-box; margin: 0; padding: 0 4px; border: 0; border-radius: 0; outline: none; background: #fbf1d2; color: #14130f; box-shadow: inset 0 -2px 0 #c0892a, 0 0 0 1px rgba(192,137,42,.55); }
 .dge-ed textarea { resize: none; padding-top: 2px; white-space: pre-wrap; }
 .dge-tip { position: absolute; z-index: 6; background: #14130f; color: #f1ecdf; border: 1px solid #c0892a; font: 500 11px/1.2 var(--f-ui); letter-spacing: .5px; padding: 4px 7px; white-space: nowrap; pointer-events: none; }
+.dge-box.night { border-color: #c9a45a; }
+.dge-box.night .dge-pen { color: #c9a45a; }
+.dge-ed.night input, .dge-ed.night textarea { background: #2a2b22; color: #e2d9bf; box-shadow: inset 0 -2px 0 #c9a45a, 0 0 0 1px rgba(201,164,90,.6); }
+.dge-tip.night { background: #26271f; color: #e2d9bf; border-color: #c9a45a; }
 .dge-go { position: absolute; z-index: 6; min-height: 48px; padding: 0 18px; background: #c0892a; color: #14130f; border: 0; border-radius: 0; font: 700 14px/1 var(--f-ui); letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.5); cursor: pointer; }
 .dge-go:focus-visible { outline: 2px solid #f1ecdf; outline-offset: 2px; }
 #editor .dge-flash { outline: 2px solid #c0892a !important; outline-offset: 1px; }
@@ -6104,6 +6108,7 @@ function cardPages(c, mode) {
 
 /* ============= APERÇU ============= */
 function renderPreview() {
+  dgeBeforeRedraw();
   const c = curCard();
   const res = cardPages(c, doc.mode);
   DG_UI.needLayout = !!res.plan.unmeasured;
@@ -6136,7 +6141,7 @@ function applyPreviewScale() {
    l'export PNG et l'impression refont leurs pages depuis l'état (cardPages) et n'en portent jamais.
    Côte à côte (DG_TABS ne correspond pas) : une case simple se modifie sur place, la valeur s'écrit dans le champ de l'éditeur (input puis change, comme au clavier) ; tout le reste ouvre sa section au rang cliqué.
    En onglets : toucher une boîte la marque et fait paraître « ✎ Modifier <boîte> », qui ouvre l'onglet, la section et le champ ; rien ne s'écrit sur place. */
-const DGE = { hov: null, hovEl: null, ed: null, mark: null, flash: null };
+const DGE = { hov: null, hovEl: null, ed: null, mark: null, flash: null, pend: null, skip: 0, tap: null };
 const DGE_AMBER = '#c0892a';
 function dgeWrap() { return document.getElementById('preview-wrap'); }
 /* Le rectangle d'un élément dans la zone défilante de l'aperçu (px de l'écran, défilement compris) */
@@ -6159,8 +6164,8 @@ function dgeZone(el) {
 }
 /* Le titre imprimé d'une boîte (le bouton du téléphone) */
 function dgeTitle(z) {
-  if (z.classList.contains('dc-top')) return t('sec.meta');
-  if (z.classList.contains('dc-head')) return t(z.classList.contains('dc-head2') ? 'sec.group' : 'sec.header');
+  if (z.classList.contains('dc-top')) return t('sec.meta').toUpperCase();       /* sans titre imprimé : le nom de la section, en capitales comme les titres des boîtes */
+  if (z.classList.contains('dc-head')) return t(z.classList.contains('dc-head2') ? 'sec.group' : 'sec.header').toUpperCase();
   const h = z.querySelector(':scope > .dc-bh');
   return h ? h.textContent : '';
 }
@@ -6361,9 +6366,9 @@ function dgeOpen(g, focus) {
   return dgeFollow(g.sec, el, focus);
 }
 /* ----- le survol (côte à côte, à la souris) ----- */
-function dgeBox(z, on) {
+function dgeBox(z, on, night) {
   const w = dgeWrap(), r = dgeRect(z), b = document.createElement('div');
-  b.className = 'dge-box' + (on ? ' on' : '');
+  b.className = 'dge-box' + (on ? ' on' : '') + (night ? ' night' : '');
   b.setAttribute('aria-hidden', 'true');
   dgePut(b, r.x - 3, r.y - 3, r.w + 6, r.h + 6);
   if (!on) { const p = document.createElement('span'); p.className = 'dge-pen'; p.textContent = '✎'; b.appendChild(p); }
@@ -6379,25 +6384,21 @@ function dgeHover(z) {
 function onDgeMove(e) {
   if (DG_TABS.matches || (e.pointerType && e.pointerType !== 'mouse')) return;
   if (DGE.ed) return;
-  dgeHover(dgeZone(e.target));
+  const z = dgeZone(e.target);
+  if (DGE.hovEl !== z && DGE.hov) { DGE.hov.remove(); DGE.hov = null; DGE.hovEl = null; }
+  if (z && DGE.hovEl !== z) { const pg = z.closest('.dc-page'); DGE.hovEl = z; DGE.hov = dgeBox(z, false, !!(pg && pg.dataset.mode === 'night')); }
 }
 /* ----- la saisie sur place ----- */
 function dgeEdit(g) {
   const fields = g.paths.map(dgeField);
-  if (fields.some(f => !f)) { dgeOpen(g, false); return; }       /* un champ que l'éditeur ne permet pas d'écrire : la section, comme pour une liste */
+  if (fields.some(f => !f)) { dgeOpen(g, true); return; }       /* un champ que l'éditeur ne permet pas d'écrire : la section et le champ focalisé, comme pour une liste */
   dgeClose(true);
   if (DGE.hov) { DGE.hov.remove(); DGE.hov = null; }
   DGE.hovEl = null;
-  const w = dgeWrap(), s = dgeScale(), a = dgeRect(g.anchor), cs = getComputedStyle(g.anchor), z = g.zone;
-  const fs = parseFloat(cs.fontSize) * s, lh = (parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.25) * s;
-  const ls = cs.letterSpacing === 'normal' ? 'normal' : (parseFloat(cs.letterSpacing) * s) + 'px';
-  const minW = g.minW * s;
-  const wd = Math.max(a.w, minW), ht = g.multi ? Math.max(a.h, lh * 3) : Math.max(a.h, lh);
-  let x = g.align === 'r' ? a.x + a.w - wd : (g.align === 'c' ? a.x + (a.w - wd) / 2 : a.x);
-  x = Math.max(4, Math.min(x, w.scrollWidth - wd - 4));
+  const w = dgeWrap(), cs = getComputedStyle(g.anchor), pg = g.zone.closest('.dc-page');
+  const night = !!(pg && pg.dataset.mode === 'night');       /* la nuit : le champ, l'infobulle et le contour prennent les couleurs de nuit de l'aperçu */
   const box = document.createElement('div');
-  box.className = 'dge-ed';
-  dgePut(box, x, a.y + (a.h - Math.max(a.h, ht)) / 2 * (g.multi ? 0 : 1), wd, ht);
+  box.className = 'dge-ed' + (night ? ' night' : '');
   const inputs = g.paths.map((p, k) => {
     const el = document.createElement(g.multi ? 'textarea' : 'input');
     if (!g.multi) el.type = 'text';
@@ -6406,28 +6407,50 @@ function dgeEdit(g) {
     el.setAttribute('spellcheck', 'false');
     const lab = fields[k].closest('.ed-field') && fields[k].closest('.ed-field').querySelector('label');
     el.setAttribute('aria-label', lab ? lab.textContent : p);
-    el.style.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + fs + 'px/' + lh + 'px ' + cs.fontFamily;
-    el.style.letterSpacing = ls;
     el.style.textAlign = g.align === 'r' && !g.multi ? 'right' : 'left';
     box.appendChild(el);
     return el;
   });
-  const frame = dgeBox(z, true), tip = document.createElement('div'), zr = dgeRect(z);
-  tip.className = 'dge-tip';
+  const frame = dgeBox(g.zone, true, night), tip = document.createElement('div');
+  tip.className = 'dge-tip' + (night ? ' night' : '');
   tip.setAttribute('aria-hidden', 'true');
   tip.textContent = t(g.multi ? 'dg.edit.tipm' : 'dg.edit.tip');
   w.appendChild(box);
   w.appendChild(tip);
-  dgePut(tip, 0, zr.y + zr.h + 4);
-  tip.style.left = Math.max(4, zr.x + zr.w - tip.offsetWidth) + 'px';
-  DGE.ed = { g: g, fields: fields, inputs: inputs, box: box, frame: frame, tip: tip };
+  /* la carte de la saisie : l'objet, son groupe et son rang (pour la retrouver si le document est relu pendant la frappe) ; la largeur du cadre (seul un changement de largeur valide) */
+  DGE.ed = { g: g, paths: g.paths, fields: fields, inputs: inputs, box: box, frame: frame, tip: tip, card: curCard(), gsId: curCard().gsId || '', idx: curIdx, w: window.innerWidth,
+             font: { style: cs.fontStyle, weight: cs.fontWeight, size: parseFloat(cs.fontSize), lh: parseFloat(cs.lineHeight), ls: cs.letterSpacing, family: cs.fontFamily } };
+  dgePlace(DGE.ed);
   box.addEventListener('keydown', onDgeKey);
   box.addEventListener('focusout', onDgeOut);
   dgeFollow(g.sec, fields[0], false);
   inputs[0].focus({ preventScroll: true });
   try { inputs[0].setSelectionRange(inputs[0].value.length, inputs[0].value.length); } catch (e) { /* ignore */ }
 }
-/* Fermer la saisie sur place : commit, la valeur part dans le champ de l'éditeur (input puis change, comme une saisie au clavier) ; sinon rien n'est émis */
+/* Poser (ou replacer, après un redimensionnement qui garde la largeur : le clavier d'un écran tactile) les champs, l'infobulle et le contour sur la valeur et sa boîte */
+function dgePlace(ed) {
+  const g = ed.g, w = dgeWrap(), s = dgeScale(), f = ed.font;
+  if (!g.anchor.isConnected || !g.zone.isConnected) return;
+  const a = dgeRect(g.anchor), zr = dgeRect(g.zone);
+  const fs = f.size * s, lh = (f.lh || f.size * 1.25) * s, ls = f.ls === 'normal' ? 'normal' : (parseFloat(f.ls) * s) + 'px';
+  const wd = Math.max(a.w, g.minW * s), ht = g.multi ? Math.max(a.h, lh * 3) : Math.max(a.h, lh);
+  let x = g.align === 'r' ? a.x + a.w - wd : (g.align === 'c' ? a.x + (a.w - wd) / 2 : a.x);
+  x = Math.max(4, Math.min(x, w.scrollWidth - wd - 4));
+  dgePut(ed.box, x, a.y + (a.h - Math.max(a.h, ht)) / 2 * (g.multi ? 0 : 1), wd, ht);
+  ed.inputs.forEach(el => { el.style.font = f.style + ' ' + f.weight + ' ' + fs + 'px/' + lh + 'px ' + f.family; el.style.letterSpacing = ls; });
+  dgePut(ed.frame, zr.x - 3, zr.y - 3, zr.w + 6, zr.h + 6);
+  dgePut(ed.tip, 0, zr.y + zr.h + 4);
+  ed.tip.style.left = Math.max(4, zr.x + zr.w - ed.tip.offsetWidth) + 'px';
+}
+/* Le rang, dans le document d'aujourd'hui, de la carte où la saisie a été ouverte : le même objet ; sinon (document relu) la carte du même groupe, ou la carte libre au même rang ; -1 si elle n'existe plus */
+function dgeCardIdx(ed) {
+  let k = doc.cards.indexOf(ed.card);
+  if (k < 0 && ed.gsId) k = doc.cards.findIndex(c => c.gsId === ed.gsId);
+  if (k < 0 && !ed.gsId && doc.cards[ed.idx] && !doc.cards[ed.idx].gsId) k = ed.idx;
+  return k;
+}
+/* Fermer la saisie sur place : le calque est retiré ; commit : la valeur part dans le champ de l'éditeur de même chemin (input puis change, comme une saisie au clavier), sur la carte où la saisie a été ouverte
+   (le champ d'aujourd'hui s'il a été remplacé) ; rien n'est émis pour une valeur inchangée ; une carte qui n'existe plus : la saisie est abandonnée */
 function dgeClose(commit) {
   const ed = DGE.ed;
   if (!ed) return;
@@ -6435,14 +6458,24 @@ function dgeClose(commit) {
   ed.box.removeEventListener('focusout', onDgeOut);
   [ed.box, ed.frame, ed.tip].forEach(x => { if (x.parentNode) x.parentNode.removeChild(x); });
   if (!commit) return;
-  ed.inputs.forEach((inp, k) => {
-    const f = ed.fields[k];
-    if (!f.isConnected || f.value === inp.value) return;
-    f.value = inp.value;
-    f.dispatchEvent(new Event('input', { bubbles: true }));
-    f.dispatchEvent(new Event('change', { bubbles: true }));
-  });
+  const k = dgeCardIdx(ed);
+  if (k < 0) return;
+  const keep = curIdx;
+  curIdx = k;       /* l'écriture va à la carte de la saisie, même si une autre est montrée (le redessin qui suit remet tout en place) */
+  try {
+    ed.paths.forEach((p, n) => {
+      const v = ed.inputs[n].value;
+      if (getPath(curCard(), p) === v) return;
+      const f = ed.fields[n].isConnected ? ed.fields[n] : document.querySelector('#editor [data-path="' + p + '"]');
+      if (!f) return;
+      f.value = v;
+      f.dispatchEvent(new Event('input', { bubbles: true }));
+      f.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  } finally { if (doc.cards[keep]) curIdx = keep; }
 }
+/* Avant tout redessin de l'aperçu ou de l'éditeur (théâtre, langue, carte changée, données d'un autre outil ou onglet) : une saisie sur place ouverte est validée d'abord, son calque retiré */
+function dgeBeforeRedraw() { if (DGE.ed) dgeClose(true); }
 /* Une saisie en cours se valide avant un export ou une impression */
 function dgeCommit() { dgeClose(true); }
 function onDgeKey(e) {
@@ -6484,13 +6517,36 @@ function dgeGo(g) {
 }
 /* ----- le clic sur l'aperçu ----- */
 function onDgeClick(e) {
+  if (DGE.skip && performance.now() - DGE.skip < 1000) { DGE.skip = 0; return; }       /* ce clic a déjà agi (au relâcher, après la validation d'une saisie) */
+  DGE.skip = 0;
+  let el = e.target;
+  const tp = DGE.tap;
+  DGE.tap = null;
+  if (tp && performance.now() - tp.t < 1000 && (!el.isConnected || !document.getElementById('preview').contains(el))) el = document.elementFromPoint(tp.x, tp.y);       /* au doigt, la sortie du champ vient après le relâcher : le clic retrouve sa case dans l'aperçu refait */
+  dgeAct(el);
+}
+function dgeAct(el) {
   const prev = document.getElementById('preview');
-  if (!prev.contains(e.target)) { if (DGE.mark && !(DGE.mark.btn.contains(e.target))) dgeUnmark(); return; }
-  const z = dgeZone(e.target), g = z ? dgeTarget(e.target, z) : null;
+  if (!el || !prev.contains(el)) { if (DGE.mark && !(el && DGE.mark.btn.contains(el))) dgeUnmark(); return; }
+  const z = dgeZone(el), g = z ? dgeTarget(el, z) : null;
   if (DG_TABS.matches) { if (g) dgeMark(g); else dgeUnmark(); return; }
   if (!g) return;
   if (g.paths) dgeEdit(g);
   else dgeOpen(g, true);
+}
+/* Un seul clic suffit : pendant une saisie sur place, l'appui sur une autre case de l'aperçu fait sortir du champ (la saisie est validée, l'aperçu refait) ;
+   au relâcher, la case sous le point est retrouvée dans l'aperçu refait, par la même règle que le clic, et le clic qui suit est ignoré */
+function onDgeDown(e) {
+  DGE.skip = 0; DGE.tap = null;       /* un geste neuf : rien d'un geste précédent ne reste */
+  DGE.pend = DGE.ed && !DGE.ed.box.contains(e.target) && document.getElementById('preview').contains(e.target) ? { id: e.pointerId } : null;
+}
+function onDgeUp(e) {
+  const p = DGE.pend;
+  DGE.pend = null;
+  if (p && p.id === e.pointerId && DGE.ed) DGE.tap = { x: e.clientX, y: e.clientY, t: performance.now() };
+  if (!p || p.id !== e.pointerId || DGE.ed) return;
+  DGE.skip = performance.now();
+  dgeAct(document.elementFromPoint(e.clientX, e.clientY));
 }
 /* L'aperçu est refait : les éléments marqués ou survolés n'existent plus */
 function dgeRendered() {
@@ -6503,9 +6559,12 @@ function dgeBind() {
   w.addEventListener('pointermove', onDgeMove);
   w.addEventListener('pointerleave', () => dgeHover(null));
   w.addEventListener('click', onDgeClick);
+  w.addEventListener('pointerdown', onDgeDown, true);
+  w.addEventListener('pointerup', onDgeUp);
   document.addEventListener('click', e => { if (DGE.mark && !w.contains(e.target)) dgeUnmark(); }, true);
   DG_TABS.addEventListener('change', () => { dgeClose(true); dgeRendered(); });
-  window.addEventListener('resize', () => { if (DGE.ed) dgeClose(true); dgeRendered(); });
+  /* seul un changement de largeur valide une saisie ouverte ; une hauteur qui change (le clavier d'un écran tactile) la replace */
+  window.addEventListener('resize', () => { if (DGE.ed) { if (window.innerWidth !== DGE.ed.w) dgeClose(true); else dgePlace(DGE.ed); } dgeRendered(); });
 }
 
 /* ============= ÉDITEUR ============= */
@@ -6940,6 +6999,7 @@ function dgFocusSel(el) {
 /* keep : le redessin vient d'un autre module ; le champ qu'on est en train de saisir est gardé tel quel (même nœud : sa valeur, son focus, son curseur et sa saisie
    non validée), le reste est refait. Le « change » que le retrait du champ peut déclencher est ignoré (DG_UI.rendering). */
 function renderEditor(keep) {
+  dgeBeforeRedraw();       /* une saisie sur la datacard ouverte est validée avant que l'éditeur soit refait */
   dgTypFlush();       /* idem : ce qui remplace l'éditeur n'emporte jamais une saisie non écrite */
   const ed = document.getElementById('editor');
   const top = ed.scrollTop;
@@ -7429,7 +7489,7 @@ function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[
 function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[DG] ouverture du travail indisponible', e); } }
 function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[DG] ouverture du travail indisponible', e); } }
 /* Le shell écrit le travail de toute la suite : il demande d'abord à chaque module d'écrire ce qu'il garde en attente (ici, la saisie d'un canal d'une carte liée) */
-window.MP_FLUSH = function () { dgTypFlush(); };
+window.MP_FLUSH = function () { dgeCommit(); dgTypFlush(); };       /* une saisie sur la datacard ouverte est validée d'abord */
 
 /* « Ouvrir » une datacard : les cartes des groupes de la fiche sont gardées, comme à « Exemple » ; une carte du fichier qui porte un groupe de la fiche (son gsId) remplace la carte de ce
    groupe (ses champs propres viennent du fichier, ses champs de groupe de la fiche) ; les autres cartes du fichier (libres, ou liées à un groupe que la fiche n'a pas) entrent comme cartes libres,
@@ -8083,7 +8143,7 @@ async function resetDoc() {
 /* ============= CÂBLAGE ============= */
 function bindEvents() {
   const ed = document.getElementById('editor');
-  window.addEventListener('pagehide', dgTypFlush);
+  window.addEventListener('pagehide', () => { dgeCommit(); dgTypFlush(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') dgTypFlush(); });
   if (typeof ResizeObserver === 'function') new ResizeObserver(es => { const r = es[es.length - 1].contentRect; if (!r.width || !r.height) dgTypFlush(); }).observe(document.documentElement);       /* le shell masque le module (display: none) : le document n'a plus de taille (la mesure de l'observateur, pas clientWidth, qui garde l'ancienne) */
   ed.addEventListener('input', onEditorInput);

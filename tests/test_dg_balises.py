@@ -11,6 +11,9 @@ from pathlib import Path
 
 import pytest
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from banc_attente import attendre, attendre_outil, attendre_shell, exemple  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 SET = Path(__file__).resolve().parent / 'dg_balises_navaids'
 NODE = shutil.which('node')
@@ -238,16 +241,17 @@ def open_dg(br, lang='fr'):
     pg.errs = []
     pg.on('pageerror', lambda e: pg.errs.append(str(e)[:200]))
     pg.goto(SHELL, wait_until='commit')
-    pg.wait_for_function("() => typeof window.MP_WORK_EXAMPLE === 'function' && !!document.getElementById('card-dg')", timeout=60000)
-    pg.wait_for_timeout(1300)
-    pg.evaluate("() => window.MP_WORK_EXAMPLE('fl')")
-    pg.wait_for_timeout(900)
+    attendre_shell(pg, delai=60000)
+    exemple(pg, 'fl')
     pg.locator('#card-dg').click()
-    pg.wait_for_selector('#iframe-dg', state='attached')
-    pg.wait_for_timeout(2600)
-    fr = pg.query_selector('#iframe-dg').content_frame()
-    fr.wait_for_function("() => !!document.querySelector('#preview .dc-page')", timeout=30000)
+    fr = attendre_outil(pg, 'dg', delai=30000)
+    attendre(fr, "!!document.querySelector('#preview .dc-page') && dgMeasurable() && !DG_UI.needLayout && curCard().fields.length > 0", "l'aperçu de l'exemple mesuré", delai=30000)
     return ctx, pg, fr
+
+
+def set_theatre(fr, th):
+    fr.evaluate("(th) => { const s = document.getElementById('theatre'); s.value = th; s.dispatchEvent(new Event('change', { bubbles: true })); }", th)
+    attendre(fr, 'dgTheatre() === arg', 'le théâtre %s' % th, lu='dgTheatre()', arg=th)
 
 
 ROWS = "() => [...document.querySelectorAll('#preview section.dc-block[data-block=\"beacons\"] tbody tr')].map(tr => [...tr.children].map(td => td.textContent))"
@@ -286,12 +290,48 @@ def test_a_theatre_without_beacons_has_no_block(browser):
     ctx, pg, fr = open_dg(browser)
     try:
         assert fr.evaluate(ROWS)
-        fr.evaluate("() => { const s = document.getElementById('theatre'); s.value = 'Nevada'; s.dispatchEvent(new Event('change', { bubbles: true })); }")
-        pg.wait_for_timeout(600)
-        assert fr.evaluate("() => document.querySelectorAll('#preview [data-block=\"beacons\"]').length") == 0
-        fr.evaluate("() => { const s = document.getElementById('theatre'); s.value = 'Syria'; s.dispatchEvent(new Event('change', { bubbles: true })); }")
-        pg.wait_for_timeout(600)
-        assert fr.evaluate(ROWS)                                   # le théâtre revient : le bloc aussi (le plan en cache suit le théâtre)
+        set_theatre(fr, 'Nevada')
+        attendre(fr, 'document.querySelectorAll("#preview [data-block=\\"beacons\\"]").length === 0', 'aucun bloc des balises')
+        set_theatre(fr, 'Syria')
+        attendre(fr, 'document.querySelectorAll("#preview [data-block=\\"beacons\\"] tbody tr").length > 0', 'le bloc revenu (le plan en cache suit le théâtre)')
+        assert pg.errs == []
+    finally:
+        ctx.close()
+
+
+PAGES = "() => [...document.querySelectorAll('#preview .dc-page')].map(p => [p.querySelector('.dc-top span:last-child').textContent, [...p.querySelectorAll('.dc-block')].map(b => b.dataset.block)])"
+
+
+@needs_pw
+def test_beacons_on_a_page_of_their_own_and_the_radios_page_stays_last(browser):
+    """B4 : trois terrains riches en balises (Allemagne de la guerre froide) font une page des seules balises après celle des références ; avec tous les canaux radio cochés, la page Radios
+    reste la dernière, et « p / N » compte toutes les pages. Le théâtre, les terrains et les canaux sont posés par l'éditeur."""
+    ctx, pg, fr = open_dg(browser)
+    try:
+        set_theatre(fr, 'GermanyCW')
+        for i, (role, name) in enumerate([('dep', 'Kastrup'), ('arr', 'Hamburg'), ('alt', 'Frankfurt')]):
+            fr.evaluate("""([i, role, name]) => {
+              const r = document.querySelector('#editor select[data-path="fields.' + i + '.role"]'); r.value = role; r.dispatchEvent(new Event('change', { bubbles: true }));
+              const s = document.querySelector('#editor select[data-af="' + i + '"]'); s.value = name; s.dispatchEvent(new Event('change', { bubbles: true })); }""", [i, role, name])
+            attendre(fr, 'curCard().fields[arg[0]].name === arg[1] && curCard().fields[arg[0]].role === arg[2]', 'la rangée Terrains %d : %s' % (i + 1, name), lu='curCard().fields[arg[0]]', arg=[i, name, role])
+        attendre(fr, 'document.querySelectorAll("#preview .dc-page").length === 3', 'trois pages', lu='document.querySelectorAll("#preview .dc-page").length')
+        pages = fr.evaluate(PAGES)
+        assert pages[2][1] == ['beacons'] and 'refs' in pages[1][1] and 'beacons' not in pages[1][1], pages
+        # tous les canaux radio du groupe cochés : la page 1 déborde même sans la navigation, le bloc Radio forme la dernière page
+        for _ in range(10):
+            if not fr.evaluate("() => { const b = [...document.querySelectorAll('#editor [data-rsfree]')].find(x => !/Masquer|Hide/.test(x.textContent)); if (!b) return false; b.click(); return true; }"):
+                break
+        for _ in range(80):
+            if not fr.evaluate("() => { const x = [...document.querySelectorAll('#editor input[data-rk=\"on\"]')].find(i => !i.checked); if (!x) return false; x.click(); return true; }"):
+                break
+        attendre(fr, '[...document.querySelectorAll("#editor input[data-rk=\\"on\\"]")].every(i => i.checked) && document.querySelectorAll("#preview .dc-page").length === 4',
+                 'tous les canaux cochés, quatre pages', lu='document.querySelectorAll("#preview .dc-page").length')
+        pages = fr.evaluate(PAGES)
+        n = len(pages)
+        assert [p[0] for p in pages] == ['%d / %d' % (k + 1, n) for k in range(n)]
+        assert pages[-1][1] == ['radio'] and 'radio' not in pages[0][1], pages
+        assert pages[-2][1] == ['beacons'] and pages[1][1][-1] == 'refs', pages
+        assert fr.evaluate("() => planCard(curCard()).radioPage && planCard(curCard()).bcn === 'own'")
         assert pg.errs == []
     finally:
         ctx.close()
