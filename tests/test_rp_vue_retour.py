@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT / 'tests'))
 from test_rp_menaces import (browser, display, needs_pw, open_rp, ready, setup, sym)  # noqa: E402,F401
 from test_rp_menaces_pastille import DRIFT, STORE, VIEW  # noqa: E402,F401
 from test_rp_profil import tick  # noqa: E402
+from banc_attente import attendre, attendre_fenetre, attendre_mise_en_page, attendre_theatre, attendre_vue_stable, quitter_rp, revenir_rp, viser  # noqa: E402
 
 SIZES = [(345, 590), (412, 860), (915, 412), (1100, 800)]
 OTHERS = ('dg', 'bg', 'hq')
@@ -21,8 +22,7 @@ CALLS = "window.__calls = []; ['invalidateSize', 'setView', 'panBy'].forEach(n =
 
 
 def aim(fr, pg):
-    fr.evaluate("__RP.map.setView([34.2, 36.0], 9, { animate: false })")
-    pg.wait_for_timeout(500)
+    viser(fr, 34.2, 36.0, 9)
 
 
 def prepare(fr, pg, how):
@@ -31,14 +31,13 @@ def prepare(fr, pg, how):
         fr.evaluate("__RP.map.panBy([100, 0], { animate: false })")
     elif how == 'zoomed':
         fr.evaluate("__RP.map.setZoom(__RP.map.getZoom() + 1, { animate: false })")
-    pg.wait_for_timeout(400)
+    attendre_mise_en_page(fr)
 
 
-def trip(pg, other, away=1200, back=1700):
-    pg.evaluate("openModule('%s')" % other)
-    pg.wait_for_timeout(away)
-    pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(back)
+def trip(pg, fr, other):
+    """Un tour : l'autre outil s'ouvre (le RP est caché), puis le RP revient ; chaque pas attend son état."""
+    quitter_rp(pg, other)
+    revenir_rp(pg, fr)
 
 
 def same(fr, v0, v1, what=''):
@@ -55,7 +54,7 @@ def test_coming_back_from_another_tool_keeps_the_centre_and_the_zoom(browser, w,
     setup(fr, [sym(0, 'sa-8')])
     aim(fr, pg)
     v0 = fr.evaluate(VIEW)
-    trip(pg, other)
+    trip(pg, fr, other)
     v1 = fr.evaluate(VIEW)
     same(fr, v0, v1, (w, h, other))
     assert abs(v1['h'] - v0['h']) <= 1 and abs(v1['w'] - v0['w']) <= 1, (v0, v1)       # la carte revient à sa hauteur gardée
@@ -75,7 +74,7 @@ def test_coming_back_keeps_a_moved_or_zoomed_view_in_every_tap_mode(browser, w, 
             prepare(fr, pg, how)
             v0 = fr.evaluate(VIEW)
             assert fr.evaluate("__RP.tapMode") == mode
-            trip(pg, 'dg' if how == 'moved' else 'bg')
+            trip(pg, fr, 'dg' if how == 'moved' else 'bg')
             v1 = fr.evaluate(VIEW)
             same(fr, v0, v1, (w, h, mode, how))
             assert abs(v1['h'] - v0['h']) <= 1
@@ -96,13 +95,14 @@ def test_coming_back_with_the_ground_profile_open_keeps_the_view_and_the_strip(b
     for fold in (False, True):
         if fr.evaluate("!!DISP.profFold") != fold:
             fr.evaluate("document.querySelector('#rp-prof .prof-fb').click()")
-            pg.wait_for_timeout(500)
+            attendre(fr, '!!DISP.profFold === arg', 'le bandeau du profil %s (DISP.profFold)' % ('replié' if fold else 'déplié'), lu='DISP.profFold', arg=fold)
+            attendre_mise_en_page(fr)
         for how in ('aimed', 'moved', 'zoomed'):
             fr.evaluate("(m) => setTapMode(m)", mode)
             prepare(fr, pg, how)
             v0, r0 = fr.evaluate(VIEW), fr.evaluate(RECT)
             assert r0['prof'] is not None and r0['ph'] > 0 and r0['fold'] is fold
-            trip(pg, 'dg')
+            trip(pg, fr, 'dg')
             v1, r1 = fr.evaluate(VIEW), fr.evaluate(RECT)
             same(fr, v0, v1, (w, h, mode, fold, how))
             assert r1['fold'] is fold and r1['ph'] == r0['ph'], (r0, r1)                  # le bandeau garde son état replié et sa hauteur
@@ -122,18 +122,16 @@ def test_rotated_while_away_the_same_centre_and_zoom_come_back_at_the_new_orient
     for how in ('aimed', 'moved', 'zoomed'):
         prepare(fr, pg, how)
         v0 = fr.evaluate(VIEW)
-        pg.evaluate("openModule('dg')")
-        pg.wait_for_timeout(1200)
+        quitter_rp(pg, 'dg')
         pg.set_viewport_size({'width': w2, 'height': h2})
-        pg.wait_for_timeout(800)
-        pg.evaluate("openModule('rp')")
-        pg.wait_for_timeout(1700)
+        attendre_fenetre(pg, w2, h2)
+        revenir_rp(pg, fr)
         v1 = fr.evaluate(VIEW)
         same(fr, v0, v1, (how, w2, h2))
         want = fr.evaluate("Math.round(spClamp(spGet() != null ? spGet() : SP_DEF_F * spPlace()))")
         assert abs(v1['h'] - want) <= 1 and abs(v1['w'] - w2) <= 1, (v1, want)          # la hauteur de la nouvelle orientation
         pg.set_viewport_size({'width': w, 'height': h})                                  # et on remet l'appareil dans l'autre sens pour le tour suivant
-        pg.wait_for_timeout(800)
+        attendre_fenetre(pg, w, h)
         v0 = None
         aim(fr, pg)
     assert pg.errs == []
@@ -147,13 +145,12 @@ def test_a_view_asked_while_the_tool_was_hidden_wins_the_new_theatre_is_framed(b
     pg, fr = open_rp(browser, w=w, h=h)
     setup(fr, [sym(0, 'sa-8')])
     aim(fr, pg)
-    pg.evaluate("openModule('dg')")
-    pg.wait_for_timeout(1200)
+    quitter_rp(pg, 'dg')
     pg.evaluate("localStorage.setItem('mp_theatre_v1', JSON.stringify({ theatre: 'Caucasus' }))")
-    fr.wait_for_function("S.theatre === 'Caucasus'", timeout=8000)
-    pg.wait_for_timeout(600)
-    pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(1700)
+    attendre_theatre(fr, 'Caucasus', polling=100)             # l'évènement storage est traité dans l'outil caché
+    revenir_rp(pg, fr)
+    attendre_theatre(fr, 'Caucasus')
+    attendre_vue_stable(fr)
     r = fr.evaluate("() => { const c = __RP.map.getCenter(), t = theatreOf('Caucasus'); return { th: S.theatre, tap: tapMode, z: __RP.map.getZoom(), tz: t.z, dist: __RP.map.project(c, t.z).distanceTo(__RP.map.project(L.latLng(t.c[0], t.c[1]), t.z)) }; }")
     assert r['th'] == 'Caucasus' and r['tap'] == 'read' and r['z'] == r['tz'] and r['dist'] <= 1, r
     assert pg.errs == []
@@ -167,11 +164,11 @@ def test_going_and_coming_back_writes_nothing_to_the_storage(browser, w, h):
     setup(fr, [sym(0, 'sa-8')])
     aim(fr, pg)
     prepare(fr, pg, 'moved')
-    trip(pg, 'dg')                       # le premier passage charge l'autre outil, qui écrit ses propres clés : la mesure commence après
-    trip(pg, 'hq')
+    trip(pg, fr, 'dg')                       # le premier passage charge l'autre outil, qui écrit ses propres clés : la mesure commence après
+    trip(pg, fr, 'hq')
     s0 = fr.evaluate(STORE)
     for other in ('dg', 'hq', 'bg'):
-        trip(pg, other)
+        trip(pg, fr, other)
         assert fr.evaluate(STORE) == s0, other
     assert pg.errs == []
     pg.context.close()
@@ -185,7 +182,7 @@ def test_above_1100_px_leaving_and_coming_back_calls_nothing_more_on_the_map(bro
     aim(fr, pg)
     v0 = fr.evaluate(VIEW)
     fr.evaluate(CALLS)
-    trip(pg, other)
+    trip(pg, fr, other)
     calls = fr.evaluate("window.__calls")
     assert calls.count('setView') == 0 and calls.count('panBy') == 0 and calls.count('invalidateSize') <= 1, (other, calls)    # le seul appel est celui de la base, au retour
     same(fr, v0, fr.evaluate(VIEW), other)
@@ -199,7 +196,7 @@ def test_dragging_the_handle_after_coming_back_keeps_the_top_left_corner_as_befo
     pg, fr = open_rp(browser, w=w, h=h)
     setup(fr, [sym(0, 'sa-8')])
     aim(fr, pg)
-    trip(pg, 'dg')
+    trip(pg, fr, 'dg')
     tl0 = fr.evaluate("(() => { const p = __RP.map.containerPointToLatLng([0, 0]); return [p.lat, p.lng]; })()")
     v0 = fr.evaluate(VIEW)
     off = pg.evaluate("(() => { const f = document.getElementById('iframe-rp').getBoundingClientRect(); return [f.left, f.top]; })()")
@@ -210,7 +207,7 @@ def test_dragging_the_handle_after_coming_back_keeps_the_top_left_corner_as_befo
     pg.mouse.move(x, y + 30, steps=4)
     pg.mouse.move(x, y + 60, steps=4)
     pg.mouse.up()
-    pg.wait_for_timeout(500)
+    attendre_mise_en_page(fr)       # la poignée lâchée : la carte a pris sa hauteur, sa vue est stable
     v1 = fr.evaluate(VIEW)
     assert v1['h'] > v0['h'] + 20, (v0, v1)
     pt = fr.evaluate("(tl) => { const p = __RP.map.latLngToContainerPoint(L.latLng(tl[0], tl[1])); return [p.x, p.y]; }", tl0)

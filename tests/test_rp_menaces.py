@@ -13,6 +13,9 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / 'tests'))
+from banc_attente import attendre, attendre_images, attendre_menaces, attendre_rp, attendre_shell, exemple  # noqa: E402
+
 CHROMIUM = Path('/opt/pw-browsers/chromium')
 try:
     import playwright.sync_api  # noqa: F401
@@ -118,13 +121,10 @@ def open_rp(br, w=1280, h=800, lang='fr', init='', doc=True, seed=None):
     pg.route('**/*', pg.bench.handler)
     pg.goto('about:blank')
     pg.goto(SHELL, wait_until='commit')
-    pg.wait_for_function("typeof NAV !== 'undefined' && typeof openModule === 'function'", timeout=30000)
-    pg.wait_for_timeout(600)
-    pg.evaluate("MP_WORK_EXAMPLE('fl')")
-    pg.wait_for_timeout(1200)
+    attendre_shell(pg)
+    exemple(pg, 'fl')
     pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(2300)
-    fr = next(f for f in pg.frames if f != pg.main_frame and f.evaluate("typeof window.__RP !== 'undefined'"))
+    fr = attendre_rp(pg)
     return pg, fr
 
 
@@ -148,7 +148,7 @@ def setup(fr, items, pts=None, wait=True):
 
 
 def ready(fr, timeout=30000):
-    fr.wait_for_function("(() => { const T = __RP.thr; return T.state === 'ok' && T.jobs.size === 0 && T.act.length > 0 && T.grids.size === T.act.length; })()", timeout=timeout)
+    attendre_menaces(fr, timeout)
 
 
 def grid(fr, i=0):
@@ -162,7 +162,8 @@ def hv_at(fr, dx, dy=0, i=0):
 
 def display(fr, pg, on):
     fr.evaluate("if (DSP.open !== %s) document.getElementById('btn-display').click()" % ('true' if on else 'false'))
-    pg.wait_for_timeout(200)
+    attendre(fr, 'DSP.open === arg', "le menu Affichage %s (DSP.open)" % ('ouvert' if on else 'fermé'), lu='DSP.open', arg=on)
+    attendre_images(fr, 2)
 
 
 def set_rank(fr, pg, r):

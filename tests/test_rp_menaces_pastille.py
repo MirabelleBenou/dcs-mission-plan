@@ -9,6 +9,8 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tests'))
 from test_rp_menaces import (browser, display, needs_pw, open_rp, ready, setup, sym)  # noqa: E402,F401
+from banc_attente import (attendre, attendre_images, attendre_mise_en_page, attendre_rp, attendre_shell, attendre_theatre, attendre_vue_stable, cadre_export, poser_mode,  # noqa: E402
+                          quitter_rp, revenir_rp, viser)
 
 BOX = """() => { const q = s => document.querySelector(s), b = q('#rp-thr'), cs = getComputedStyle(b), r = b.getBoundingClientRect(), m = q('#map').getBoundingClientRect();
   return { hidden: b.hidden, display: cs.display, w: r.width, h: r.height, pill: b.classList.contains('thr-pill'), style: b.getAttribute('style'), mapw: m.width, bottom: parseFloat(cs.bottom) }; }"""
@@ -26,22 +28,26 @@ STORE = "() => JSON.stringify(Object.keys(localStorage).sort().map(k => [k, loca
 
 def tick_threats(fr, pg):
     display(fr, pg, True)
+    want = not fr.evaluate("DISP.threats")
     fr.evaluate("document.querySelector('#dsp-panel [data-k=threats]').click()")
-    pg.wait_for_timeout(500)
+    attendre(fr, "DISP.threats === arg && document.getElementById('rp-thr').hidden === !arg", 'la case Menaces %s et le cartouche %s' % (('cochée', 'affiché') if want else ('décochée', 'caché')),
+             lu='[DISP.threats, document.getElementById("rp-thr").hidden]', arg=want)
+    attendre_images(fr, 2)
     display(fr, pg, False)
 
 
 def tick_relief(fr, pg):
     display(fr, pg, True)
+    want = not fr.evaluate("DISP.relief")
     fr.evaluate("document.querySelector('#dsp-panel [data-k=relief]').click()")
-    pg.wait_for_timeout(900)
+    attendre(fr, 'DISP.relief === arg', 'la case Relief %s' % ('cochée' if want else 'décochée'), arg=want)
+    attendre_images(fr, 2)
     display(fr, pg, False)
 
 
 def settle(pg, n=3):
     for _ in range(n):
         pg.evaluate("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))")
-    pg.wait_for_timeout(120)
 
 
 def gap(fr):
@@ -52,7 +58,7 @@ def tap_on(pg, fr, sel):
     off = pg.evaluate("(() => { const f = document.getElementById('iframe-rp').getBoundingClientRect(); return [f.left, f.top]; })()")
     c = fr.evaluate("(s) => { const r = document.querySelector(s).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }", sel)
     pg.touchscreen.tap(off[0] + c[0], off[1] + c[1])
-    pg.wait_for_timeout(250)
+    attendre_images(fr, 2)       # le toucher est traité, la mise en page suit
 
 
 # ---------- règle 1 : décoché, la pastille disparaît ----------
@@ -182,11 +188,11 @@ def test_the_pill_starts_folded_and_the_plus_minus_button_unfolds_and_folds_by_t
     # le clavier : Entrée déplie, Espace replie, le focus reste
     fr.evaluate("document.querySelector('#rp-thr .thr-fold').focus()")
     pg.keyboard.press('Enter')
-    pg.wait_for_timeout(150)
+    attendre(fr, "document.querySelector('#rp-thr .thr-fold').getAttribute('aria-expanded') === 'true'", "le cartouche des menaces déplié (aria-expanded)", lu="document.querySelector('#rp-thr .thr-fold').getAttribute('aria-expanded')")
     f = fr.evaluate(FOLD)
     assert f['exp'] == 'true' and f['text'] == '‹' and f['focus'] is True and len(f['steps']) == 2, f
     pg.keyboard.press('Space')
-    pg.wait_for_timeout(150)
+    attendre(fr, "document.querySelector('#rp-thr .thr-fold').getAttribute('aria-expanded') === 'false'", "le cartouche des menaces replié (aria-expanded)", lu="document.querySelector('#rp-thr .thr-fold').getAttribute('aria-expanded')")
     f = fr.evaluate(FOLD)
     assert f['exp'] == 'false' and f['text'] == '±' and f['focus'] is True and f['steps'] == [], f
     # le clic de la souris
@@ -239,25 +245,22 @@ def test_every_opening_of_the_route_planner_starts_folded(browser):
     fr.evaluate("document.querySelector('#rp-thr .thr-fold').click()")
     assert fr.evaluate(FOLD)['exp'] == 'true'
     # le shell réaffiche l'outil : repliée
-    pg.evaluate("openModule('dg')")
-    pg.wait_for_timeout(1500)
-    pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(800)
+    quitter_rp(pg, 'dg')
+    revenir_rp(pg, fr)
     f = fr.evaluate(FOLD)
     assert f['exp'] == 'false' and f['text'] == '±' and f['steps'] == [], f
     # le rechargement : repliée
     fr.evaluate("document.querySelector('#rp-thr .thr-fold').click()")
     assert fr.evaluate(FOLD)['exp'] == 'true'
     pg.reload(wait_until='commit')
-    pg.wait_for_function("typeof NAV !== 'undefined' && typeof openModule === 'function'", timeout=30000)
-    pg.wait_for_timeout(800)
+    attendre_shell(pg)
     pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(2300)
-    fr2 = next(x for x in pg.frames if x != pg.main_frame and x.evaluate("typeof window.__RP !== 'undefined'"))
+    fr2 = attendre_rp(pg)
     assert fr2.evaluate("__RP.thr.open") is False                                   # en mémoire, à la création du cartouche : repliée
     if fr2.evaluate("S.theatre") != 'Syria':                                         # le théâtre de l'exemple n'est pas toujours déjà écrit au rechargement
         fr2.evaluate("(id) => { const s = document.getElementById('theatre'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); }", 'Syria')
-        pg.wait_for_timeout(900)
+        attendre_theatre(fr2, 'Syria')
+        attendre_images(fr2, 2)
     setup(fr2, [sym(0, 'sa-8')])
     f = fr2.evaluate(FOLD)
     assert f['exp'] == 'false' and f['text'] == '±' and f['steps'] == [], f
@@ -269,7 +272,8 @@ def test_every_opening_of_the_route_planner_starts_folded(browser):
 def test_without_the_tint_the_pill_has_no_button_and_nothing_changes(browser):
     pg, fr = open_rp(browser, w=360, h=780, doc=False)
     setup(fr, [sym(0, 'sa-8')], wait=False)
-    pg.wait_for_timeout(1500)
+    attendre(fr, "__RP.thr.state === 'err' && __RP.thr.jobs.size === 0", "les menaces en erreur faute de relief (state 'err', aucun calcul en cours)", lu='[__RP.thr.state, __RP.thr.jobs.size]')
+    attendre_images(fr, 2)
     r = fr.evaluate("""() => { const b = document.getElementById('rp-thr'); return { state: __RP.thr.state, pill: b.classList.contains('thr-pill'), shut: b.classList.contains('thr-shut'), hidden: b.hidden,
       fold: !!b.querySelector('.thr-fold'), btn: b.querySelectorAll('button').length, src: b.querySelector('.thr-src').textContent, h: b.getBoundingClientRect().height }; }""")
     assert r['state'] == 'err' and r['pill'] is True and r['shut'] is False and r['hidden'] is False and r['fold'] is False and r['btn'] == 0 and r['h'] == 44 and r['src'], r
@@ -305,8 +309,7 @@ DRIFT = """([a, b]) => { const m = __RP.map; return m.project(L.latLng(a.lat, a.
 
 
 def aim(fr, pg):
-    fr.evaluate("__RP.map.setView([34.2, 36.0], 9, { animate: false })")
-    pg.wait_for_timeout(500)
+    viser(fr, 34.2, 36.0, 9)
 
 
 @needs_pw
@@ -318,36 +321,29 @@ def test_the_big_map_keeps_its_centre_and_zoom_in_and_out_for_the_export_and_the
     v0 = fr.evaluate(VIEW)
     for kind in ('export', 'draw'):
         if kind == 'export':
-            fr.evaluate("expOpen()")
+            cadre_export(fr, True)
         else:
-            fr.evaluate("setTapMode('draw')")
-        pg.wait_for_timeout(600)
+            poser_mode(fr, 'draw')
         vin = fr.evaluate(VIEW)
         assert vin['h'] > v0['h'] + 20, (kind, v0, vin)                      # la carte a bien pris de la hauteur
         assert vin['z'] == v0['z'] and fr.evaluate(DRIFT, [v0, vin]) <= 1, (kind, 'entrée', v0, vin, fr.evaluate(DRIFT, [v0, vin]))
         if kind == 'export':
-            fr.evaluate("expClose()")
+            cadre_export(fr, False)
         else:
-            fr.evaluate("setTapMode('read')")
-        pg.wait_for_timeout(600)
+            poser_mode(fr, 'read')
         vout = fr.evaluate(VIEW)
         assert abs(vout['h'] - v0['h']) <= 1
         assert vout['z'] == v0['z'] and fr.evaluate(DRIFT, [v0, vout]) <= 1, (kind, 'sortie', v0, vout, fr.evaluate(DRIFT, [v0, vout]))
     # l'export puis le dessin l'un dans l'autre : le centre reste
-    fr.evaluate("setTapMode('draw')")
-    pg.wait_for_timeout(400)
-    fr.evaluate("expOpen()")
-    pg.wait_for_timeout(500)
+    poser_mode(fr, 'draw')
+    cadre_export(fr, True)
     assert fr.evaluate(DRIFT, [v0, fr.evaluate(VIEW)]) <= 1
-    fr.evaluate("expClose()")
-    pg.wait_for_timeout(500)
-    fr.evaluate("setTapMode('read')")
-    pg.wait_for_timeout(500)
+    cadre_export(fr, False)
+    poser_mode(fr, 'read')
     vend = fr.evaluate(VIEW)
     assert vend['z'] == v0['z'] and fr.evaluate(DRIFT, [v0, vend]) <= 1 and abs(vend['h'] - v0['h']) <= 1
     # le cadre d'export se calcule comme à la base, sur la vue recentrée : au plus grand qui tient, centré dans la place au-dessus de la barre
-    fr.evaluate("expOpen()")
-    pg.wait_for_timeout(500)
+    cadre_export(fr, True)
     e = fr.evaluate("() => ({ r: EXP.rect, W: document.getElementById('map').clientWidth })")
     assert e['r'] and abs(e['r']['x'] - round((e['W'] - e['r']['w']) / 2)) <= 1
     fr.evaluate("expClose()")
@@ -370,7 +366,7 @@ def test_dragging_the_handle_keeps_the_top_left_corner_as_before(browser):
     pg.mouse.move(x, y + 30, steps=4)
     pg.mouse.move(x, y + 60, steps=4)
     pg.mouse.up()
-    pg.wait_for_timeout(500)
+    attendre_mise_en_page(fr)       # la poignée lâchée, la carte a pris sa hauteur et sa vue est stable
     v1 = fr.evaluate(VIEW)
     assert v1['h'] > v0['h'] + 20, (v0, v1)
     pt = fr.evaluate("(tl) => { const p = __RP.map.latLngToContainerPoint(L.latLng(tl[0], tl[1])); return [p.x, p.y]; }", tl0)
@@ -428,27 +424,20 @@ def test_the_big_map_keeps_its_centre_when_the_tool_is_left_and_come_back_to_dur
     setup(fr, [sym(0, 'sa-8')])
     aim(fr, pg)
     v0 = fr.evaluate(VIEW)
-    fr.evaluate("setTapMode('draw')")
-    pg.wait_for_timeout(600)
-    pg.evaluate("openModule('dg')")
-    pg.wait_for_timeout(1200)
-    pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(1500)
+    poser_mode(fr, 'draw')
+    quitter_rp(pg, 'dg')
+    revenir_rp(pg, fr)
     v1 = fr.evaluate(VIEW)
     assert fr.evaluate("tapMode") == 'read' and v1['z'] == v0['z'] and abs(v1['h'] - v0['h']) <= 1 and fr.evaluate(DRIFT, [v0, v1]) <= 1, (v0, v1, fr.evaluate(DRIFT, [v0, v1]))
     # l'export : le cadre RESTE ouvert quand le shell cache puis réaffiche le RP (mesuré) ; la carte reste en grand, le centre aussi ; la fermeture rend la hauteur
-    fr.evaluate("expOpen()")
-    pg.wait_for_timeout(600)
-    pg.evaluate("openModule('dg')")
-    pg.wait_for_timeout(1200)
+    cadre_export(fr, True)
+    quitter_rp(pg, 'dg')
     assert fr.evaluate("EXP.on") is True
-    pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(1500)
+    revenir_rp(pg, fr)
     assert fr.evaluate("EXP.on") is True and fr.evaluate("document.body.classList.contains('rp-mapfull-exp')")
     vo = fr.evaluate(VIEW)
     assert vo['h'] > v0['h'] + 20 and vo['z'] == v0['z'] and fr.evaluate(DRIFT, [v0, vo]) <= 1, (v0, vo)
-    fr.evaluate("expClose()")
-    pg.wait_for_timeout(600)
+    cadre_export(fr, False)
     v2 = fr.evaluate(VIEW)
     assert abs(v2['h'] - v0['h']) <= 1 and v2['z'] == v0['z'] and fr.evaluate(DRIFT, [v0, v2]) <= 1, (v0, v2)
     assert pg.errs == []
@@ -461,11 +450,9 @@ def test_above_1100_px_the_big_map_calls_no_move_at_all(browser):
     setup(fr, [sym(0, 'sa-8')])
     aim(fr, pg)
     fr.evaluate("window.__ev = {}; ['movestart', 'moveend'].forEach(n => __RP.map.on(n, () => { __ev[n] = (__ev[n] || 0) + 1; }))")
-    for a, b in (("expOpen()", "expClose()"), ("setTapMode('draw')", "setTapMode('read')")):
-        fr.evaluate(a)
-        pg.wait_for_timeout(700)
-        fr.evaluate(b)
-        pg.wait_for_timeout(700)
+    for a, b in ((lambda: cadre_export(fr, True), lambda: cadre_export(fr, False)), (lambda: poser_mode(fr, 'draw'), lambda: poser_mode(fr, 'read'))):
+        a()
+        b()
     assert fr.evaluate("window.__ev") == {}
     assert pg.errs == []
     pg.context.close()
@@ -477,14 +464,15 @@ def _hidden_path(browser, w, h, kind):
     setup(fr, [sym(0, 'sa-8')])
     aim(fr, pg)
     v0 = fr.evaluate(VIEW)
-    fr.evaluate("expOpen()" if kind.startswith('exp') else "setTapMode('draw')")
-    pg.wait_for_timeout(600)
+    if kind.startswith('exp'):
+        cadre_export(fr, True)
+    else:
+        poser_mode(fr, 'draw')
     if kind.endswith('pan'):
         fr.evaluate("__RP.map.panBy([0, 100], { animate: false })")
-        pg.wait_for_timeout(300)
+        attendre_mise_en_page(fr)
     vin = fr.evaluate(VIEW)
-    pg.evaluate("openModule('dg')")
-    pg.wait_for_timeout(1200)
+    quitter_rp(pg, 'dg')
     return pg, fr, v0, vin
 
 
@@ -493,9 +481,10 @@ def _hidden_path(browser, w, h, kind):
 def test_drawing_then_another_tool_changes_the_theatre_then_back_the_map_frames_the_new_theatre(browser, w, h):
     pg, fr, v0, vin = _hidden_path(browser, w, h, 'draw')
     pg.evaluate("localStorage.setItem('mp_theatre_v1', JSON.stringify({ theatre: 'Caucasus' }))")
-    pg.wait_for_timeout(900)
-    pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(1500)
+    attendre_theatre(fr, 'Caucasus', polling=100)             # l'évènement storage est traité dans l'outil caché (un cadre caché ne reçoit pas d'images de rendu : lecture toutes les 100 ms)
+    revenir_rp(pg, fr)
+    attendre_theatre(fr, 'Caucasus')
+    attendre_vue_stable(fr)                                   # le nouveau théâtre est cadré : le centre et le zoom ne bougent plus
     r = fr.evaluate("() => { const c = __RP.map.getCenter(), t = theatreOf('Caucasus'); return { th: S.theatre, tap: tapMode, z: __RP.map.getZoom(), tz: t.z, dist: __RP.map.project(c, t.z).distanceTo(__RP.map.project(L.latLng(t.c[0], t.c[1]), t.z)) }; }")
     assert r['th'] == 'Caucasus' and r['tap'] == 'read' and r['z'] == r['tz'] and r['dist'] <= 1, r        # le cadrage du nouveau théâtre, comme à la base
     assert pg.errs == []
@@ -507,9 +496,9 @@ def test_drawing_then_another_tool_changes_the_theatre_then_back_the_map_frames_
 def test_drawing_then_another_tool_writes_the_route_then_back_the_view_is_the_one_the_base_gives(browser, w, h):
     pg, fr, v0, vin = _hidden_path(browser, w, h, 'draw')
     pg.evaluate("(() => { const s = JSON.parse(localStorage.getItem('route_state_v1')); (s.points || []).forEach(p => { p.lat += 1.0; p.lon += 1.5; }); localStorage.setItem('route_state_v1', JSON.stringify(s)); })()")
-    pg.wait_for_timeout(900)
-    pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(1500)
+    attendre(fr, "JSON.stringify(S.points.map(p => [p.lat, p.lon])) === JSON.stringify((JSON.parse(localStorage.getItem('route_state_v1')).points || []).map(p => [p.lat, p.lon]))",
+             "la route relue dans l'outil caché (les points de S sont ceux du stockage)", lu='[S.points.map(p => [p.lat, p.lon]), JSON.parse(localStorage.getItem("route_state_v1")).points.map(p => [p.lat, p.lon])]', polling=100)
+    revenir_rp(pg, fr)
     v1 = fr.evaluate(VIEW)
     # le banc joue ce chemin (rpReloadSoon) : à la base la vue n'est pas recadrée sur la route, elle reste celle d'avant le dessin ; la livraison donne la même
     assert fr.evaluate("tapMode") == 'read' and v1['z'] == v0['z'] and fr.evaluate(DRIFT, [v0, v1]) <= 1, (v0, v1)
@@ -522,8 +511,7 @@ def test_drawing_then_another_tool_writes_the_route_then_back_the_view_is_the_on
 def test_drawing_moved_by_100px_then_another_tool_then_back_the_last_seen_view_is_kept(browser, w, h):
     pg, fr, v0, vin = _hidden_path(browser, w, h, 'drawpan')
     assert fr.evaluate(DRIFT, [v0, vin]) > 50
-    pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(1500)
+    revenir_rp(pg, fr)
     v1 = fr.evaluate(VIEW)
     assert fr.evaluate("tapMode") == 'read' and v1['z'] == v0['z'] and abs(v1['h'] - v0['h']) <= 1 and fr.evaluate(DRIFT, [vin, v1]) <= 1, (vin, v1, fr.evaluate(DRIFT, [vin, v1]))
     assert pg.errs == []
@@ -535,13 +523,11 @@ def test_drawing_moved_by_100px_then_another_tool_then_back_the_last_seen_view_i
 def test_export_moved_by_100px_then_another_tool_then_back_and_closed_the_last_seen_view_is_kept(browser, w, h):
     pg, fr, v0, vin = _hidden_path(browser, w, h, 'exppan')
     assert fr.evaluate(DRIFT, [v0, vin]) > 50
-    pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(1500)
+    revenir_rp(pg, fr)
     assert fr.evaluate("EXP.on") is True
     v1 = fr.evaluate(VIEW)
     assert fr.evaluate(DRIFT, [vin, v1]) <= 1, (vin, v1)
-    fr.evaluate("expClose()")
-    pg.wait_for_timeout(600)
+    cadre_export(fr, False)
     v2 = fr.evaluate(VIEW)
     assert abs(v2['h'] - v0['h']) <= 1 and v2['z'] == v0['z'] and fr.evaluate(DRIFT, [vin, v2]) <= 1, (vin, v2)
     assert pg.errs == []
