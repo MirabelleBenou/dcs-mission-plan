@@ -1078,7 +1078,7 @@ body {
 .tp-lock[aria-pressed="true"] { color: #1f1c16; background: var(--amber); border-color: var(--amber); }
 .tp-lock:disabled { opacity: .4; cursor: not-allowed; }
 .tp-lock:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
-.tp-fl { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 6px; align-items: end; }
+.tp-fl { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 6px; align-items: center; }
 .tp-in { position: relative; min-width: 0; }
 .tp-in input { width: 100%; }
 .tm-redw { position: relative; }
