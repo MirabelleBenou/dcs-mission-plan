@@ -227,3 +227,28 @@ def attendre_relief_repos(fr, delai=DELAI):
     fr.evaluate('() => { window.__banc_relief = null; }')
     attendre_etat(fr, RELIEF_REPOS, 'le relief au repos (RE.raf, RE.dwell, RE.pend nuls, cartouche stable sur deux lectures à 100 ms)',
                   lecture="() => ({ raf: RE.raf, dwell: RE.dwell, pend: RE.pend, derniere_lecture: window.__banc_relief })", delai=delai, polling=100)
+
+
+# --- la navigation du shell (historique, niveaux, mur) ---
+NAV_REPOS = """() => { const k = JSON.stringify([history.state, location.hash, activeModule, navLevel(), navigation.currentEntry.index, navigation.entries().length, document.getElementById('landing').style.display]);
+  const avant = window.__banc_nav; window.__banc_nav = k; return avant === k; }"""
+
+
+def attendre_navigation_stable(pg, delai=DELAI):
+    """La navigation du shell est au repos : des images de rendu sont passées et deux lectures (état d'historique, adresse, outil, niveau, entrée courante et leur nombre, mur) à 100 ms d'écart sont égales."""
+    attendre_images(pg, 2, delai)
+    pg.evaluate('() => { window.__banc_nav = null; }')
+    attendre_etat(pg, NAV_REPOS, "la navigation au repos (historique, adresse, outil, niveau : deux lectures égales à 100 ms)",
+                  lecture="() => ({ state: history.state, hash: location.hash, outil: activeModule, niveau: navLevel(), entree: navigation.currentEntry.index, nombre: navigation.entries().length })", delai=delai, polling=100)
+
+
+def attendre_python(page, condition, etat, delai=DELAI):
+    """Attend qu'une condition côté Python soit vraie en laissant la page traiter ses évènements (dialogues, fermeture) ; chaque tour est un aller-retour vers la page, jamais une durée fixe."""
+    import time
+    fin = time.monotonic() + delai / 1000.0
+    while True:
+        if condition():
+            return
+        if time.monotonic() > fin:
+            raise AssertionError('état attendu : %s ; état lu : la condition est restée fausse (délai %d ms)' % (etat, delai))
+        page.evaluate('() => new Promise(r => setTimeout(r, 25))')       # un tour de la boucle d'évènements de la page : les dialogues et la fermeture sont traités

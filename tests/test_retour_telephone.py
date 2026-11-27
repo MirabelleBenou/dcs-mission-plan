@@ -11,6 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import miz_fixture  # noqa: E402
+from banc_attente import attendre, attendre_navigation_stable, attendre_outil, attendre_python, attendre_shell, exemple  # noqa: E402
 
 CHROMIUM = Path('/opt/pw-browsers/chromium')
 try:
@@ -62,14 +63,17 @@ def new_page(br, w=412, h=900, touch=True, url=SHELL, no_nav_api=False):
     ctx = br.new_context(viewport={'width': w, 'height': h}, has_touch=touch, is_mobile=touch)
     if no_nav_api:                                  # les cadres des outils sans l'API de navigation (Safari avant 26.2, Firefox avant 147) ; le shell la garde, pour lire ses entrées
         ctx.add_init_script(NO_NAV_API)
+    ctx.add_init_script("window.addEventListener('popstate', () => { window.__pop = (window.__pop || 0) + 1; });")          # compte les retours reçus par la page : le geste est arrivé
     pg = ctx.new_page()
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith(('file:', 'data:', 'blob:')) else r.abort())
     pg.goto('about:blank')
     pg.goto(url, wait_until='commit')
-    pg.wait_for_function("typeof NAV !== 'undefined' && typeof openModule === 'function'", timeout=20000)
-    pg.wait_for_timeout(1500)
+    attendre_shell(pg)
+    if url != SHELL and url[len(SHELL):] in ('#hq', '#fm'):                         # l'adresse nomme un outil : il s'ouvre à la suite
+        attendre_outil(pg, url[len(SHELL) + 1:])
+    attendre_navigation_stable(pg)
     pg.errs = errs
     return pg
 
@@ -79,9 +83,28 @@ def state(pg):
         tool: activeModule, level: navLevel(), idx: navigation.currentEntry.index, n: navigation.entries().length })""")
 
 
-def back(pg, ms=700):
+def back(pg):
+    """Le geste retour : attend que la page l'ait reçu (popstate) puis que la navigation soit au repos."""
+    pg.evaluate('() => { window.__pop0 = window.__pop || 0; history.back(); }')
+    attendre(pg, '(window.__pop || 0) > window.__pop0', 'le retour reçu par la page (popstate)', lu='[window.__pop, window.__pop0]')
+    attendre_navigation_stable(pg)
+
+
+def forward(pg):
+    pg.evaluate('() => { window.__pop0 = window.__pop || 0; history.forward(); }')
+    attendre(pg, '(window.__pop || 0) > window.__pop0', "l'avance reçue par la page (popstate)", lu='[window.__pop, window.__pop0]')
+    attendre_navigation_stable(pg)
+
+
+def leave(pg):
+    """Le retour depuis le mur quitte la page : l'adresse devient about:blank."""
     pg.evaluate('history.back()')
-    pg.wait_for_timeout(ms)
+    pg.wait_for_url('about:blank')
+
+
+def tool_attendre(pg, tid, expr, etat):
+    """Attend qu'une expression évaluée dans le cadre de l'outil soit vraie."""
+    attendre(pg, 'iframes[arg[0]].contentWindow.eval(arg[1])', etat, lu='iframes[arg[0]].contentWindow.eval(arg[1])', arg=[tid, expr])
 
 
 def tool_win(pg, tid, code):
@@ -90,12 +113,14 @@ def tool_win(pg, tid, code):
 
 def open_tool(pg, tid):
     pg.evaluate('(id) => openModule(id)', tid)
-    pg.wait_for_timeout(2300)
+    attendre_outil(pg, tid)
+    attendre_navigation_stable(pg)
 
 
 def go_hub_by_arrow(pg, tid):
     pg.evaluate("(id) => iframes[id].contentDocument.querySelector('.mp-back-injected').click()", tid)
-    pg.wait_for_timeout(700)
+    attendre(pg, "document.getElementById('landing').style.display !== 'none' && activeModule === null", 'le mur affiché, aucun outil ouvert', lu="[document.getElementById('landing').style.display, activeModule]")
+    attendre_navigation_stable(pg)
 
 
 @needs_pw
@@ -106,7 +131,7 @@ def test_each_tool_opens_one_entry_and_returns_to_the_wall(browser, how):
     assert base['wall'] and not base['level'] and not base['hash']
     for tid in TOOLS:
         pg.evaluate('window.scrollTo(0, 250)')
-        pg.wait_for_timeout(150)
+        attendre(pg, 'Math.round(window.scrollY) > 0', 'le mur défilé (scrollY > 0)', lu='window.scrollY')
         y0 = pg.evaluate('Math.round(window.scrollY)')
         assert y0 > 0
         open_tool(pg, tid)
@@ -120,7 +145,7 @@ def test_each_tool_opens_one_entry_and_returns_to_the_wall(browser, how):
         s = state(pg)
         assert s['wall'] and s['tool'] is None and s['hash'] == '' and s['idx'] == base['idx']
         assert pg.evaluate('Math.round(window.scrollY)') == y0          # le mur garde sa place
-    back(pg)
+    leave(pg)
     assert pg.url == 'about:blank'                                       # depuis le mur, le retour quitte la page
     assert pg.errs == []
     pg.context.close()
@@ -148,24 +173,24 @@ def level_cases():
 def test_a_level_above_the_tool_closes_first(browser, case):
     tid, _name, opener, sel, own = case
     pg = new_page(browser, 412)
-    pg.evaluate("MP_WORK_EXAMPLE('mc')")
-    pg.wait_for_timeout(1300)
-    pg.evaluate("MP_WORK_EXAMPLE('fl')")
-    pg.wait_for_timeout(1800)
+    exemple(pg, 'mc')
+    exemple(pg, 'fl')
     open_tool(pg, tid)
     base = state(pg)
     keys = pg.evaluate('JSON.stringify(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k).length]))')
     assert tool_win(pg, tid, opener) == 'ok'
-    pg.wait_for_timeout(700)
+    attendre(pg, 'navLevel() > 0', 'un niveau ouvert au-dessus de l\'outil (navLevel)', lu='navLevel()')
+    attendre_navigation_stable(pg)
     s = state(pg)
     assert s['level'] and s['state'] == {'mp': 2, 'tool': tid} and s['idx'] == base['idx'] + 1
-    back(pg, 900)                                                           # le retour ferme le niveau, comme Échap : l'outil reste, rien n'est fait
+    back(pg)                                                           # le retour ferme le niveau, comme Échap : l'outil reste, rien n'est fait
     s = state(pg)
     assert not s['level'] and s['tool'] == tid and s['state'] == {'mp': 1, 'tool': tid} and s['idx'] == base['idx']
     assert pg.evaluate('JSON.stringify(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k).length]))') == keys
     # le même niveau fermé par son propre geste : l'entrée est consommée, le retour suivant ramène au mur
     assert tool_win(pg, tid, opener) == 'ok'
-    pg.wait_for_timeout(700)
+    attendre(pg, 'navLevel() > 0', 'un niveau ouvert au-dessus de l\'outil (navLevel)', lu='navLevel()')
+    attendre_navigation_stable(pg)
     assert state(pg)['level']
     if own == 'esc':
         pg.keyboard.press('Escape')
@@ -175,7 +200,8 @@ def test_a_level_above_the_tool_closes_first(browser, case):
         tool_win(pg, tid, "document.getElementById('ui-confirm-cancel').click()")
     else:
         pg.evaluate("document.getElementById('mp-work-close').click()")
-    pg.wait_for_timeout(900)
+    attendre(pg, 'navLevel() === 0', 'le niveau fermé par son propre geste (navLevel nul)', lu='navLevel()')
+    attendre_navigation_stable(pg)
     s = state(pg)
     assert not s['level'] and s['tool'] == tid and s['idx'] == base['idx']
     back(pg)
@@ -190,19 +216,21 @@ def test_a_question_over_a_window_closes_alone_and_the_entry_is_restored(browser
     open_tool(pg, 'hq')
     base = state(pg)
     tool_win(pg, 'hq', "document.getElementById('btn-wing').click()")
-    pg.wait_for_timeout(600)
+    tool_attendre(pg, 'hq', "document.getElementById('wing-modal').hidden === false", 'la fenêtre Wing ouverte')
+    attendre_navigation_stable(pg)
     tool_win(pg, 'hq', "askConfirm({ title: 'Q', text: 't', verb: 'OK', danger: true }); 1")
-    pg.wait_for_timeout(600)
+    tool_attendre(pg, 'hq', "document.getElementById('ui-confirm').hidden === false", 'la question ouverte')
+    attendre_navigation_stable(pg)
     assert state(pg)['idx'] == base['idx'] + 1                               # une fenêtre et une question : un seul niveau
-    back(pg, 900)
+    back(pg)
     s = state(pg)
     assert tool_win(pg, 'hq', "document.getElementById('ui-confirm').hidden") is True
     assert tool_win(pg, 'hq', "document.getElementById('wing-modal').hidden") is False
     assert s['state'] == {'mp': 2, 'tool': 'hq'} and s['idx'] == base['idx'] + 1     # l'entrée du niveau 2 est rétablie
-    back(pg, 900)
+    back(pg)
     assert tool_win(pg, 'hq', "document.getElementById('wing-modal').hidden") is True
     assert state(pg)['idx'] == base['idx'] and state(pg)['tool'] == 'hq'
-    back(pg, 900)
+    back(pg)
     assert state(pg)['wall']
     pg.context.close()
 
@@ -223,15 +251,17 @@ def test_never_more_than_two_entries_above_the_wall(browser):
         go_hub_by_arrow(pg, tid); check()
     for tid in ['fc', 'fm', 'hq', 'bg', 'rs']:
         open_tool(pg, tid); check()
-        back(pg, 800); check()
+        back(pg); check()
     open_tool(pg, 'rp'); check()
     tool_win(pg, 'rp', "document.getElementById('btn-export-menu').click()")
-    pg.wait_for_timeout(600); check()
+    attendre(pg, 'navLevel() > 0', 'le menu Exporter ouvert (navLevel)', lu='navLevel()')
+    attendre_navigation_stable(pg); check()
     pg.evaluate("MP_SEND_MAP({ dataUrl: %s, name: 't', theatre: 'caucasus', width: 1, height: 1 })" % json.dumps(png))
-    pg.wait_for_timeout(2500); check()
+    attendre_outil(pg, 'bg')                                                                # la carte envoyée ouvre le Briefing Generator
+    attendre_navigation_stable(pg); check()
     s = state(pg)
     assert s['tool'] == 'bg' and s['state'] == {'mp': 1, 'tool': 'bg'} and s['hash'] == '#bg'      # l'entrée est remplacée, non ajoutée
-    back(pg, 800)
+    back(pg)
     assert state(pg)['wall']
     assert worst <= 2
     pg.context.close()
@@ -243,16 +273,15 @@ def test_forward_onto_an_entry_that_says_more_than_the_screen_goes_back_silently
     base = state(pg)
     open_tool(pg, 'hq')
     back(pg)
-    pg.evaluate('history.forward()')
-    pg.wait_for_timeout(900)
+    forward(pg)
     s = state(pg)
     assert s['wall'] and s['idx'] == base['idx'] and not s['level']          # rien ne s'est rouvert
     open_tool(pg, 'hq')
     tool_win(pg, 'hq', "document.getElementById('btn-wing').click()")
-    pg.wait_for_timeout(600)
-    back(pg, 900)
-    pg.evaluate('history.forward()')
-    pg.wait_for_timeout(900)
+    tool_attendre(pg, 'hq', "document.getElementById('wing-modal').hidden === false", 'la fenêtre Wing ouverte')
+    attendre_navigation_stable(pg)
+    back(pg)
+    forward(pg)
     s = state(pg)
     assert s['tool'] == 'hq' and not s['level'] and s['state'] == {'mp': 1, 'tool': 'hq'}
     assert tool_win(pg, 'hq', "document.getElementById('wing-modal').hidden") is True
@@ -270,14 +299,17 @@ def test_reload_reopens_the_tool_without_a_dead_entry(browser, what):
         tool_win(pg, tid, "document.getElementById('btn-wing').click()")
     elif what == 'menu':
         tool_win(pg, tid, "document.getElementById('btn-load').click()")
-    pg.wait_for_timeout(600)
+    if what != 'tool':
+        attendre(pg, 'navLevel() > 0', 'un niveau ouvert au-dessus de l\'outil (navLevel)', lu='navLevel()')
+        attendre_navigation_stable(pg)
     pg.reload(wait_until='commit')
-    pg.wait_for_function("typeof NAV !== 'undefined'", timeout=20000)
-    pg.wait_for_timeout(2800)
+    attendre_shell(pg)
+    attendre_outil(pg, tid)                                                  # l'adresse rouvre l'outil
+    attendre_navigation_stable(pg)
     s = state(pg)
     assert s['tool'] == tid and not s['level'] and s['state'] == {'mp': 1, 'tool': tid} and s['hash'] == '#' + tid
     assert s['idx'] == base['idx'] + 1
-    back(pg, 900)
+    back(pg)
     assert state(pg)['wall']                                                 # le premier retour fait quelque chose
     pg.context.close()
 
@@ -286,12 +318,11 @@ def test_reload_reopens_the_tool_without_a_dead_entry(browser, what):
 @pytest.mark.parametrize('addr, tool', [('#hq', 'hq'), ('#fm', 'fm'), ('#zz', None), ('#HQ', None)])
 def test_the_address_names_the_tool(browser, addr, tool):
     pg = new_page(browser, 412, url=SHELL + addr)
-    pg.wait_for_timeout(1500)
     s = state(pg)
     assert s['tool'] == tool
     if tool:
         assert s['state'] == {'mp': 1, 'tool': tool} and s['hash'] == addr
-        back(pg, 900)
+        back(pg)
         s = state(pg)
         assert s['wall'] and s['hash'] == ''
     else:
@@ -305,14 +336,16 @@ def test_the_field_manual_pages_do_not_add_entries(browser):
     base = state(pg)
     open_tool(pg, 'fm')
     tool_win(pg, 'fm', "document.getElementById('btn-toc').click()")
-    pg.wait_for_timeout(500)
+    attendre(pg, 'navLevel() > 0', 'le sommaire ouvert (navLevel)', lu='navLevel()')
+    attendre_navigation_stable(pg)
     assert state(pg)['level']
     tool_win(pg, 'fm', "document.querySelectorAll('#fmnav-panel a.fmnav-ch')[2].click()")
-    pg.wait_for_timeout(900)
+    tool_attendre(pg, 'fm', "location.hash === '#hq'", 'la page HQ du manuel ouverte (adresse #hq)')
+    attendre_navigation_stable(pg)
     assert tool_win(pg, 'fm', "location.hash") == '#hq'
     s = state(pg)
     assert not s['level'] and s['idx'] == base['idx'] + 1 and s['n'] - 1 - base['idx'] <= 2
-    back(pg, 900)
+    back(pg)
     assert state(pg)['wall']
     pg.context.close()
 
@@ -324,28 +357,32 @@ def test_the_field_manual_pages_do_not_add_entries_without_the_navigation_api(br
     assert tool_win(pg, 'fm', 'typeof navigation') == 'undefined'
     base = state(pg)
     tool_win(pg, 'fm', "document.getElementById('btn-toc').click()")
-    pg.wait_for_timeout(500)
+    tool_attendre(pg, 'fm', "document.body.classList.contains('fmnav-open')", 'le sommaire ouvert')
     tool_win(pg, 'fm', "document.querySelectorAll('#fmnav-panel a.fmnav-ch')[2].click()")      # le sommaire, puis le lien du bas de chapitre, un lien du texte, navigate(), le sommaire encore
-    pg.wait_for_timeout(900)
+    tool_attendre(pg, 'fm', "location.hash === '#hq'", 'la page HQ du manuel ouverte (adresse #hq)')
+    attendre_navigation_stable(pg)
     assert tool_win(pg, 'fm', 'location.hash') == '#hq'
+    h0 = tool_win(pg, 'fm', 'location.hash')
     tool_win(pg, 'fm', "(document.querySelector('.fmnav-pn a.fmnav-nx:not([hidden])') || document.querySelector('.fmnav-pn a')).click()")
-    pg.wait_for_timeout(900)
+    attendre_navigation_stable(pg)
     tool_win(pg, 'fm', "(document.querySelector('a.fm-lnk') || { click() {} }).click()")
-    pg.wait_for_timeout(900)
+    attendre_navigation_stable(pg)
     tool_win(pg, 'fm', "navigate('index')")
-    pg.wait_for_timeout(700)
+    tool_attendre(pg, 'fm', "location.hash === '#index'", 'la page Index du manuel ouverte (adresse #index)')
+    attendre_navigation_stable(pg)
     assert tool_win(pg, 'fm', 'location.hash') == '#index'
     tool_win(pg, 'fm', "document.getElementById('btn-toc').click()")
-    pg.wait_for_timeout(500)
+    tool_attendre(pg, 'fm', "document.body.classList.contains('fmnav-open')", 'le sommaire ouvert')
     tool_win(pg, 'fm', "document.querySelectorAll('#fmnav-panel a.fmnav-ch')[1].click()")
-    pg.wait_for_timeout(900)
+    tool_attendre(pg, 'fm', "!document.body.classList.contains('fmnav-open')", 'le sommaire refermé par le choix d\'un chapitre')
+    attendre_navigation_stable(pg)
     s = state(pg)
     assert s['state'] == {'mp': 1, 'tool': 'fm'} and not s['level']
     assert s['idx'] == base['idx'] and s['n'] == base['n'] + 1                 # seule reste l'entrée « en avant » du niveau 2 consommé : aucune page n'a ajouté d'entrée
     assert pg.evaluate('navigation.entries().filter(e => e.getState() && e.getState().mp === 0).length') == 0     # aucune entrée {mp:0} en double
-    back(pg, 900)
+    back(pg)
     assert state(pg)['wall'] and state(pg)['state'] is None
-    back(pg, 900)
+    leave(pg)
     assert pg.url == 'about:blank'
     assert pg.errs == []
     pg.context.close()
@@ -357,14 +394,14 @@ def test_the_arrow_after_field_manual_pages_goes_back_to_the_wall_without_the_na
     open_tool(pg, 'fm')
     for k in (1, 2, 3):
         tool_win(pg, 'fm', "document.getElementById('btn-toc').click()")
-        pg.wait_for_timeout(400)
+        tool_attendre(pg, 'fm', "document.body.classList.contains('fmnav-open')", 'le sommaire ouvert')
         tool_win(pg, 'fm', "document.querySelectorAll('#fmnav-panel a.fmnav-ch')[%d].click()" % k)
-        pg.wait_for_timeout(700)
+        tool_attendre(pg, 'fm', "!document.body.classList.contains('fmnav-open')", "le sommaire refermé par le choix d'un chapitre")
+        attendre_navigation_stable(pg)
     go_hub_by_arrow(pg, 'fm')
-    pg.wait_for_timeout(500)
     s = state(pg)
     assert s['wall'] and s['state'] is None
-    back(pg, 900)
+    back(pg)
     assert pg.url == 'about:blank'
     pg.context.close()
 
@@ -375,13 +412,14 @@ def test_a_window_closes_by_its_cross_never_by_escape(browser):
     open_tool(pg, 'rs')
     tool_win(pg, 'rs', "SOURCE_READY = true; RSD.tool = 'rect'; rsdSyncUi(); 1")            # une image, l'outil de dessin Rectangle
     tool_win(pg, 'rs', "document.getElementById('btn-reset').click()")
-    pg.wait_for_timeout(600)
+    tool_attendre(pg, 'rs', "document.getElementById('ui-confirm').hidden === false", 'la question ouverte')
+    attendre_navigation_stable(pg)
     assert tool_win(pg, 'rs', "document.getElementById('ui-confirm').hidden") is False
-    back(pg, 900)
+    back(pg)
     assert tool_win(pg, 'rs', "document.getElementById('ui-confirm').hidden") is True
     assert tool_win(pg, 'rs', 'RSD.tool') == 'rect'                                         # Échap l'aurait remis à « select »
     assert tool_win(pg, 'rs', 'SOURCE_READY') is True                                        # rien d'effacé
-    back(pg, 900)
+    back(pg)
     assert state(pg)['wall']
     pg.context.close()
 
@@ -394,19 +432,20 @@ def test_a_window_closes_by_its_cross_never_by_escape(browser):
 def test_a_back_that_skips_two_entries_closes_the_levels_one_by_one_down_to_the_wall(browser, tid, opener, win):
     pg = new_page(browser, 412)
     if tid == 'fc':                                    # le Flight Configurator exporte une fois une mission chargée
-        pg.evaluate("MP_WORK_EXAMPLE('mc')")
-        pg.wait_for_timeout(1500)
-        pg.evaluate("MP_WORK_EXAMPLE('fl')")
-        pg.wait_for_timeout(2000)
+        exemple(pg, 'mc')
+        exemple(pg, 'fl')
     open_tool(pg, tid)
     tool_win(pg, tid, opener)
-    pg.wait_for_timeout(600)
+    tool_attendre(pg, tid, "document.getElementById('%s').hidden === false" % win, 'la fenêtre ouverte')
+    attendre_navigation_stable(pg)
     tool_win(pg, tid, "askConfirm({ title: 'Q', text: 't', verb: 'OK', danger: true }); 1")
-    pg.wait_for_timeout(500)
+    tool_attendre(pg, tid, "document.getElementById('ui-confirm').hidden === false", 'la question ouverte')
+    attendre_navigation_stable(pg)
     assert tool_win(pg, tid, "document.getElementById('%s').hidden" % win) is False
     assert state(pg)['state'] == {'mp': 2, 'tool': tid}
-    pg.evaluate('history.go(-2)')
-    pg.wait_for_timeout(1500)
+    pg.evaluate('() => { window.__pop0 = window.__pop || 0; history.go(-2); }')
+    attendre(pg, 'navLevel() === 0 && activeModule === null', 'les niveaux fermés un à un jusqu\'au mur (navLevel nul, aucun outil)', lu='[navLevel(), activeModule, window.__pop, window.__pop0]')
+    attendre_navigation_stable(pg)
     s = state(pg)
     assert s['wall'] and s['state'] is None and not s['level']
     assert pg.errs == []
@@ -423,7 +462,7 @@ def test_the_browser_asks_before_leaving_only_while_an_hq_mission_is_open(browse
     ctrl = pg.context.new_page()
     assert pg.evaluate("localStorage.getItem('mission_snapshot_v1')") is None
     pg.close(run_before_unload=True)
-    ctrl.wait_for_timeout(800)
+    attendre_python(ctrl, lambda: pg.is_closed(), 'la page fermée sans question')
     assert pg.is_closed() and dialogs == []                                  # sans mission, aucune question
     pg = new_page(browser, 412)
     pg.on('dialog', lambda d: (dialogs.append(d.type), d.dismiss()))
@@ -431,23 +470,23 @@ def test_the_browser_asks_before_leaving_only_while_an_hq_mission_is_open(browse
     open_tool(pg, 'hq')
     hq = pg.query_selector('#iframe-hq').content_frame()
     hq.set_input_files('#miz-file-input', str(miz))
-    pg.wait_for_timeout(3000)
+    attendre(pg, "localStorage.getItem('mission_snapshot_v1') !== null", 'la mission chargée dans HQ (instantané enregistré)', lu="localStorage.getItem('mission_snapshot_v1') === null", delai=30000)
     assert pg.evaluate("localStorage.getItem('mission_snapshot_v1')") is not None
     keys = pg.evaluate('JSON.stringify(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k).length]))')
     pg.close(run_before_unload=True)
-    ctrl.wait_for_timeout(800)
+    attendre_python(ctrl, lambda: dialogs == ['beforeunload'], 'la question du navigateur posée (beforeunload)')
     assert dialogs == ['beforeunload'] and not pg.is_closed()                # « Rester » garde tout
     assert pg.evaluate('JSON.stringify(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k).length]))') == keys
     assert state(pg)['tool'] == 'hq'
     # « Effacer » d'HQ retire la mission : plus de question
     dialogs.clear()
     tool_win(pg, 'hq', "document.getElementById('btn-clear').click()")
-    pg.wait_for_timeout(600)
+    tool_attendre(pg, 'hq', "document.getElementById('ui-confirm').hidden === false", 'la question ouverte')
     tool_win(pg, 'hq', "document.getElementById('ui-confirm-ok').click()")
-    pg.wait_for_timeout(1500)
-    assert pg.evaluate("localStorage.getItem('mission_snapshot_v1')") is None
+    attendre(pg, "localStorage.getItem('mission_snapshot_v1') === null", 'la mission retirée (instantané effacé)', lu="localStorage.getItem('mission_snapshot_v1') === null")
+    attendre_navigation_stable(pg)
     pg.close(run_before_unload=True)
-    ctrl.wait_for_timeout(800)
+    attendre_python(ctrl, lambda: pg.is_closed(), 'la page fermée sans question')
     assert pg.is_closed() and dialogs == []
 
 
@@ -460,5 +499,5 @@ def test_pull_to_refresh_is_off_in_the_shell_and_every_tool(browser):
         open_tool(pg, tid)
         assert pg.evaluate("(id) => (" + css + ")(iframes[id].contentDocument)", tid) == ['none', 'none'], tid
         pg.evaluate('goHub()')
-        pg.wait_for_timeout(200)
+        attendre(pg, "document.getElementById('landing').style.display !== 'none' && activeModule === null", 'le mur affiché, aucun outil ouvert', lu="[document.getElementById('landing').style.display, activeModule]")
     pg.context.close()
