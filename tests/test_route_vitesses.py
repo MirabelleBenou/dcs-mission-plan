@@ -609,3 +609,42 @@ def test_datacard_a_point_that_arrives_at_rank_zero_loses_its_speed_and_its_padl
     after = dg.evaluate(GS)
     assert after[0][0] == before[1][0] and after[0][1:] == [None, False]                                              # ni vitesse ni verrou au rang 0
     assert pg.errs == []
+
+
+DG_WRITES_POINT_3 = """() => { const set = rwReadSet(); const r = rwUpdateRoute(set.routes[set.active].rid, route => { route.points[3].t = '10:12:30'; route.points[3].tLock = true; }); return r.ok; }"""
+RP_POINTS_STORED = "() => JSON.parse(localStorage.getItem('route_state_v1')).points.map(p => [p.t || null, p.tLock === true])"
+DEAF = "() => { window.rpReloadSoon = () => {}; }"       # le cadre ne reçoit pas l'évènement « storage » (le navigateur ne le livre pas toujours à un cadre du shell) : ce que son écouteur ferait est supprimé
+
+
+@needs_pw
+def test_the_route_planner_reads_back_what_the_datacard_wrote_when_it_is_shown_again_even_without_a_storage_event(browser):
+    pg = shell(browser, 1280, 860)
+    fr = open_rp(pg)
+    nav_open(fr)
+    tm_type(fr, pg, 4, '10:17'); tm_lock(fr, 4)
+    fr.evaluate(DEAF)
+    dg = open_dg(pg)
+    assert dg.evaluate(DG_WRITES_POINT_3) is True
+    pg.wait_for_timeout(400)                                                                                       # le temps qu'un évènement « storage » aurait mis (150 ms) : il ne vient pas, le Route Planner caché n'a rien relu
+    assert fr.evaluate("() => S.points.map(p => [p.t || null, p.tLock === true])") == [[None, False]] * 4 + [['10:17:00', True], [None, False]]
+    fr = open_rp(pg)                                                                                               # il redevient visible : il se relit
+    attendre(fr, "S.points[3].tLock === true", 'le Route Planner a relu la route du Datacard Generator', lu="S.points.map(p => [p.t || null, p.tLock === true])")
+    assert fr.evaluate("() => S.points.map(p => [p.t || null, p.tLock === true])") == [[None, False]] * 3 + [['10:12:30', True], ['10:17:00', True], [None, False]]
+    assert pg.errs == []
+
+
+@needs_pw
+def test_the_route_planner_never_overwrites_a_datacard_write_it_did_not_hear_about(browser):
+    pg = shell(browser, 1280, 860)
+    fr = open_rp(pg)
+    nav_open(fr)
+    tm_type(fr, pg, 4, '10:17'); tm_lock(fr, 4)
+    fr.evaluate(DEAF)
+    dg = open_dg(pg)
+    assert dg.evaluate(DG_WRITES_POINT_3) is True
+    # le Route Planner, caché et sourd, écrit (le nom de la route) : il relit d'abord, rejoue sa seule saisie, puis écrit ; l'heure du point 3 posée au Datacard Generator reste
+    fr.evaluate("() => { S.name = 'AUTRE'; persistState(); }")
+    assert dg.evaluate(RP_POINTS_STORED) == [[None, False]] * 3 + [['10:12:30', True], ['10:17:00', True], [None, False]]
+    assert fr.evaluate("() => [S.name, S.points.map(p => [p.t || null, p.tLock === true])]") == ['AUTRE'] + [[[None, False]] * 3 + [['10:12:30', True], ['10:17:00', True], [None, False]]]
+    assert fr.evaluate("() => JSON.parse(localStorage.getItem('route_state_v1')).name") == 'AUTRE'
+    assert pg.errs == []

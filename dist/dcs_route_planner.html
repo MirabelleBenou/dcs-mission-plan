@@ -6247,7 +6247,7 @@ function parseRoute(src) {
 
 let SAVE_FAILED = false;
 function persistState() {
-  if (RLD.stale) rpMergeStale();       /* une relecture attend (le DG a écrit pendant une saisie) : on relit avant d'écrire, puis on rejoue ce que cet écran a changé */
+  if (RLD.stale || (RLD.base && rpStoredDiffers())) rpMergeStale();       /* une relecture attend (le DG a écrit pendant une saisie) : on relit avant d'écrire, puis on rejoue ce que cet écran a changé */
   syncActive();
   let ok = true;
   /* route_set_v1 d'abord, route_state_v1 (lu par le DG) ensuite ; un échec (quota ou stockage indisponible) est dit une fois par série */
@@ -6257,7 +6257,7 @@ function persistState() {
   SAVE_FAILED = !ok;
   try { gsSyncRoutes(); } catch (e) { /* la fiche des groupes est facultative */ }
   mpNavWrite();
-  RLD.base = rpSnap();
+  rpMark();
 }
 
 function loadState() {
@@ -6280,7 +6280,7 @@ function loadState() {
   } catch (e) { /* état illisible : route neuve */ }
   if (!ok) S = defaultState();
   loadSet(ok);
-  RLD.base = rpSnap();
+  rpMark();
 }
 
 /* ============= PLUSIEURS ROUTES =============
@@ -6832,8 +6832,16 @@ function mpNavFollow() {
 
 /* Le Datacard Generator écrit route_set_v1 et route_state_v1 (son bloc d'écriture de route) : le Route Planner se relit, sans rien réécrire, sans perdre le point sélectionné s'il existe encore (son pid),
    et jamais sous un champ en cours de saisie (la relecture attend la sortie du champ). Il ne réécrit pas ce qu'il vient de lire : aucune boucle (l'évènement « storage » ne revient pas à l'onglet qui écrit). */
-const RLD = { timer: 0, wait: false, stale: false, base: null };       /* stale : une route a changé dans le stockage depuis la dernière lecture ; base : l'état lu ou écrit en dernier (pour rejouer la seule saisie en cours) */
-function rpReloadSoon() { RLD.stale = true; clearTimeout(RLD.timer); RLD.timer = setTimeout(rpReload, 150); }
+const RLD = { timer: 0, wait: false, stale: false, base: null, raw: null };       /* stale : une route a changé dans le stockage depuis la dernière lecture ; base : l'état lu ou écrit en dernier (pour rejouer la seule saisie en cours) */
+/* Ce que le stockage portait la dernière fois que cet écran l'a lu ou écrit : sans lui, un évènement « storage » qui n'arrive pas (le navigateur ne le livre pas toujours à un cadre du shell) laisserait cet écran
+   écraser, à sa prochaine écriture, ce que le Datacard Generator a écrit, ou ne pas le montrer au retour */
+function rpRawNow() { try { return localStorage.getItem(KEY_STATE); } catch (e) { return null; } }
+function rpMark() { RLD.base = rpSnap(); RLD.raw = rpRawNow(); }
+function rpStoredDiffers() { return rpRawNow() !== RLD.raw; }
+/* L'outil redevient visible, ou reçoit le focus : si la route du stockage n'est plus celle qu'il a lue, il se relit (sans rien écrire) */
+function rpFollowStore() { if (!RLD.stale && RLD.base && rpStoredDiffers()) rpReloadAfter(); }
+function rpReloadAfter() { RLD.stale = true; clearTimeout(RLD.timer); RLD.timer = setTimeout(rpReload, 150); }
+function rpReloadSoon() { rpReloadAfter(); }       /* l'évènement « storage » d'une route */
 function rpBusy() {
   const a = document.activeElement;
   return !!a && document.hasFocus() && /^(INPUT|TEXTAREA)$/.test(a.tagName) && !a.readOnly && !a.disabled && a.type !== 'checkbox' && a.type !== 'radio' && a.type !== 'file';       /* un champ d'une fenêtre qui n'a pas le focus ne compte pas */
@@ -11895,7 +11903,7 @@ function spInit() {
   document.addEventListener('focusin', spKbSync);          /* le focus passe d'un champ du panneau à la carte (ou l'inverse) : la mise en page suit ; le bloc commun a déjà regardé si le clavier est ouvert */
   document.addEventListener('focusout', () => setTimeout(spKbSync, 0));
   uiKbOnChange(() => { spSync(); spKbReveal(); });
-  if (app && window.ResizeObserver) new ResizeObserver(() => spSync()).observe(app);      /* l'outil redevient visible dans le shell, la ligne de la mission d'HQ paraît : le partage se refait */
+  if (app && window.ResizeObserver) new ResizeObserver(() => { spSync(); rpFollowStore(); }).observe(app);      /* l'outil redevient visible dans le shell, la ligne de la mission d'HQ paraît : le partage se refait */
   spSync();
 }
 
@@ -12995,7 +13003,7 @@ function rpBack(m) {
   renderLayers(); drawLayers(); drAfterLayers();
   setBase();
   frameRoute();
-  RLD.base = rpSnap();
+  rpMark();
 }
 /* ============= « EFFACER » : CHOISIR CE QUI S'EFFACE ============= */
 /* Six ensembles, dans cet ordre. Les dessins et les symboles OTAN sont les objets des calques dessinés (source « drawn ») ; les calques importés sont ceux d'un
@@ -17169,6 +17177,7 @@ function bindEvents() {
     if (e.key === KEY_SET || e.key === KEY_STATE || e.key === null) rpReloadSoon();       /* ... ou une route (son bloc d'écriture) */
     if (e.key === KEY_LAYERS && e.newValue === null) rpLayersWiped();       /* ... ou « Tout effacer » */
   });
+  window.addEventListener('focus', rpFollowStore);
   document.addEventListener('focusout', () => { if (RLD.wait) setTimeout(() => { if (RLD.wait && !rpBusy()) rpReload(); }, 60); });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); routesRender(); });
   routesBind();
