@@ -179,7 +179,7 @@ def test_a_level_above_the_tool_closes_first(browser, case):
     base = state(pg)
     keys = pg.evaluate('JSON.stringify(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k).length]))')
     assert tool_win(pg, tid, opener) == 'ok'
-    attendre(pg, 'navLevel() > 0', 'un niveau ouvert au-dessus de l\'outil (navLevel)', lu='navLevel()')
+    attendre(pg, '!!navLevel()', 'un niveau ouvert au-dessus de l\'outil (navLevel)', lu='navLevel()')
     attendre_navigation_stable(pg)
     s = state(pg)
     assert s['level'] and s['state'] == {'mp': 2, 'tool': tid} and s['idx'] == base['idx'] + 1
@@ -189,7 +189,7 @@ def test_a_level_above_the_tool_closes_first(browser, case):
     assert pg.evaluate('JSON.stringify(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k).length]))') == keys
     # le même niveau fermé par son propre geste : l'entrée est consommée, le retour suivant ramène au mur
     assert tool_win(pg, tid, opener) == 'ok'
-    attendre(pg, 'navLevel() > 0', 'un niveau ouvert au-dessus de l\'outil (navLevel)', lu='navLevel()')
+    attendre(pg, '!!navLevel()', 'un niveau ouvert au-dessus de l\'outil (navLevel)', lu='navLevel()')
     attendre_navigation_stable(pg)
     assert state(pg)['level']
     if own == 'esc':
@@ -200,7 +200,7 @@ def test_a_level_above_the_tool_closes_first(browser, case):
         tool_win(pg, tid, "document.getElementById('ui-confirm-cancel').click()")
     else:
         pg.evaluate("document.getElementById('mp-work-close').click()")
-    attendre(pg, 'navLevel() === 0', 'le niveau fermé par son propre geste (navLevel nul)', lu='navLevel()')
+    attendre(pg, '!navLevel()', 'le niveau fermé par son propre geste (navLevel nul)', lu='navLevel()')
     attendre_navigation_stable(pg)
     s = state(pg)
     assert not s['level'] and s['tool'] == tid and s['idx'] == base['idx']
@@ -254,7 +254,7 @@ def test_never_more_than_two_entries_above_the_wall(browser):
         back(pg); check()
     open_tool(pg, 'rp'); check()
     tool_win(pg, 'rp', "document.getElementById('btn-export-menu').click()")
-    attendre(pg, 'navLevel() > 0', 'le menu Exporter ouvert (navLevel)', lu='navLevel()')
+    attendre(pg, '!!navLevel()', 'le menu Exporter ouvert (navLevel)', lu='navLevel()')
     attendre_navigation_stable(pg); check()
     pg.evaluate("MP_SEND_MAP({ dataUrl: %s, name: 't', theatre: 'caucasus', width: 1, height: 1 })" % json.dumps(png))
     attendre_outil(pg, 'bg')                                                                # la carte envoyée ouvre le Briefing Generator
@@ -300,7 +300,7 @@ def test_reload_reopens_the_tool_without_a_dead_entry(browser, what):
     elif what == 'menu':
         tool_win(pg, tid, "document.getElementById('btn-load').click()")
     if what != 'tool':
-        attendre(pg, 'navLevel() > 0', 'un niveau ouvert au-dessus de l\'outil (navLevel)', lu='navLevel()')
+        attendre(pg, '!!navLevel()', 'un niveau ouvert au-dessus de l\'outil (navLevel)', lu='navLevel()')
         attendre_navigation_stable(pg)
     pg.reload(wait_until='commit')
     attendre_shell(pg)
@@ -336,7 +336,7 @@ def test_the_field_manual_pages_do_not_add_entries(browser):
     base = state(pg)
     open_tool(pg, 'fm')
     tool_win(pg, 'fm', "document.getElementById('btn-toc').click()")
-    attendre(pg, 'navLevel() > 0', 'le sommaire ouvert (navLevel)', lu='navLevel()')
+    attendre(pg, '!!navLevel()', 'le sommaire ouvert (navLevel)', lu='navLevel()')
     attendre_navigation_stable(pg)
     assert state(pg)['level']
     tool_win(pg, 'fm', "document.querySelectorAll('#fmnav-panel a.fmnav-ch')[2].click()")
@@ -400,7 +400,7 @@ def test_the_arrow_after_field_manual_pages_goes_back_to_the_wall_without_the_na
     go_hub_by_arrow(pg, 'fm')
     s = state(pg)
     assert s['wall'] and s['state'] is None
-    back(pg)
+    leave(pg)
     assert pg.url == 'about:blank'
     pg.context.close()
 
@@ -443,7 +443,7 @@ def test_a_back_that_skips_two_entries_closes_the_levels_one_by_one_down_to_the_
     assert tool_win(pg, tid, "document.getElementById('%s').hidden" % win) is False
     assert state(pg)['state'] == {'mp': 2, 'tool': tid}
     pg.evaluate('() => { window.__pop0 = window.__pop || 0; history.go(-2); }')
-    attendre(pg, 'navLevel() === 0 && activeModule === null', 'les niveaux fermés un à un jusqu\'au mur (navLevel nul, aucun outil)', lu='[navLevel(), activeModule, window.__pop, window.__pop0]')
+    attendre(pg, '!navLevel() && activeModule === null', 'les niveaux fermés un à un jusqu\'au mur (navLevel nul, aucun outil)', lu='[navLevel(), activeModule, window.__pop, window.__pop0]')
     attendre_navigation_stable(pg)
     s = state(pg)
     assert s['wall'] and s['state'] is None and not s['level']

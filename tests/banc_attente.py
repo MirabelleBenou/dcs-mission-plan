@@ -106,7 +106,7 @@ def attendre(cible, expr, etat=None, lu=None, arg=None, delai=DELAI, polling='ra
 # --- l'état de mise en page du Route Planner : ce que l'application pose elle-même (SP) ---
 # la carte en grand (cadre d'export, dessin) : jusqu'à 1 100 px, la classe rp-mapfull suit SP.full ; la dernière vue vue (SP.view) est rafraîchie à chaque moveend tant que la carte a une taille
 MISE_EN_PAGE = """!SP.mq.matches || (document.body.classList.contains('rp-mapfull') === !!(SP.full.exp || SP.full.dr) && !SP.away && SP.hold === null
-  && (!SP.view || (SP.view.z === __RP.map.getZoom() && SP.view.c.lat === __RP.map.getCenter().lat && SP.view.c.lng === __RP.map.getCenter().lng)))"""
+  && (!SP.view || (SP.view.z === __RP.map.getZoom() && __RP.map.project(SP.view.c, SP.view.z).distanceTo(__RP.map.project(__RP.map.getCenter(), SP.view.z)) < 2)))"""        # à moins de 2 px : le centre se relit au pixel près quand la carte est redimensionnée
 MISE_EN_PAGE_LU = """({ mq: SP.mq.matches, mapfull: document.body.classList.contains('rp-mapfull'), full: SP.full, away: SP.away, hold: SP.hold && { z: SP.hold.z }, view: SP.view && { z: SP.view.z, lat: SP.view.c.lat },
   carte: { z: __RP.map.getZoom(), lat: __RP.map.getCenter().lat } })"""
 
@@ -121,7 +121,7 @@ def attendre_mise_en_page(fr, delai=DELAI):
 def viser(fr, lat, lon, zoom, delai=DELAI):
     """Pose la vue sans animation et attend qu'elle soit celle de la carte, retenue et stable."""
     fr.evaluate('([la, lo, z]) => __RP.map.setView([la, lo], z, { animate: false })', [lat, lon, zoom])
-    attendre(fr, '__RP.map.getZoom() === arg[2] && Math.abs(__RP.map.getCenter().lat - arg[0]) < 1e-6 && Math.abs(__RP.map.getCenter().lng - arg[1]) < 1e-6', 'la vue posée : centre et zoom',
+    attendre(fr, '__RP.map.getZoom() === arg[2] && __RP.map.project({ lat: arg[0], lng: arg[1] }, arg[2]).distanceTo(__RP.map.project(__RP.map.getCenter(), arg[2])) < 2', 'la vue posée : centre et zoom (à moins de 2 px)',
              lu='({ z: __RP.map.getZoom(), lat: __RP.map.getCenter().lat, lng: __RP.map.getCenter().lng })', arg=[lat, lon, zoom], delai=delai)
     attendre_mise_en_page(fr, delai)
 

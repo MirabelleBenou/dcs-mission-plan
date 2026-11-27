@@ -315,7 +315,7 @@ def test_tag_follows_the_mouse_and_stays_inside_the_map(browser, lang, unit, lab
     s = read()
     assert not s['hidden'] and abs(s['t'] + s['h'] - (mb['h'] - 20 - 14)) <= 1
     pg.mouse.move(2, 2)                                                                            # hors de la carte
-    attendre(fr, "document.getElementById('rp-alt').hidden === true", 'le cartouche masqué hors de la carte', lu="document.getElementById('rp-alt').hidden")
+    attendre(fr, "(document.getElementById('rp-alt') || { hidden: true }).hidden === true", 'le cartouche masqué hors de la carte', lu="(document.getElementById('rp-alt') || { hidden: true }).hidden")
     assert read()['hidden'] is True
     assert pg.errs == []
     pg.context.close()
@@ -335,19 +335,19 @@ def test_touch_in_read_mode_shows_the_tag_and_the_ring_and_nothing_else(browser)
     n = fr.evaluate("__RP.S.points.length")
     fr.evaluate("""() => { window.__tap = null; __RP.map.on('click', e => { window.__tap = [e.latlng.lat, e.latlng.lng]; }); }""")
     pg.touchscreen.tap(*at(-60, 40))
-    attendre(fr, "!document.getElementById('rp-alt').hidden", 'le cartouche posé au toucher', lu="document.getElementById('rp-alt').hidden")
+    attendre(fr, "!(document.getElementById('rp-alt') || { hidden: true }).hidden", 'le cartouche posé au toucher', lu="(document.getElementById('rp-alt') || { hidden: true }).hidden")
     attendre_relief_repos(fr)
     h = fr.evaluate("([a, b]) => __RP.reliefAltAt(a, b)", fr.evaluate("window.__tap"))
     assert read() == {'hidden': False, 'text': f'Alt. sol {round(h)} m', 'ring': True, 'n': n, 'mode': 'read'}      # en mode Lire, rien d'autre qu'avant
     fr.evaluate("__RP.map.panBy([30, 20], {animate:false})")
-    attendre(fr, "document.getElementById('rp-alt').hidden === true && document.getElementById('rp-alt-x').hidden === true", 'le cartouche et l\'anneau masqués par le déplacement', lu="[document.getElementById('rp-alt').hidden, document.getElementById('rp-alt-x').hidden]")
+    attendre(fr, "(document.getElementById('rp-alt') || { hidden: true }).hidden === true && (document.getElementById('rp-alt-x') || { hidden: true }).hidden === true", 'le cartouche et l\'anneau masqués par le déplacement', lu="[(document.getElementById('rp-alt') || { hidden: true }).hidden, (document.getElementById('rp-alt-x') || { hidden: true }).hidden]")
     assert read()['hidden'] is True and read()['ring'] is False                                    # un déplacement de la carte les masque
     pg.touchscreen.tap(*at(-60, 40))
-    attendre(fr, "!document.getElementById('rp-alt').hidden", 'le cartouche posé au toucher', lu="document.getElementById('rp-alt').hidden")
+    attendre(fr, "!(document.getElementById('rp-alt') || { hidden: true }).hidden", 'le cartouche posé au toucher', lu="(document.getElementById('rp-alt') || { hidden: true }).hidden")
     attendre_relief_repos(fr)
     assert read()['hidden'] is False
     fr.evaluate("document.querySelector('#tapmode [data-tap=wp]').click()")
-    attendre(fr, "__RP.tapMode === 'wp' && document.getElementById('rp-alt').hidden === true", 'le mode Point posé, le cartouche masqué', lu="[__RP.tapMode, document.getElementById('rp-alt').hidden]")
+    attendre(fr, "__RP.tapMode === 'wp' && (document.getElementById('rp-alt') || { hidden: true }).hidden === true", 'le mode Point posé, le cartouche masqué', lu="[__RP.tapMode, (document.getElementById('rp-alt') || { hidden: true }).hidden]")
     assert read()['hidden'] is True                                                                # le changement de mode aussi
     pg.touchscreen.tap(*at(80, 80))
     attendre(fr, '__RP.S.points.length === arg', 'un point posé en mode Point', lu='__RP.S.points.length', arg=n + 1)
@@ -404,7 +404,7 @@ def test_nothing_is_read_below_min_zoom_and_an_absent_tile_waits_for_the_pointer
     for k in range(40):                                                                           # 40 positions espacées de 20 px, sans pause
         pg.mouse.move(box['x'] + mb['l'] + mb['w'] / 2 - 780 + 20 * k, box['y'] + mb['t'] + mb['h'] / 2)       # de loin à gauche jusqu'au centre : les huit dernières positions sont dans les bornes
     assert len(pg.bench.relief('elevation')) - n0 <= 1
-    attendre(fr, "RE.dwell !== 0 || RE.pend !== '' || RE.shown !== null || document.getElementById('rp-alt').hidden === false", "le pointeur au repos : l'attente de la tuile (RELIEF_DWELL) est partie ou la lecture est faite", lu='[RE.raf, RE.dwell, RE.pend]')
+    attendre(fr, "RE.dwell !== 0 || RE.pend !== '' || RE.shown !== null || (document.getElementById('rp-alt') || { hidden: true }).hidden === false", "le pointeur au repos : l'attente de la tuile (RELIEF_DWELL) est partie ou la lecture est faite", lu='[RE.raf, RE.dwell, RE.pend]')
     attendre_relief_repos(fr)                                                                     # puis une pause : la tuile du dernier pixel se demande (RELIEF_DWELL, le délai de l'application, écoulé)
     assert len(pg.bench.relief('elevation')) - n0 == 1
     assert fr.evaluate(TAG)['tag'] is True
@@ -468,7 +468,7 @@ def test_the_kind_of_a_click_comes_from_the_last_pointerdown(browser):
     attendre_relief_repos(fr)
     assert fr.evaluate(TAG)['ring'] is False and fr.evaluate(TAG)['tag'] is False                 # souris : pas d'anneau
     fr.evaluate(click, 'touch')
-    attendre(fr, "!document.getElementById('rp-alt').hidden", 'le cartouche posé au toucher', lu="document.getElementById('rp-alt').hidden")
+    attendre(fr, "!(document.getElementById('rp-alt') || { hidden: true }).hidden", 'le cartouche posé au toucher', lu="(document.getElementById('rp-alt') || { hidden: true }).hidden")
     attendre_relief_repos(fr)
     assert fr.evaluate(TAG)['ring'] is True and fr.evaluate(TAG)['tag'] is True                   # doigt : le cartouche et l'anneau
     assert pg.errs == []
@@ -483,17 +483,17 @@ def test_the_pointer_on_a_map_control_hides_the_tag(browser):
     box = fr.frame_element().bounding_box()
     mb = fr.evaluate("(() => { const r = __RP.map.getContainer().getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; })()")
     pg.mouse.move(box['x'] + mb['l'] + mb['w'] / 2, box['y'] + mb['t'] + mb['h'] / 2)
-    attendre(fr, "!document.getElementById('rp-alt').hidden", 'le cartouche posé à la souris', lu="document.getElementById('rp-alt').hidden")
+    attendre(fr, "!(document.getElementById('rp-alt') || { hidden: true }).hidden", 'le cartouche posé à la souris', lu="(document.getElementById('rp-alt') || { hidden: true }).hidden")
     attendre_relief_repos(fr)
     assert fr.evaluate(TAG)['tag'] is True
     for sel in ('.leaflet-control-zoom-in', '.leaflet-control-attribution'):
         r = fr.evaluate("(s) => { const b = document.querySelector(s).getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; }", sel)
         pg.mouse.move(box['x'] + mb['w'] / 2 + mb['l'], box['y'] + mb['t'] + mb['h'] / 2)
-        attendre(fr, "!document.getElementById('rp-alt').hidden", 'le cartouche posé à la souris', lu="document.getElementById('rp-alt').hidden")
+        attendre(fr, "!(document.getElementById('rp-alt') || { hidden: true }).hidden", 'le cartouche posé à la souris', lu="(document.getElementById('rp-alt') || { hidden: true }).hidden")
         attendre_relief_repos(fr)
         assert fr.evaluate(TAG)['tag'] is True
         pg.mouse.move(box['x'] + r[0], box['y'] + r[1])
-        attendre(fr, "document.getElementById('rp-alt').hidden === true", 'le cartouche masqué sur un contrôle de la carte', lu="document.getElementById('rp-alt').hidden")
+        attendre(fr, "(document.getElementById('rp-alt') || { hidden: true }).hidden === true", 'le cartouche masqué sur un contrôle de la carte', lu="(document.getElementById('rp-alt') || { hidden: true }).hidden")
         attendre_relief_repos(fr)
         assert fr.evaluate(TAG)['tag'] is False
     assert pg.errs == []
@@ -529,7 +529,7 @@ def test_the_export_leaves_the_tag_and_the_ring_out_of_the_image(browser):
     tap_at(pg, fr, -50, 40)
     assert fr.evaluate(TAG)['tag'] is True
     fr.evaluate("expOpen()")                                                                      # l'ouverture du cadre les efface
-    attendre(fr, "EXP.on === true && document.getElementById('rp-alt').hidden === true", "le cadre d'export ouvert, le cartouche effacé", lu="[EXP.on, document.getElementById('rp-alt').hidden]")
+    attendre(fr, "EXP.on === true && (document.getElementById('rp-alt') || { hidden: true }).hidden === true", "le cadre d'export ouvert, le cartouche effacé", lu="[EXP.on, (document.getElementById('rp-alt') || { hidden: true }).hidden]")
     attendre_relief_repos(fr)
     assert fr.evaluate(TAG)['tag'] is False
     tap_at(pg, fr, -60, 60)                                                                       # un toucher dans le cadre les montre de nouveau (le cadre garde la carte en lecture)
