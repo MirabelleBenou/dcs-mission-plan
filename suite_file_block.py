@@ -44,13 +44,13 @@ HTML_BEGIN = '<!-- ===== FENÊTRE : SAUVEGARDER LE TRAVAIL — CHOISIR LE NOM DU
 _F_UI = "'Oswald', 'Arial Narrow', sans-serif"
 _F_STENCIL = "'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif"
 THEME_VARS = {
-    'cw-nato': {'--amber': '#c0892a', '--amber-dark': '#8a5e15', '--green-radar': '#4f6b3a', '--khaki': '#807454', '--khaki-light': '#a89a72', '--mp-warn': '#e8806a',
+    'cw-nato': {'--amber': '#c0892a', '--amber-dark': '#8a5e15', '--green-radar': '#4f6b3a', '--khaki': '#807454', '--khaki-light': '#a89a72', '--mp-warn': '#e8806a', '--mp-sig-orange': '#e07a12', '--mp-sig-orange-line': '#a95604', '--mp-sig-red': '#c0392b',
                 '--olive': '#4a5230', '--olive-dark': '#2c321e', '--paper': '#d8c9a5', '--paper-light': '#e3d6b5', '--f-ui': _F_UI, '--f-stencil': _F_STENCIL},
-    'cw-soviet': {'--amber': '#c0892a', '--amber-dark': '#8a5e15', '--green-radar': '#4f6b3a', '--khaki': '#3a4a2e', '--khaki-light': '#5a6a48', '--mp-warn': '#e8806a',
+    'cw-soviet': {'--amber': '#c0892a', '--amber-dark': '#8a5e15', '--green-radar': '#4f6b3a', '--khaki': '#3a4a2e', '--khaki-light': '#5a6a48', '--mp-warn': '#e8806a', '--mp-sig-orange': '#e07a12', '--mp-sig-orange-line': '#a95604', '--mp-sig-red': '#c0392b',
                   '--olive': '#2a3a5a', '--olive-dark': '#1a2540', '--paper': '#d8c479', '--paper-light': '#e8d690', '--f-ui': _F_UI, '--f-stencil': _F_STENCIL},
-    'modern-nato': {'--amber': '#c0892a', '--amber-dark': '#8a5e15', '--green-radar': '#4f6b3a', '--khaki': '#5c6b7a', '--khaki-light': '#7a8a98', '--mp-warn': '#e8806a',
+    'modern-nato': {'--amber': '#c0892a', '--amber-dark': '#8a5e15', '--green-radar': '#4f6b3a', '--khaki': '#5c6b7a', '--khaki-light': '#7a8a98', '--mp-warn': '#e8806a', '--mp-sig-orange': '#e07a12', '--mp-sig-orange-line': '#a95604', '--mp-sig-red': '#c0392b',
                     '--olive': '#2a3038', '--olive-dark': '#1c2026', '--paper': '#e8e3d8', '--paper-light': '#f0ece2', '--f-ui': _F_UI, '--f-stencil': _F_STENCIL},
-    'modern-east': {'--amber': '#c0892a', '--amber-dark': '#8a5e15', '--green-radar': '#4f6b3a', '--khaki': '#4a5238', '--khaki-light': '#6a7256', '--mp-warn': '#e8806a',
+    'modern-east': {'--amber': '#c0892a', '--amber-dark': '#8a5e15', '--green-radar': '#4f6b3a', '--khaki': '#4a5238', '--khaki-light': '#6a7256', '--mp-warn': '#e8806a', '--mp-sig-orange': '#e07a12', '--mp-sig-orange-line': '#a95604', '--mp-sig-red': '#c0392b',
                     '--olive': '#3d3024', '--olive-dark': '#2a2018', '--paper': '#cdc6b8', '--paper-light': '#ddd6c8', '--f-ui': _F_UI, '--f-stencil': _F_STENCIL},
 }
 

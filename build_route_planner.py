@@ -26,6 +26,7 @@ from diss_block import build_block as build_diss_block, verify as diss_verify
 from projection_block import build_block as build_projection_block
 from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
+from route_timing_block import build_block as build_route_timing_block
 from route_write_block import build_block as build_route_write_block
 from group_store_block import build_block as build_group_store_block
 from public_host_block import build_block as build_public_host_block
@@ -1206,6 +1207,32 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   .pt-row.pts select.in, .pt-row.pts .in.tbm-trigger { font-size: 16px !important; }
 }
 
+/* heures réelles : sous un point de la carte (cadenas, pastille rouge C13 bis), au tableau de Navigation (le temps, son champ, son cadenas) et le bandeau des tronçons intenables */
+.wp-time { display: inline-flex; align-items: center; gap: 4px; }
+.wp-time .tm-ico { flex: none; width: 11px; height: 11px; }
+.wp-time.red { background: var(--mp-sig-red); color: #fff; }
+.tm-warn { margin-left: 2px; }
+.tm-wrap { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.tm-t { box-sizing: border-box; display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 6px; margin: 0 0 0 -6px; font: inherit; letter-spacing: 0; color: inherit; background: transparent; border: 1px solid transparent; border-radius: 0; cursor: pointer; }
+.tm-t:hover { border-color: #463f30; }
+.tm-t:focus-visible, .tm-lock:focus-visible, .tm-in:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+.tm-t.red { margin-left: 0; color: #fff; background: var(--mp-sig-red); border-color: var(--mp-sig-red); }
+.tm-in { box-sizing: border-box; width: 9em; height: 28px; padding: 0 6px; font: 400 12px var(--f-mono); letter-spacing: 0; color: #1f1c16; background: #fffdf6; border: 2px solid var(--amber); border-radius: 0; }
+.tm-lock { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; padding: 0; color: #1f1c16; background: transparent; border: 1px solid #463f30; border-radius: 0; cursor: pointer; }
+.tm-lock .tm-ico { width: 16px; height: 16px; }
+.tm-lock[aria-pressed="true"] { color: #f0e8d6; background: #1f1c16; }
+.tm-lock:disabled { opacity: .4; cursor: default; }
+.nav-red { box-sizing: border-box; padding: 8px 12px; font-family: var(--f-ui); font-weight: 500; font-size: 12px; line-height: 1.45; letter-spacing: .2px; color: #1f1c16;
+  background: color-mix(in srgb, var(--mp-sig-red) 28%, var(--paper-light)); border-left: 3px solid var(--mp-sig-red); overflow-wrap: anywhere; }
+.nav-red[hidden] { display: none; }
+.nav-red div + div { margin-top: 4px; }
+.nav-red b { font-weight: 700; }
+@media (pointer: coarse) {
+  .tm-t, .tm-in { min-height: 44px; }
+  .tm-lock { width: 44px; height: 44px; }
+}
+@media (pointer: coarse) and (max-width: 759px) { .tm-in { font-size: 16px; } }
+
 /* ---------- au doigt : 44 px (le bloc d'interface commun pose min-height et min-width à spécificité zéro ; ce que ce module disait plus bas l'emporte et se corrige ici, sous la même condition) ---------- */
 @media (pointer: coarse) {
   .in { min-height: 44px; }                                         /* les champs du panneau, ceux des lignes de point comprises (la hauteur seule : leurs largeurs sont celles de la base) */
@@ -1415,6 +1442,7 @@ __CSS__
           <p class="dv-src" id="dv-src"></p>
         </div>
         <div class="sheet">
+          <div class="nav-red" id="nav-red" role="status" hidden></div>
           <div class="sheet-top"><span id="nav-title"></span></div>
           <div class="sheet-top sheet-diss" id="nav-diss" hidden><span id="nav-diss-t"></span></div>
           <table class="nav">
@@ -2306,6 +2334,15 @@ const I18N = {
     'nav.leg': '↓ {cap}° · {spd} · ETE {ete}',
     'nav.t': 'T {t}',
     'nav.total.v': '{d} · {t}',
+    't.lock': 'Verrouiller l\u2019heure',
+    't.unlock': 'D\u00e9verrouiller l\u2019heure',
+    't.ph': 'hh:mm:ss',
+    'nav.total.arr': '\u00b7 arriv\u00e9e {a}',
+    't.red': '{p} \u00e0 {h} intenable\u202f: il faudrait {n} ({v}) de {a} \u00e0 {b}. Aux vitesses de la route\u202f: {r}.',
+    't.red.nv': '{p} \u00e0 {h} intenable\u202f: il faudrait {n} de {a} \u00e0 {b}. Aux vitesses de la route\u202f: {r}.',
+    't.red.0': '{p} \u00e0 {h} intenable\u202f: m\u00eame heure que {a}. Aux vitesses de la route\u202f: {r}.',
+    'exp.red.q': 'Une heure verrouill\u00e9e n\u2019est pas tenue ({p}). Exporter quand m\u00eame\u202f?',
+    'exp.red.go': 'Exporter',
     'ref.AGL': 'SOL',
     'ref.MSL': 'MER',
     'refl.AGL': 'sol',
@@ -2892,6 +2929,15 @@ const I18N = {
     'nav.leg': '↓ {cap}° · {spd} · ETE {ete}',
     'nav.t': 'T {t}',
     'nav.total.v': '{d} · {t}',
+    't.lock': 'Lock time',
+    't.unlock': 'Unlock time',
+    't.ph': 'hh:mm:ss',
+    'nav.total.arr': '\u00b7 arrival {a}',
+    't.red': '{p} at {h} cannot be met: it would take {n} ({v}) from {a} to {b}. At the route\u2019s speeds: {r}.',
+    't.red.nv': '{p} at {h} cannot be met: it would take {n} from {a} to {b}. At the route\u2019s speeds: {r}.',
+    't.red.0': '{p} at {h} cannot be met: same time as {a}. At the route\u2019s speeds: {r}.',
+    'exp.red.q': 'A locked time is not met ({p}). Export anyway?',
+    'exp.red.go': 'Export',
     'ref.AGL': 'AGL',
     'ref.MSL': 'MSL',
     'refl.AGL': 'AGL',
@@ -3351,6 +3397,7 @@ const $ = id => document.getElementById(id);
 /* ============= COORDONNÉES DE NAVIGATION ============= */
 /* Recopié à l'identique du Datacard Generator : constantes WGS84, UTM, MGRS, lectures, DMS, cap et distance. */
 @@GEO_BLOCK@@
+@@ROUTE_TIMING_BLOCK@@
 @@READNUM_BLOCK@@
 
 @@MAGVAR_BLOCK@@
@@ -3455,6 +3502,7 @@ function readPoints(list) {
     const dc = readDcs(p.dcs);
     if (dc) q.dcs = dc;
     if (pidValid(p.pid)) q.pid = p.pid;
+    rtmRead(p, q);       /* l'heure réelle du point (p.t) et son verrou (p.tLock), s'ils sont valides */
     pts.push(q);
   });
   assignPids(pts);       /* un point sans pid valide, ou en doublon, en reçoit un neuf (migration silencieuse, écrite au prochain enregistrement) */
@@ -3963,21 +4011,20 @@ function readSpeed(s) {
   return S.units.distance === 'nm' ? r4(n * NM_KM) : n;
 }
 
+/* L'état de la saisie d'une heure : i, le point dont le champ est ouvert (-1 : aucun) ; init, l'heure qu'il montrait ; val, ce qui y est tapé ; plain : l'export (l'heure seule, sans cadenas ni couleur) */
+const TMX = { i: -1, init: '', val: '', plain: false };
+
 /* Le minutage de la route : par branche (cap, distance, vitesse, durée non arrondie en secondes) et temps écoulé à chaque point
    (somme non arrondie des durées qui précèdent) */
 function timing() {
-  const pts = S.points, legs = [null], el = [0];
+  const pts = S.points, legs = [null];
   const ys = navIsCalc() ? navYear() : null;
-  let km = 0, sec = 0;
+  const T = rtmCompute(pts, S.groundSpeed);       /* les temps viennent du bloc commun (route_timing_block.py), les mêmes qu'au Datacard Generator */
   for (let i = 1; i < pts.length; i++) {
     const l = legInfo(pts[i - 1], pts[i], ys);
-    const v = legSpeed(i);
-    const sc = l.km / v * 3600;
-    legs.push({ cap: l.cap, km: l.km, v: v, sec: sc });
-    km += l.km; sec += sc;
-    el.push(sec);
+    legs.push({ cap: l.cap, km: T.legs[i].km, v: T.legs[i].v, sec: T.legs[i].sec });
   }
-  return { legs: legs, el: el, km: km, sec: sec };
+  return { legs: legs, el: T.el, km: T.km, sec: T.sec, h: T };
 }
 
 /* ============= CALQUES COMBATFLITE : MODÈLE dcs-layers-v1, LECTURE DU .cf, STOCKAGE ============= */
@@ -5976,21 +6023,36 @@ function routeColor() {
   return getComputedStyle(document.body).getPropertyValue('--route').trim() || '#a83524';
 }
 
+/* Un cadenas, dessiné (sans texte) : fermé ou ouvert */
+function lockSvg(closed) {
+  return '<svg class="tm-ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="3" y="7" width="10" height="7" rx="1" fill="currentColor"/>' +
+    '<path d="' + (closed ? 'M5 7V5a3 3 0 0 1 6 0v2' : 'M5 7V5a3 3 0 0 1 5.8-1') + '" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
+}
+/* L'heure d'un point (la route a des heures) ou son temps écoulé ; l'export prend l'heure seule (TMX.plain) */
+function timeText(tm, i) { return tm.h.has ? rtmClock(tm.h.t[i]) : fmtElapsed(tm.el[i]); }
+function timeRed(tm, i) { return tm.h.has && !!tm.h.red[i] && !TMX.plain; }
+/* Sous un point de la carte : un cadenas fermé devant une heure verrouillée, ⚠ derrière une heure rouge */
+function wpTimeInner(tm, i) {
+  const lk = tm.h.has && tm.h.lock[i] && !TMX.plain;
+  return (lk ? lockSvg(true) : '') + esc(timeText(tm, i)) + (timeRed(tm, i) ? '<span class="tm-warn" aria-hidden="true">\u26a0</span>' : '');
+}
+function wpTimeCls(tm, i) { return 'wp-time' + (timeRed(tm, i) ? ' red' : ''); }
+
 function wpIcon(p, i, tm) {
   return L.divIcon({
     className: 'wp-icon', iconSize: [30, 30], iconAnchor: [15, 15],
     html: '<div class="wp-dot' + (i === sel ? ' sel' : '') + '">' + i + '</div><div class="wp-name">' + esc(p.name) + '</div>' +
-      '<div class="wp-time">' + esc(fmtElapsed(tm.el[i])) + '</div>'
+      '<div class="' + wpTimeCls(tm, i) + '">' + wpTimeInner(tm, i) + '</div>'
   });
 }
 
-/* Le temps écoulé sous chaque point, remis à jour pendant qu'un point se déplace (les marqueurs ne sont pas refaits) */
+/* L'heure (ou le temps écoulé) sous chaque point, remise à jour pendant qu'un point se déplace (les marqueurs ne sont pas refaits) */
 function updateTimes() {
   const tm = timing();
   ptMarkers.forEach((m, k) => {
     const el = m.getElement && m.getElement();
     const n = el && el.querySelector('.wp-time');
-    if (n) n.textContent = fmtElapsed(tm.el[k]);
+    if (n) { n.className = wpTimeCls(tm, k); n.innerHTML = wpTimeInner(tm, k); }
   });
 }
 
@@ -6045,7 +6107,12 @@ function drawRoute() {
       persistState();
       setTimeout(() => { drawRoute(); drawRefs(); syncRows(); renderNav(); }, 0);
     });
-    mk.on('click', ev => { L.DomEvent.stop(ev); selectPoint(i); });
+    mk.on('click', ev => {
+      L.DomEvent.stop(ev);
+      const tg = ev.originalEvent && ev.originalEvent.target, onTime = !!(tg && tg.closest && tg.closest('.wp-time'));
+      selectPoint(i);
+      if (onTime) openTimeEdit(i);       /* toucher l'heure sous un point ouvre son champ au tableau de Navigation */
+    });
     mk.addTo(routeGroup);
   });
   drawDecor();
@@ -8307,6 +8374,90 @@ function rpDissD0(o) {
 const NAVD = { sig: '' };
 function rpDissSig() { if (!DISP.diss) return 'off'; const d = rpDiss(); return d.ok ? d.kind : d.why; }
 
+/* ============= HEURES RÉELLES AU TABLEAU DE NAVIGATION ============= */
+/* La ligne de temps d'un point : sans heures, le temps écoulé ; avec heures, l'heure seule, et un cadenas. Au toucher, un champ hh:mm:ss ; le cadenas d'un champ ouvert est inactif quand la route n'a pas d'heure. */
+function navTimeHtml(tm, i) {
+  const has = tm.h.has, lk = has && tm.h.lock[i];
+  const lbl = esc(t(lk ? 't.unlock' : 't.lock'));
+  const btn = dis => '<button type="button" class="tm-lock" data-tl="' + i + '" aria-pressed="' + (lk ? 'true' : 'false') + '" aria-label="' + lbl + '" title="' + lbl + '"' + (dis ? ' disabled' : '') + '>' + lockSvg(lk) + '</button>';
+  if (TMX.i === i) {
+    return '<span class="tm-wrap"><input class="tm-in" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" data-tmi="' + i + '" value="' + esc(TMX.val) + '" placeholder="' + esc(t('t.ph')) + '" aria-label="' + esc(t('t.ph')) + '">' + btn(!has) + '</span>';
+  }
+  const red = timeRed(tm, i);
+  return '<span class="tm-wrap"><button type="button" class="tm-t' + (red ? ' red' : '') + '" data-tm="' + i + '">' + esc(has ? rtmClock(tm.h.t[i]) : t('nav.t', { t: fmtElapsed(tm.el[i]) })) +
+    (red ? '<span class="tm-warn" aria-hidden="true">⚠</span>' : '') + '</button>' + (has ? btn(false) : '') + '</span>';
+}
+/* Les messages des tronçons intenables (le bloc commun les écrit), en tête du panneau Navigation ; rien sans tronçon rouge */
+function redMsgs(tm) {
+  const o = { t: t, speedText: speedText, fr: CURRENT_LANG === 'fr', name: k => S.points[k] ? S.points[k].name : '' }, out = [];
+  tm.h.red.forEach((r, i) => { if (r) out.push(rtmRedMsg(S.points, tm.h, i, o)); });
+  return out;
+}
+function navRedRender(tm) {
+  const box = $('nav-red'), m = redMsgs(tm);
+  box.hidden = !m.length;
+  box.innerHTML = m.map(x => '<div>' + rtmRedHtml(x, esc) + '</div>').join('');
+}
+/* Les noms des points dont l'heure verrouillée n'est pas tenue */
+function redNames(tm) { const out = []; tm.h.red.forEach((r, i) => { if (r) out.push(S.points[i].name.trim() !== '' ? S.points[i].name.trim() : String(i)); }); return out; }
+
+/* Ouvrir le champ d'heure du point i (au toucher du temps, au tableau ou sous le point de la carte) : l'onglet Nav. au téléphone, la section dépliée, la ligne en vue */
+function openTimeEdit(i) {
+  if (!S.points[i]) return;
+  if (TMX.i >= 0 && TMX.i !== i) commitTime(false);
+  const tm = timing();
+  TMX.i = i; TMX.init = tm.h.has ? rtmClock(tm.h.t[i]) : ''; TMX.val = TMX.init;
+  const sec = document.querySelector('#panel > .ed-section[data-section="nav"]');
+  if (sec && sec.dataset.open !== 'true') sec.dataset.open = 'true';
+  rpSetTab('nav');
+  renderNav();
+  const inp = document.querySelector('#nav-body .tm-in');
+  if (inp) { inp.focus({ preventScroll: true }); inp.select(); inp.scrollIntoView({ block: 'nearest' }); }
+}
+/* Les points ont changé d'heure : enregistrer et redessiner */
+function timesChanged() { persistState(); drawRoute(); renderNav(); }
+/* Valider (ou, cancel, abandonner) le champ ouvert : vide, l'heure du point est retirée ; illisible ou inchangé, rien ne s'écrit et le champ reprend l'heure affichée */
+function commitTime(cancel) {
+  const i = TMX.i;
+  if (i < 0) return;
+  const inp = document.querySelector('#nav-body .tm-in'), val = inp ? inp.value : TMX.val;
+  TMX.i = -1; TMX.val = '';
+  let changed = false;
+  if (!cancel && S.points[i] && val !== TMX.init) {
+    if (val.trim() === '') { if (rtmValid(S.points[i].t)) changed = rtmType(S.points, i, null); }
+    else { const sec = rtmParse(val); if (sec !== null) changed = rtmType(S.points, i, sec); }
+  }
+  if (changed) timesChanged(); else renderNav();
+}
+function toggleTimeLock(i) {
+  const p = S.points[i];
+  if (!p) return;
+  const tm = timing();
+  if (tm.h.lock[i]) rtmUnlock(S.points, i); else if (!rtmLock(S.points, i, tm.h)) return;
+  timesChanged();
+}
+function bindNavTimes() {
+  const nb = $('nav-body');
+  nb.addEventListener('pointerdown', ev => { if (TMX.i >= 0 && ev.target.closest && ev.target.closest('[data-tl]')) ev.preventDefault(); });       /* le cadenas ne prend pas le focus du champ ouvert : sa saisie se valide à son geste */
+  nb.addEventListener('click', ev => {
+    const lk = ev.target.closest('[data-tl]'), tb = ev.target.closest('[data-tm]');
+    if (lk && !lk.disabled) {
+      const i = parseInt(lk.dataset.tl, 10);
+      if (TMX.i >= 0) commitTime(false);       /* l'heure tapée d'abord, puis le cadenas */
+      toggleTimeLock(i);
+    } else if (tb) openTimeEdit(parseInt(tb.dataset.tm, 10));
+  });
+  nb.addEventListener('keydown', ev => {
+    if (!ev.target.classList || !ev.target.classList.contains('tm-in')) return;
+    if (ev.key === 'Enter') { ev.preventDefault(); commitTime(false); }
+    else if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); commitTime(true); }
+  });
+  nb.addEventListener('focusout', ev => {
+    if (!ev.target.classList || !ev.target.classList.contains('tm-in') || TMX.i < 0) return;
+    setTimeout(() => { if (TMX.i >= 0 && document.activeElement !== document.querySelector('#nav-body .tm-in')) commitTime(false); }, 0);       /* quitter le champ le valide (sauf si un redessin l'a seulement refait) */
+  });
+}
+
 function renderNav() {
   $('nav-title').textContent = navTitle();
   /* DISS-15 : sous le titre, la ligne du nord et de la valeur à régler (ou la raison du refus) ; sous chaque point, ses deux valeurs */
@@ -8324,20 +8475,28 @@ function renderNav() {
   }
   const tm = timing();
   const calc = navIsCalc(), ys = calc ? navYear() : null;
+  const oldIn = document.querySelector('#nav-body .tm-in');
+  const hadFocus = !!oldIn && document.activeElement === oldIn;
+  if (oldIn) TMX.val = oldIn.value;       /* le champ d'heure en cours de saisie : sa frappe survit au redessin */
   let rows = '';
   S.points.forEach((p, i) => {
     if (i > 0) {
       const lg = tm.legs[i];
       rows += '<tr class="leg"><td></td><td colspan="2">' + esc(t('nav.leg', { cap: lg.cap, spd: speedText(lg.v), ete: fmtEte(lg.sec) })) + '</td><td class="r">' + esc(fmtDist(lg.km)) + '</td></tr>' + profNavRow(i) + thrNavRow(i);
     }
-    rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + esc(t('nav.t', { t: fmtElapsed(tm.el[i]) })) + '</span>' +
+    rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + navTimeHtml(tm, i) + '</span>' +
       (calc ? '<span class="co alt dv-leg">' + esc(t('nav.var', { v: fmtVar(declAt(p, ys)) })) + '</span>' : '') + '</td>' +
       '<td colspan="2"><span class="co">' + esc(toMGRS(p.lat, p.lon)) + '</span><span class="co dms">' + esc(toDMS(p.lat, p.lon)) + '</span>' +
       (dv && dv[i] ? '<span class="co diss"><span class="dv">' + esc(dv[i].fwd) + '</span> · <span class="dv">' + esc(dv[i].right) + '</span></span>' : '') + '</td></tr>';
   });
   $('nav-body').innerHTML = rows;
+  if (TMX.i >= 0) {
+    const ni = document.querySelector('#nav-body .tm-in');
+    if (ni) { ni.value = TMX.val; if (hadFocus) { ni.focus({ preventScroll: true }); try { ni.setSelectionRange(ni.value.length, ni.value.length); } catch (e) { /* ignore */ } } }
+  }
+  navRedRender(tm);
   PROF.nsig = profNavSig();       /* la signature tenue est celle de ce que le tableau montre : un relevé qui rend les mêmes chiffres après un relevé périmé redessine quand même la ligne */
-  $('nav-total').textContent = t('nav.total.v', { d: fmtDist(tm.km), t: fmtElapsed(tm.sec) });
+  $('nav-total').textContent = t('nav.total.v', { d: fmtDist(tm.km), t: fmtElapsed(tm.sec) }) + (tm.h.has && S.points.length ? ' ' + t('nav.total.arr', { a: rtmClock(tm.h.t[S.points.length - 1]) }) : '');
   /* Les points de référence : après le total ; ni dans les branches ni dans le total */
   let rr = '';
   S.refs.forEach((p, i) => {
@@ -11554,8 +11713,11 @@ function expDeliver(dataUrl, W, H, partial) {
 }
 
 /* « Exporter » du cadre : le rendu part tout de suite, vers le shell */
-function expGo() {
+async function expGo() {
   if (!EXP.on || EXP.busy || !expShellSend()) return;
+  const red = redNames(timing());
+  if (red.length && !(await askConfirm({ title: t('exp.red.q', { p: red.join(', ') }), verb: t('exp.red.go') }))) return;       /* une heure verrouillée qui n'est pas tenue : on demande avant d'exporter */
+  if (!EXP.on || EXP.busy) return;
   expRun();
 }
 
@@ -11570,6 +11732,7 @@ async function expRun() {
   let sw = null, out = null, partial = false;
   try {
     if (typeof html2canvas !== 'function') throw new Error('html2canvas absent');
+    TMX.plain = true; updateTimes();       /* l'image porte l'heure seule : ni cadenas, ni couleur, ni ⚠ */
     map.closePopup();
     partial = expForeignTiles(rect);
     await expPrepFonts();
@@ -11584,6 +11747,7 @@ async function expRun() {
     out = null;
   } finally {
     if (sw) { try { expRestorePaths(sw); } catch (e) { console.warn('[export carte] retour au SVG', e); } }
+    TMX.plain = false; updateTimes();
     EXP.busy = false;
     $('export-layer').classList.remove('busy');
     $('exp-go').disabled = false;
@@ -11746,6 +11910,7 @@ function bindEvents() {
     const el = ev.target;
     if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) revealPanelField(el);
   });
+  bindNavTimes();
   const pts = $('pts');
   pts.addEventListener('input', ev => onRowInput(ev, 'wp'));
   pts.addEventListener('change', ev => onRowChange(ev, 'wp'));
@@ -11897,7 +12062,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@PROJECTION_BLOCK@@\n', build_projection_block()).replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@PUBLIC_HOST_BLOCK@@\n', build_public_host_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
+    js = js.replace('@@PROJECTION_BLOCK@@\n', build_projection_block()).replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@ROUTE_TIMING_BLOCK@@\n', build_route_timing_block()).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@PUBLIC_HOST_BLOCK@@\n', build_public_host_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     js = js.replace('@@TBM_JS@@\n', build_tbm_block())
     js = js.replace('@@THREATS_BLOCK@@\n', threats_block.build_block())
     if '@@' in js:

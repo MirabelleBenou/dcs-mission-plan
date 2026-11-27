@@ -536,7 +536,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 """
 
 _CSS = r"""
-:root { --mp-warn: #e8806a; }
+:root { --mp-warn: #e8806a; --mp-sig-orange: #e07a12; --mp-sig-orange-line: #a95604; --mp-sig-red: #c0392b; }
 
 /* ---- la fenêtre de suite ---- */
 .ui-modal[hidden] { display: none !important; }

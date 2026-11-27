@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+24` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+25` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -234,6 +234,10 @@ Between two releases, the hosted version shows its build number at the bottom of
 - With Threats ticked, the strip also shows in red where an aircraft is seen and within firing range, up to the ceiling, and marks under its axis where the route is seen; hovering over or touching it shows the distance, the ground and the threats that see that point, and the same point on the map.
 - A slider on the right of the graph sets its top, up to 20,000 ft: higher to see the threats up to their ceiling, lower to look at the ground up close; AUTO goes back to the automatic scale, as each new route does. It is absent when the graph is too low.
 
+**Real times on the route**
+- In the Navigation section, touch a waypoint's time to type a real time (in the datacard's time reference): the other waypoints' times follow from the route's speeds, the map shows times instead of elapsed time, and the total adds the arrival time.
+- A padlock keeps a time fixed. When two fixed times cannot both be met at the route's speeds, the later one turns red with ⚠ and the panel says by how much; exports show plain times, and ask first if a red time remains.
+
 ### Datacard Generator
 
 **DISS-15 values on Mi-24P and Mi-8MTV2 datacards**
@@ -263,6 +267,10 @@ Between two releases, the hosted version shows its build number at the bottom of
 
 **Airfield beacons**
 - On Caucasus, Cold War Germany and Syria, a “Beacons — airfields” block lists the game's beacons of the departure, arrival and alternate airfields (NDB, RSBN, PRMG, TACAN, VOR, DME, ILS), after the reference points.
+
+**Times from the route**
+- A Times row can follow a waypoint of the linked route: its time is computed, can be typed and locked, as in the Route Planner; “Take-off” follows the first waypoint once the route has times.
+- With route times, the TOS column of the navigation is computed (to the nearest minute) and can be typed too.
 
 ### Field Manual
 

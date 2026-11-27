@@ -717,7 +717,7 @@ select[data-tbm-src] { display: none !important; }
 @media print { .toast { display: none !important; } }
 /* ===== FIN DE LA FEUILLE DU TOAST ===== */
 /* ===== INTERFACE COMMUNE : feuille ===== */
-:root { --mp-warn: #e8806a; }
+:root { --mp-warn: #e8806a; --mp-sig-orange: #e07a12; --mp-sig-orange-line: #a95604; --mp-sig-red: #c0392b; }
 
 /* ---- la fenêtre de suite ---- */
 .ui-modal[hidden] { display: none !important; }
@@ -1196,6 +1196,25 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 .dc-steps li { display: flex; font: 500 19px/1.4 var(--dc-fo); letter-spacing: .03em; }
 .dc-steps .n { flex: 0 0 26px; text-align: right; padding-right: 4px; }
 .dc-steps .x { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+
+/* heures de la route : la pastille rouge de l'aperçu (C13 bis) ; la ligne « Point » des Horaires, le cadenas et le champ Heure de la nav */
+.tm-red { display: inline-block; padding: 0 .18em; color: #fff; background: var(--mp-sig-red); }
+.tm-warn { margin-left: .2em; font-size: .7em; vertical-align: .1em; }
+.tp-row { grid-template-columns: minmax(0, 1fr) 44px; align-items: end; }
+.tp-lock { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; color: var(--paper-light); background: var(--olive); border: 1px solid var(--khaki); border-radius: 0; cursor: pointer; }
+.tp-lock .tm-ico { width: 18px; height: 18px; }
+.tp-lock[aria-pressed="true"] { color: #1f1c16; background: var(--amber); border-color: var(--amber); }
+.tp-lock:disabled { opacity: .4; cursor: not-allowed; }
+.tp-lock:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+.tp-fl { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 6px; align-items: end; }
+.tp-in { position: relative; min-width: 0; }
+.tp-in input { width: 100%; }
+.tm-redw { position: relative; }
+.ed-field input.tm-redin { color: #fff; background: var(--mp-sig-red); border-color: var(--mp-sig-red); border-left-color: var(--mp-sig-red); padding-right: 30px; }
+.ed-field input.tm-redin:focus { background: var(--mp-sig-red); }
+.tm-redw .tm-warn, .tp-in .tm-warn { position: absolute; right: 10px; bottom: 14px; margin: 0; font-size: 14px; line-height: 1; color: #fff; pointer-events: none; }
+.tm-redmsg b { font-weight: 700; }
+.tm-redmsg div + div { margin-top: 4px; }
 
 /* Horaires */
 .dc-times { display: grid; gap: 4px; }
@@ -2270,6 +2289,18 @@ const I18N = {
     'f.nav.distance': 'Distance',
     'f.nav.altitude': 'Altitude',
     'f.nav.tos': 'Heure',
+    'f.times.pt': 'Point',
+    'pt.none': '\u2014 aucun \u2014',
+    'u.kmh': 'km/h',
+    'u.kt': 'kt',
+    't.lock': 'Verrouiller l\u2019heure',
+    't.unlock': 'D\u00e9verrouiller l\u2019heure',
+    't.ph': 'hh:mm:ss',
+    't.red': '{p} \u00e0 {h} intenable\u202f: il faudrait {n} ({v}) de {a} \u00e0 {b}. Aux vitesses de la route\u202f: {r}.',
+    't.red.nv': '{p} \u00e0 {h} intenable\u202f: il faudrait {n} de {a} \u00e0 {b}. Aux vitesses de la route\u202f: {r}.',
+    't.red.0': '{p} \u00e0 {h} intenable\u202f: m\u00eame heure que {a}. Aux vitesses de la route\u202f: {r}.',
+    'exp.red.q': 'Une heure verrouill\u00e9e n\u2019est pas tenue ({p}). Exporter quand m\u00eame\u202f?',
+    'exp.red.go': 'Exporter',
     'f.nav.note': 'Note',
     'f.nav.display': 'Affichage',
     'nav.mode.course': 'Cap / distance',
@@ -2808,6 +2839,18 @@ const I18N = {
     'f.nav.distance': 'Distance',
     'f.nav.altitude': 'Altitude',
     'f.nav.tos': 'Time',
+    'f.times.pt': 'Point',
+    'pt.none': '\u2014 none \u2014',
+    'u.kmh': 'km/h',
+    'u.kt': 'kt',
+    't.lock': 'Lock time',
+    't.unlock': 'Unlock time',
+    't.ph': 'hh:mm:ss',
+    't.red': '{p} at {h} cannot be met: it would take {n} ({v}) from {a} to {b}. At the route\u2019s speeds: {r}.',
+    't.red.nv': '{p} at {h} cannot be met: it would take {n} from {a} to {b}. At the route\u2019s speeds: {r}.',
+    't.red.0': '{p} at {h} cannot be met: same time as {a}. At the route\u2019s speeds: {r}.',
+    'exp.red.q': 'A locked time is not met ({p}). Export anyway?',
+    'exp.red.go': 'Export',
     'f.nav.note': 'Note',
     'f.nav.display': 'Display',
     'nav.mode.course': 'Heading / distance',
@@ -4989,7 +5032,11 @@ function normalizeCard(src) {
     if (Array.isArray(mi.execution)) c.mission.execution = normStrList(mi.execution, LIMITS.steps);
   }
   if (Array.isArray(src.times)) {
-    c.times = src.times.slice(0, LIMITS.times).map(o => ({ label: str(o && o.label), value: str(o && o.value) }));
+    c.times = src.times.slice(0, LIMITS.times).map(o => {
+      const q = { label: str(o && o.label), value: str(o && o.value) };
+      if (o && typeof o.pid === 'string' && (o.pid === '' || rwPidValid(o.pid))) q.pid = o.pid;       /* le point de la route liée que la ligne suit ('' : « — aucun — ») ; la clé n'existe que si la ligne en a un */
+      return q;
+    });
   }
   if (Array.isArray(src.crew)) {
     /* une ligne d'une carte ancienne porte « crew » (l'équipier) : il est gardé après le pilote, « VIPER / HUSKER », et la clé disparaît */
@@ -5863,6 +5910,140 @@ function rwSetNavDisplay(n) {
   return rwCommit([{ k: RW_KEY_STATE, v: JSON.stringify(st) }]);
 }
 /* ===== FIN DE L'ÉCRITURE D'UNE ROUTE ===== */
+/* ===== HEURES D'UNE ROUTE (calcul, heures fixes, tronçons intenables) ===== */
+const RTM_R_KM = 6371.0088, RTM_DAY = 86400, RTM_TOL = 5;
+
+/* Une heure stockée : « HH:MM:SS », 00-23, 00-59, 00-59 */
+function rtmValid(s) {
+  const m = typeof s === 'string' ? /^(\d{2}):(\d{2}):(\d{2})$/.exec(s) : null;
+  return !!m && +m[1] <= 23 && +m[2] <= 59 && +m[3] <= 59;
+}
+/* Une heure stockée valide → secondes depuis minuit */
+function rtmSecs(s) { const m = /^(\d{2}):(\d{2}):(\d{2})$/.exec(s); return +m[1] * 3600 + +m[2] * 60 + +m[3]; }
+/* Une saisie « hh:mm:ss » ou « hh:mm » (un ou deux chiffres par champ) → secondes, ou null */
+function rtmParse(s) {
+  const m = typeof s === 'string' ? /^\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*$/.exec(s) : null;
+  if (!m) return null;
+  const h = +m[1], mi = +m[2], se = m[3] === undefined ? 0 : +m[3];
+  return (h <= 23 && mi <= 59 && se <= 59) ? h * 3600 + mi * 60 + se : null;
+}
+function rtmPad(n) { return (n < 10 ? '0' : '') + n; }
+/* Des secondes (non arrondies, hors de [0 ; 86 400[ s'il le faut) → « HH:MM:SS » : à la seconde la plus proche (0,5 s vers le haut), modulo 24 h */
+function rtmClock(sec) {
+  const n = (((Math.floor(sec + 0.5)) % RTM_DAY) + RTM_DAY) % RTM_DAY;
+  return rtmPad(Math.floor(n / 3600)) + ':' + rtmPad(Math.floor(n / 60) % 60) + ':' + rtmPad(n % 60);
+}
+/* … → « HH:MM » : l'heure à la seconde, arrondie à la minute la plus proche (30 s vers le haut) */
+function rtmClockMin(sec) {
+  const n = (((Math.floor(sec + 0.5)) % RTM_DAY) + RTM_DAY) % RTM_DAY;
+  const m = Math.floor((n + 30) / 60) % 1440;
+  return rtmPad(Math.floor(m / 60)) + ':' + rtmPad(m % 60);
+}
+/* Les champs d'heure d'un point lu (src) recopiés sur dst s'ils sont valides, écartés sinon */
+function rtmRead(src, dst) {
+  if (src && rtmValid(src.t)) { dst.t = src.t; if (src.tLock === true) dst.tLock = true; }
+}
+/* Distance (km) d'une branche : la formule de legCalc */
+function rtmKm(a, b) {
+  const r = Math.PI / 180;
+  const p1 = a.lat * r, p2 = b.lat * r, dl = (b.lon - a.lon) * r;
+  const h = Math.sin((p2 - p1) / 2) * Math.sin((p2 - p1) / 2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+  return 2 * RTM_R_KM * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+/* Les temps d'une route : { n, legs (par branche : km, v, sec), el (temps écoulé non arrondi), km, sec, has (une heure fixe au moins), fixed, lock, t (secondes non arrondies, ou null sans heure), red }.
+   red[i] : null, ou { a, besoin, actuel, f } quand l'heure fixe du point i ne tient pas à 5 s près depuis la fixe qui la précède (f : actuel / besoin, null si besoin = 0) */
+function rtmCompute(points, gsDefault) {
+  const n = points.length, legs = [null], el = [0];
+  let km = 0, sec = 0;
+  for (let i = 1; i < n; i++) {
+    const k = rtmKm(points[i - 1], points[i]);
+    const p = points[i], v = (typeof p.gs === 'number' && p.gs > 0) ? p.gs : gsDefault;
+    const sc = k / v * 3600;
+    legs.push({ km: k, v: v, sec: sc });
+    km += k; sec += sc;
+    el.push(sec);
+  }
+  const fixed = [], lock = [], t = [], red = [], F = [];
+  for (let i = 0; i < n; i++) {
+    const ok = rtmValid(points[i].t);
+    fixed.push(ok); lock.push(ok && points[i].tLock === true); t.push(null); red.push(null);
+    if (ok) F.push(i);
+  }
+  if (F.length) {
+    const T = i => rtmSecs(points[i].t);
+    const f0 = F[0], l0 = F[F.length - 1];
+    for (let i = 0; i < f0; i++) t[i] = T(f0) - (el[f0] - el[i]);
+    for (let i = l0; i < n; i++) t[i] = T(l0) + (el[i] - el[l0]);
+    for (let k = 0; k + 1 < F.length; k++) {
+      const a = F[k], b = F[k + 1];
+      const besoin = (((T(b) - T(a)) % RTM_DAY) + RTM_DAY) % RTM_DAY, actuel = el[b] - el[a];
+      for (let i = a; i < b; i++) t[i] = T(a) + (el[i] - el[a]);
+      if (Math.abs(actuel - besoin) > RTM_TOL) red[b] = { a: a, besoin: besoin, actuel: actuel, f: besoin > 0 ? actuel / besoin : null };
+    }
+    F.forEach(i => { t[i] = T(i); });
+  }
+  return { n: n, legs: legs, el: el, km: km, sec: sec, has: F.length > 0, fixed: fixed, lock: lock, t: t, red: red };
+}
+/* Taper l'heure du point i (sec : secondes, ou null pour la vider) : un point non verrouillé devient le pivot (l'heure des autres points non verrouillés est retirée) ; un point verrouillé change de valeur et garde son verrou ; taper ne verrouille jamais */
+function rtmType(points, i, sec) {
+  const p = points[i];
+  if (!p) return false;
+  if (sec === null) { delete p.t; delete p.tLock; return true; }
+  p.t = rtmClock(sec);
+  if (p.tLock !== true) points.forEach((q, k) => { if (k !== i && q.tLock !== true) delete q.t; });
+  return true;
+}
+/* Verrouiller le point i : son heure affichée (tm : rtmCompute des points tels qu'ils sont) devient p.t, avec p.tLock ; faux sans heure à fixer */
+function rtmLock(points, i, tm) {
+  const p = points[i];
+  if (!p || !tm || tm.t[i] === null) return false;
+  p.t = rtmClock(tm.t[i]); p.tLock = true;
+  return true;
+}
+/* Déverrouiller le point i : p.tLock et p.t sont retirés, sauf si c'était la seule heure fixe de la route : p.t reste, le point devient le pivot */
+function rtmUnlock(points, i) {
+  const p = points[i];
+  if (!p) return false;
+  const other = points.some((q, k) => k !== i && rtmValid(q.t));
+  delete p.tLock;
+  if (other) delete p.t;
+  return true;
+}
+/* Le pourcentage du message : (f − 1) × 100 à l'entier le plus proche, au moins 1 en valeur absolue, toujours signé (« + » ou « − » U+2212) ; en français, espace fine insécable avant « % » */
+function rtmPct(f, fr) {
+  let n = Math.round((f - 1) * 100);
+  if (n === 0) n = f >= 1 ? 1 : -1;
+  return (n < 0 ? '−' : '+') + Math.abs(n) + (fr ? ' %' : '%');
+}
+/* Le message d'un tronçon intenable : { text, head (le premier membre, avant « : »), n (le pourcentage, '' sans) } ; o : { t (le dictionnaire), speedText (km/h → texte dans l'unité affichée), fr, name (i → nom du point) } */
+function rtmRedMsg(points, tm, i, o) {
+  const r = tm.red[i], a = r.a;
+  const nm = k => { const s = o.name(k); return typeof s === 'string' && s.trim() !== '' ? s.trim() : String(k); };
+  const rr = rtmClock(rtmSecs(points[a].t) + r.actuel);
+  const vars = { p: nm(i), h: rtmClock(tm.t[i]), a: nm(a), b: nm(i), r: rr, n: '', v: '' };
+  let key = 't.red.0';
+  if (r.f !== null) {
+    vars.n = rtmPct(r.f, o.fr);
+    let same = true;
+    for (let k = a + 2; k <= i; k++) if (tm.legs[k].v !== tm.legs[a + 1].v) same = false;
+    if (same) { key = 't.red'; vars.v = o.speedText(tm.legs[a + 1].v * r.f); } else key = 't.red.nv';
+  }
+  let text = o.t(key, vars);
+  if (o.fr) {
+    const ap = ' de ' + vars.a + ' à ';
+    if (/^[aeiouyàâäéèêëîïôöùûüœæh]/i.test(vars.a)) text = text.replace(ap, ' d’' + vars.a + ' à ');
+  }
+  const from = Math.max(0, text.indexOf(vars.h)) + vars.h.length, c = text.slice(from).search(/\u202f?:/);       /* le premier « : » après l'heure du message (l'heure en porte elle-même) */
+  return { text: text, head: c < 0 ? '' : text.slice(0, from + c), n: vars.n };
+}
+/* Le message en HTML : le premier membre et le pourcentage en gras ; esc : l'échappement de l'outil */
+function rtmRedHtml(m, esc) {
+  const h = m.head, rest = m.text.slice(h.length);
+  const j = m.n !== '' ? rest.indexOf(m.n) : -1;
+  const tail = j < 0 ? esc(rest) : esc(rest.slice(0, j)) + '<b>' + esc(m.n) + '</b>' + esc(rest.slice(j + m.n.length));
+  return (h !== '' ? '<b>' + esc(h) + '</b>' : '') + tail;
+}
+/* ===== FIN DES HEURES D'UNE ROUTE ===== */
 /* ===== IMPORT COMMUN (HQ, briefing, fichier) ===== */
 /* Les types que la suite gère (les types volables du jeu, ceux de PAYLOAD_TYPES) et les canaux par poste : les postes que la mission pré-règle et le nombre de canaux que l'éditeur de mission écrit pour chacun (data/aircraft_radios.json,
    pydcs 1.0.0) ; un type sans poste programmable a une entrée vide. Le poste HF des deux hélicoptères, que la mission ne pré-règle pas, est dans RADIO_FREE (radio_bands_block.py). Le nom d'un type à l'écran est gameAircraftName (aircraft_types_block.py). */
@@ -7601,10 +7782,11 @@ function dgSyncRoutes() {
   if (rs.st && Array.isArray(rs.st.refs)) rs.st.refs.forEach(p => { if (rwObj(p) && rwPidValid(p.pid)) DG_ALTREFR[p.pid] = p.altRef === 'AGL' ? 'AGL' : 'MSL'; });
   let changed = false;
   doc.cards.forEach(c => {
-    const before = JSON.stringify([c.nav, c.refs, c.refsOff]);
+    const before = JSON.stringify([c.nav, c.refs, c.refsOff, c.times]);
     dgSyncCardNav(c, rs);
     dgSyncCardRefs(c, rs.st);
-    if (JSON.stringify([c.nav, c.refs, c.refsOff]) !== before) changed = true;
+    dgAutoTimes(c, rs);
+    if (JSON.stringify([c.nav, c.refs, c.refsOff, c.times]) !== before) changed = true;
   });
   return changed;
 }
@@ -7665,6 +7847,146 @@ function dgFollowDocNow(force) {
 function dgFollowDoc() {
   clearTimeout(DG_DOC.timer);
   DG_DOC.timer = setTimeout(dgFollowDocNow, 150);
+}
+
+/* ============= LES HEURES DE LA ROUTE LIÉE (lot mp-rp-heures-tot) =============
+   Une ligne d'Horaires peut suivre un point de la route liée de la carte (c.times[i].pid) : son heure est celle du point, calculée (bloc route_timing_block.py, le même qu'au Route Planner) ; elle se saisit et se verrouille
+   comme au Route Planner, et la saisie va au point (route_write_block.py), jamais dans « value ». Quand la route a des heures, la colonne TOS des points de route se calcule de même ; leur saisie `tos` reste gardée. */
+const DGT = { c: null, rt: null, plain: false };       /* c, rt : la carte dont on dessine les pages et ses temps (un seul calcul par rendu) ; plain : l'export (PNG, PDF, impression) : jamais de pastille ni de ⚠ */
+/* Les temps de la route liée de la carte (ses points valides à pid, le bloc commun, la vitesse par défaut de route_state_v1) ; null sans route liée */
+function dgRTcalc(c, rs) {
+  rs = rs || dgRouteSet();
+  const info = dgRouteInfo(c, rs);
+  if (info.state !== 'linked') return null;
+  const pts = info.route.points.filter(p => rwObj(p) && rwValidCoord(p.lat, p.lon) && rwPidValid(p.pid));
+  return { info: info, pts: pts, idx: new Map(pts.map((p, i) => [p.pid, i])), tm: rtmCompute(pts, rwGs(rs.st)) };
+}
+function dgRTget(c) { return DGT.c === c ? DGT.rt : dgRTcalc(c); }
+/* Le rang, dans la route liée, du point d'une ligne d'Horaires (pid) ou d'une ligne de nav (pid) ; -1 si la ligne est libre */
+function dgPtOf(rt, x) { return rt && typeof x.pid === 'string' && rt.idx.has(x.pid) ? rt.idx.get(x.pid) : -1; }
+/* Ce qu'une ligne d'Horaires montre : l'heure calculée de son point quand la route a des heures, sinon sa valeur */
+function dgTimeVal(x, rt) { const k = dgPtOf(rt, x); return k >= 0 && rt.tm.has ? rtmClock(rt.tm.t[k]) : x.value; }
+function dgTimeRed(rt, k) { return !!rt && k >= 0 && rt.tm.has && !!rt.tm.red[k] && !DGT.plain; }
+/* La valeur en pastille rouge (C13 bis) avec ⚠, dans l'aperçu seulement */
+function dgRedCell(v) { return '<span class="tm-red">' + esc(v) + '<span class="tm-warn" aria-hidden="true">⚠</span></span>'; }
+/* La cellule TOS d'une ligne de nav : l'heure calculée de son point (hh:mm) quand la route a des heures, sinon ce qui a été saisi */
+function dgTos(c, r) {
+  const rt = dgRTget(c), k = dgPtOf(rt, r);
+  if (k < 0 || !rt.tm.has) return dash(r.tos);
+  const v = rtmClockMin(rt.tm.t[k]);
+  return dgTimeRed(rt, k) ? dgRedCell(v) : esc(v);
+}
+function dgSpeedText(kmh) { const nm = dgU.distance === 'nm'; return Math.round(nm ? kmh / NAV_NM_KM : kmh) + ' ' + t(nm ? 'u.kt' : 'u.kmh'); }
+/* Les messages des tronçons intenables de la route liée (le bloc commun les écrit : le même texte qu'au Route Planner) */
+function dgRedMsgs(rt) {
+  const out = [];
+  if (!rt || !rt.tm.has) return out;
+  const o = { t: t, speedText: dgSpeedText, fr: CURRENT_LANG === 'fr', name: k => str(rt.pts[k].name) };
+  rt.tm.red.forEach((r, i) => { if (r) out.push(rtmRedMsg(rt.pts, rt.tm, i, o)); });
+  return out;
+}
+function dgRedBanner(rt) {
+  const m = dgRedMsgs(rt);
+  return m.length ? '<div class="ui-bandeau err tm-redmsg" data-nav-red role="status">' + m.map(x => '<div>' + rtmRedHtml(x, esc) + '</div>').join('') + '</div>' : '';
+}
+/* Les noms des points dont l'heure verrouillée n'est pas tenue, sur les cartes des pages choisies (la confirmation avant l'export) */
+function dgRedNames(sel) {
+  const out = [], seen = new Set();
+  sel.forEach(p => {
+    const c = doc.cards[p.card];
+    if (!c || seen.has(c)) return;
+    seen.add(c);
+    const rt = dgRTcalc(c);
+    if (rt && rt.tm.has) rt.tm.red.forEach((r, i) => { if (r) { const n = str(rt.pts[i].name).trim(); out.push(n !== '' ? n : String(i)); } });
+  });
+  return out;
+}
+/* Un cadenas, dessiné (sans texte) */
+function dgLockSvg(closed) {
+  return '<svg class="tm-ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="3" y="7" width="10" height="7" rx="1" fill="currentColor"/>' +
+    '<path d="' + (closed ? 'M5 7V5a3 3 0 0 1 6 0v2' : 'M5 7V5a3 3 0 0 1 5.8-1') + '" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
+}
+/* Le cadenas d'un point de la route liée (attr : data-tpl pour une ligne d'Horaires, data-tnl pour une ligne de nav ; i : son rang) ; inactif tant que la route n'a pas d'heure */
+function dgLockBtn(attr, i, rt, k) {
+  const lk = rt.tm.has && rt.tm.lock[k], lbl = esc(t(lk ? 't.unlock' : 't.lock'));
+  return '<button type="button" class="tp-lock" ' + attr + '="' + i + '" aria-pressed="' + (lk ? 'true' : 'false') + '" aria-label="' + lbl + '" title="' + lbl + '"' + (rt.tm.has ? '' : ' disabled') + '>' + dgLockSvg(lk) + '</button>';
+}
+/* Le champ d'une heure calculée : rouge (pastille C13 bis, ⚠) quand le tronçon est intenable */
+function dgTimeInput(path, value, red) {
+  if (!red) return fInputBare(path, value);
+  return '<div class="ed-field tm-redw"><input type="text" data-path="' + path + '" value="' + esc(value) + '"' + phAttr(path) + ' class="tm-redin" aria-invalid="true"><span class="tm-warn" aria-hidden="true">⚠</span></div>';
+}
+function dgTimesEditor(c) {
+  const rt = dgRTcalc(c);
+  return listHtml('times', c.times, (x, i) => {
+    const k = dgPtOf(rt, x);
+    const h = '<div class="li-grid g2">' + fInputBare('times.' + i + '.label', x.label) + (k >= 0 ? dgTimeInput('times.' + i + '.value', dgTimeVal(x, rt), dgTimeRed(rt, k)) : fInputBare('times.' + i + '.value', x.value)) + '</div>';
+    if (!rt) return h;
+    const sel = '<div class="ed-field"><label>' + esc(t('f.times.pt')) + '</label><select data-tpt="' + i + '"><option value="">' + esc(t('pt.none')) + '</option>' +
+      rt.pts.map((p, j) => '<option value="' + esc(p.pid) + '"' + (j === k ? ' selected' : '') + '>' + esc(j + ' · ' + str(p.name)) + '</option>').join('') + '</select></div>';
+    return h + '<div class="li-grid tp-row">' + sel + (k >= 0 ? dgLockBtn('data-tpl', i, rt, k) : '<span></span>') + '</div>';
+  }, 'add.time');
+}
+/* Le champ Heure (TOS) d'un point de route quand la route a des heures : la valeur calculée (hh:mm), son cadenas à droite ; sinon le champ de toujours */
+function dgTosField(c, x, i, rt) {
+  const k = dgPtOf(rt, x);
+  if (k < 0 || !rt.tm.has) return fInput('f.nav.tos', 'nav.' + i + '.tos', x.tos);
+  const red = dgTimeRed(rt, k), v = rtmClockMin(rt.tm.t[k]);
+  return '<div class="ed-field' + (red ? ' tm-redw' : '') + '"><label>' + esc(t('f.nav.tos')) + '</label><div class="tp-fl"><div class="tp-in"><input type="text" data-path="nav.' + i + '.tos" value="' + esc(v) + '"' + phAttr('nav.' + i + '.tos') +
+    (red ? ' class="tm-redin" aria-invalid="true"' : '') + '>' + (red ? '<span class="tm-warn" aria-hidden="true">⚠</span>' : '') + '</div>' + dgLockBtn('data-tnl', i, rt, k) + '</div></div>';
+}
+/* « Décollage » (le libellé par défaut, qui n'a jamais eu de point : le champ pid est absent) suit le point 0 dès que la route liée a une heure */
+function dgAutoTimes(c, rs) {
+  const rt = dgRTcalc(c, rs);
+  if (!rt || !rt.tm.has || !rt.pts.length) return;
+  const d2 = [I18N.fr['times.d2'], I18N.en['times.d2']];
+  const x = c.times.find(r => d2.indexOf(r.label) >= 0 && !Object.prototype.hasOwnProperty.call(r, 'pid'));
+  if (x) x.pid = rt.pts[0].pid;
+}
+/* La liste « Point » d'une ligne d'Horaires : '' (— aucun —) ou le pid d'un point ; « — aucun — » ne se relie plus d'office */
+function dgTimePick(c, i, pid) {
+  const x = c.times[i];
+  if (!x) return;
+  x.pid = pid;
+  touch();
+  renderEditor(true);
+}
+/* Une heure saisie (ligne d'Horaires liée ou TOS d'un point de route) : elle va au point, par le bloc d'écriture et les règles du bloc commun ; illisible ou inchangée, le champ reprend l'heure affichée */
+function dgPointTime(c, pid, el, shown) {
+  const raw = el.value;
+  if (raw === shown) return;
+  let sec = null;
+  if (raw.trim() !== '') { sec = rtmParse(raw); if (sec === null) { el.value = shown; return; } }
+  const info = dgRouteInfo(c);
+  if (info.state !== 'linked') { el.value = shown; return; }
+  const r = rwUpdateRoute(info.rid, route => {
+    const k = route.points.findIndex(q => rwObj(q) && q.pid === pid);
+    if (k < 0) return false;
+    if (sec === null && !rtmValid(route.points[k].t)) return false;       /* rien à vider */
+    rtmType(route.points, k, sec);
+  });
+  if (!r.ok) { if (r.why === 'abort') el.value = shown; else if (r.why !== 'gone') dgRouteFail(r.why); return; }
+  dgAfterRouteWrite(true);
+}
+/* Le cadenas d'une ligne d'Horaires ou d'une ligne de nav : verrouille l'heure affichée du point, ou la libère */
+function dgLockClick(btn) {
+  const c = curCard(), isT = btn.dataset.tpl !== undefined, i = parseInt(isT ? btn.dataset.tpl : btn.dataset.tnl, 10), x = (isT ? c.times : c.nav)[i], pid = x ? x.pid : '';
+  const info = dgRouteInfo(c);
+  if (!pid || info.state !== 'linked') return;
+  const gs = rwGs(rwReadState());
+  const r = rwUpdateRoute(info.rid, route => {
+    const pts = route.points.filter(q => rwObj(q) && rwValidCoord(q.lat, q.lon)), k = pts.findIndex(q => q.pid === pid);
+    if (k < 0) return false;
+    if (pts[k].tLock === true) { rtmUnlock(pts, k); return; }
+    if (!rtmLock(pts, k, rtmCompute(pts, gs))) return false;
+  });
+  if (!r.ok) { if (r.why !== 'abort' && r.why !== 'gone') dgRouteFail(r.why); return; }
+  dgAfterRouteWrite(true);
+}
+/* La confirmation avant l'export : une heure verrouillée qui n'est pas tenue ; faux si on renonce */
+async function dgExportRedOk(o) {
+  const names = dgRedNames(dgExportSel(o.page));
+  return !names.length || await askConfirm({ title: t('exp.red.q', { p: names.join(', ') }), verb: t('exp.red.go') });
 }
 
 /* ----- Ce que le DG écrit dans la route ----- */
@@ -8001,7 +8323,7 @@ function dgLinkCard(c, rid) {
 function dgEnterRoute(r) {
   const rs = dgRouteSet();
   if (r.rid && rs.set && rs.set.routes.some(x => x.rid === r.rid && routeTheatre(x, rwRefTheatre(rs.st)) === dgCommonTheatre())) return { ok: true, rid: r.rid };
-  const pts = r.points.slice(0, RW_MAX_POINTS).map(p => { const o = { name: p.name, lat: dgRound7(p.lat), lon: dgRound7(p.lon), alt: p.alt, altRef: p.altRef }; if (rwPidValid(p.pid)) o.pid = p.pid; return o; });
+  const pts = r.points.slice(0, RW_MAX_POINTS).map(p => { const o = { name: p.name, lat: dgRound7(p.lat), lon: dgRound7(p.lon), alt: p.alt, altRef: p.altRef }; if (rwPidValid(p.pid)) o.pid = p.pid; rtmRead(p, o); return o; });
   const x = rwCreateRoute({ name: hasText(r.name) ? r.name.trim().slice(0, 60) : '', theatre: dgCommonTheatre(), points: pts, missionDate: r.missionDate });
   return x.ok ? { ok: true, rid: x.rid } : { ok: false, why: x.why };
 }
@@ -9401,10 +9723,11 @@ function blkMission(c) {
 }
 
 function blkTimes(c) {
-  const rows = c.times.filter(x => hasText(x.value));
+  const rt = dgRTget(c);
+  const rows = c.times.map(x => ({ x: x, k: dgPtOf(rt, x), v: dgTimeVal(x, rt) })).filter(r => hasText(r.v));       /* une ligne liée s'imprime dès que la route a des heures, même sans valeur */
   if (!rows.length) return '';
-  const b = '<div class="dc-times">' + rows.map(x =>
-    '<div class="dc-trow"><span class="dc-tl">' + esc(x.label) + '</span><span class="dc-tv">' + esc(x.value) + '</span></div>').join('') + '</div>';
+  const b = '<div class="dc-times">' + rows.map(r =>
+    '<div class="dc-trow"><span class="dc-tl">' + esc(r.x.label) + '</span><span class="dc-tv">' + (dgTimeRed(rt, r.k) ? dgRedCell(r.v) : esc(r.v)) + '</span></div>').join('') + '</div>';
   return blockHtml('times', t('dc.b.times'), b);
 }
 
@@ -9528,7 +9851,7 @@ function blkNav(c) {
       return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
         '<td class="m r">' + (k ? esc(k.cap) : dash(r.course)) + '</td><td class="m r">' + (k ? esc(k.dist) : dash(r.distance)) + '</td>' +
         (dv ? '<td class="m r">' + (dv[i] ? esc(dv[i].fwd) : '—') + '</td><td class="m r">' + (dv[i] ? esc(dv[i].right) : '—') + '</td>' : '') +
-        '<td class="m r">' + altCell(r, c) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
+        '<td class="m r">' + altCell(r, c) + '</td><td class="m r">' + dgTos(c, r) + '</td>' +
         '<td class="nt">' + esc(r.note) + '</td></tr>';
     }).join('');
   } else {
@@ -9538,7 +9861,7 @@ function blkNav(c) {
       const cc = p ? esc(mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : esc('—');
       return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
         '<td class="m cc">' + cc + '</td>' +
-        '<td class="m r">' + altCell(r, c) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
+        '<td class="m r">' + altCell(r, c) + '</td><td class="m r">' + dgTos(c, r) + '</td>' +
         '<td class="nt">' + esc(r.note) + '</td></tr>';
     }).join('');
   }
@@ -9964,7 +10287,13 @@ function planBeacons(c, plan) {
 }
 
 /* Les pages d'une carte, dans un mode donné */
+/* Les pages d'une carte : ses temps de route se calculent une fois pour tout le rendu */
 function cardPages(c, mode) {
+  const keep = [DGT.c, DGT.rt];
+  DGT.c = c; DGT.rt = dgRTcalc(c);
+  try { return cardPagesOf(c, mode); } finally { DGT.c = keep[0]; DGT.rt = keep[1]; }
+}
+function cardPagesOf(c, mode) {
   const plan = planCard(c);
   const rp = plan.radioPage, nr = rp;
   const b1 = plan.bcn === 'p1', b2 = plan.bcn === 'p2', bo = plan.bcn === 'own';       /* les balises : en page 1, sur la page des références, ou sur une page à elles juste après */
@@ -10099,7 +10428,7 @@ function dgeTarget(el, z) {
     if (blkTimes(c) === '') return sect('times');
     const tr = inn('.dc-trow');
     if (!tr) return sect('times');
-    const i = dgeNth(c.times, x => hasText(x.value), dgeIdx(tr, '.dc-trow'));
+    const rtT = dgRTget(c), i = dgeNth(c.times, x => hasText(dgTimeVal(x, rtT)), dgeIdx(tr, '.dc-trow'));
     if (i < 0) return sect('times');
     if (inn('.dc-tl')) return simple('times', ['times.' + i + '.label'], inn('.dc-tl'), 'l', 150);
     return simple('times', ['times.' + i + '.value'], tr.querySelector('.dc-tv'), 'r', 130);
@@ -10291,7 +10620,7 @@ function dgeEdit(g) {
   w.appendChild(box);
   w.appendChild(tip);
   /* la carte de la saisie : l'objet, son groupe et son rang (pour la retrouver si le document est relu pendant la frappe) ; la largeur du cadre (seul un changement de largeur valide) */
-  DGE.ed = { g: g, paths: g.paths, fields: fields, inputs: inputs, box: box, frame: frame, tip: tip, card: curCard(), gsId: curCard().gsId || '', idx: curIdx, w: window.innerWidth,
+  DGE.ed = { g: g, paths: g.paths, orig: fields.map(f => f.value), fields: fields, inputs: inputs, box: box, frame: frame, tip: tip, card: curCard(), gsId: curCard().gsId || '', idx: curIdx, w: window.innerWidth,
              font: { style: cs.fontStyle, weight: cs.fontWeight, size: parseFloat(cs.fontSize), lh: parseFloat(cs.lineHeight), ls: cs.letterSpacing, family: cs.fontFamily } };
   dgePlace(DGE.ed);
   box.addEventListener('keydown', onDgeKey);
@@ -10338,7 +10667,7 @@ function dgeClose(commit) {
   try {
     ed.paths.forEach((p, n) => {
       const v = ed.inputs[n].value;
-      if (getPath(curCard(), p) === v) return;
+      if (getPath(curCard(), p) === v || (/^times\.\d+\.value$/.test(p) && ed.orig[n] === v)) return;       /* la valeur d'une ligne liée est celle du point, calculée : inchangée, rien n'est émis */
       const f = ed.fields[n].isConnected ? ed.fields[n] : document.querySelector('#editor [data-path="' + p + '"]');
       if (!f) return;
       f.value = v;
@@ -10657,13 +10986,12 @@ const SECTION_BUILDERS = {
     '<div class="ed-field"><label>' + esc(t('f.steps')) + '</label></div>' +
     listHtml('mission.execution', c.mission.execution, (s, i) => fInputBare('mission.execution.' + i, s), 'add.step'),
 
-  times: c => listHtml('times', c.times, (x, i) =>
-    '<div class="li-grid g2">' + fInputBare('times.' + i + '.label', x.label) + fInputBare('times.' + i + '.value', x.value) + '</div>', 'add.time'),
+  times: c => dgTimesEditor(c),
 
   group: c => groupBoxHtml(c),
 
-  nav: c => navBannerHtml(c) + navSettingsHtml(c) + (() => {
-    const legs = navLegs(c), info = dgRouteInfo(c), frozen = info.state === 'other';
+  nav: c => navBannerHtml(c) + dgRedBanner(dgRTcalc(c)) + navSettingsHtml(c) + (() => {
+    const legs = navLegs(c), info = dgRouteInfo(c), frozen = info.state === 'other', rtT = dgRTcalc(c);
     return listHtml('nav', c.nav, (x, i) => {
       const g = legs[i], rt = !!x.pid, ro = rt && frozen;
       const first = rt && !legs.slice(0, i).some(q => q.pt);       /* la première ligne positionnée : rien d'où partir */
@@ -10678,7 +11006,7 @@ const SECTION_BUILDERS = {
         fInput('f.nav.distance', 'nav.' + i + '.distance', g.calc ? g.calc.dist : x.distance, rc) +
         fInput('f.nav.altitude', 'nav.' + i + '.altitude', x.altitude, rr) + '</div>' +
         (rt ? '<div class="li-grid g3"><div class="ed-field"><label>' + esc(t('f.nav.altref')) + '</label><select data-nref="' + i + '"' + (ro ? ' disabled' : '') + '><option value="AGL"' + (al === 'AGL' ? ' selected' : '') + '>AGL</option><option value="MSL"' + (al === 'MSL' ? ' selected' : '') + '>MSL</option></select></div>' +
-          fInput('f.nav.tos', 'nav.' + i + '.tos', x.tos) + fInput('f.nav.note', 'nav.' + i + '.note', x.note) + '</div>'
+          dgTosField(c, x, i, rtT) + fInput('f.nav.note', 'nav.' + i + '.note', x.note) + '</div>'
         : '<div class="li-grid g2">' + fInput('f.nav.tos', 'nav.' + i + '.tos', x.tos) + fInput('f.nav.note', 'nav.' + i + '.note', x.note) + '</div>');
     }, 'add.point', frozen);
   })(),
@@ -10796,7 +11124,7 @@ function dgSectionSum(id, c) {
   if (id === 'meta') return uiJoin([CLASSIF_KEYS.indexOf(c.meta.classification) >= 0 ? t('classif.' + c.meta.classification) : '', v(c.meta.docRef)]);
   if (id === 'mission') return uiJoin([v(c.flight.task), v(c.mission.objective)]);
   if (id === 'times') {
-    const vals = c.times.map(x => v(x.value)).filter(Boolean);
+    const rtS = dgRTcalc(c), vals = c.times.map(x => v(dgTimeVal(x, rtS))).filter(Boolean);
     return vals.length > 1 ? vals[0] + ' → ' + vals[vals.length - 1] : (vals[0] || '');
   }
   if (id === 'group') return uiJoin([v(c.flight.callsign), partialGroup(c) ? groupText(c) : (c.flight.count ? c.flight.count + ' × ' : '') + v(dgAircraftShown(c))]);
@@ -11086,8 +11414,16 @@ function onEditorInput(e) {
   if (el && el.dataset && el.dataset.nref !== undefined) { if (e.type === 'change') dgNavField(curCard(), parseInt(el.dataset.nref, 10), 'altRef', el); return; }        /* AGL ou MSL d'un point de route */
   if (el && el.dataset && el.dataset.rref !== undefined) { if (e.type === 'change') dgRefField(curCard(), parseInt(el.dataset.rref, 10), 'altRef', el); return; }        /* AGL ou MSL d'une référence */
   if (el && el.dataset && el.dataset.rshow !== undefined) { dgRefShow(curCard(), el.dataset.rshow, el.checked); return; }        /* la case « Sur cette datacard » */
+  if (el && el.dataset && el.dataset.tpt !== undefined) { if (e.type === 'change') dgTimePick(curCard(), parseInt(el.dataset.tpt, 10), el.value); return; }        /* la liste « Point » d'une ligne d'Horaires */
   const path = el && el.dataset ? el.dataset.path : '';
   if (!path) return;
+  { /* l'heure d'une ligne d'Horaires liée, ou le TOS d'un point de route quand la route a des heures : elle va au point (au « change »), jamais dans la valeur de la ligne */
+    const tm = /^(times|nav)\.(\d+)\.(value|tos)$/.exec(path), cc = tm ? curCard() : null, ln = cc ? cc[tm[1]][parseInt(tm[2], 10)] : null, rtx = ln ? dgRTcalc(cc) : null, kx = dgPtOf(rtx, ln || {});
+    if (tm && ((tm[1] === 'times' && tm[3] === 'value') || (tm[1] === 'nav' && tm[3] === 'tos')) && kx >= 0 && (tm[1] === 'times' || rtx.tm.has)) {
+      if (e.type === 'change' && el.tagName === 'INPUT') dgPointTime(cc, ln.pid, el, tm[1] === 'times' ? dgTimeVal(ln, rtx) : rtmClockMin(rtx.tm.t[kx]));
+      return;
+    }
+  }
   const rf = /^(nav|refs)\.(\d+)\.(name|coord|altitude|course|distance)$/.exec(path);
   if (rf && e.type === 'change' && el.tagName === 'INPUT') {        /* un champ de la route : écrit à la sortie du champ, pas à chaque frappe */
     if (rf[1] === 'nav') dgNavField(curCard(), parseInt(rf[2], 10), rf[3], el);
@@ -11142,6 +11478,8 @@ function onEditorFocusOut(e) {
   if (c.gsId && dgFlightOf(c) && el.dataset.gs.indexOf('f.') === 0) dgSetFreq(c, el.dataset.gs.slice(2), el);
 }
 function onEditorClick(e) {
+  const tl = e.target.closest('[data-tpl], [data-tnl]');
+  if (tl) { if (!tl.disabled) dgLockClick(tl); return; }
   const ga = e.target.closest('[data-gs-act]');
   if (ga) {
     if (!ga.disabled) { const c = curCard(); if (ga.dataset.gsAct === 'add-unit') dgAddUnit(c); else if (ga.dataset.gsAct === 'rm-unit') dgRemoveUnit(c, parseInt(ga.dataset.i, 10)); }
@@ -11434,7 +11772,7 @@ function routeFromObject(o) {
   if (!isRouteObject(o)) return null;
   const un = (o.units && typeof o.units === 'object') ? o.units : {};
   const nd = (o.navDisplay && typeof o.navDisplay === 'object') ? o.navDisplay : {};
-  const readPts = list => {
+  const readPts = (list, withT) => {
     const out = [];
     list.forEach(p => {
       if (!p || typeof p !== 'object') return;
@@ -11446,12 +11784,13 @@ function routeFromObject(o) {
         altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
       };
       if (rwPidValid(p.pid)) q.pid = p.pid;
+      if (withT) rtmRead(p, q);       /* l'heure réelle du point et son verrou, s'ils sont valides */
       out.push(q);
     });
     return out;
   };
-  const points = readPts(o.points);
-  const refs = Array.isArray(o.refs) ? readPts(o.refs) : [];
+  const points = readPts(o.points, true);
+  const refs = Array.isArray(o.refs) ? readPts(o.refs, false) : [];
   return {
     name: str(o.name),
     units: { distance: un.distance === 'nm' ? 'nm' : 'km', altitude: un.altitude === 'ft' ? 'ft' : 'm' },
@@ -11844,14 +12183,17 @@ function dgImported(res) {
 
 /* ============= EXPORT : fenêtre ============= */
 function allExportPages() {
-  /* Toutes les pages de toutes les cartes, dans le mode affiché. Rien ne part d'un plan non mesuré : cadre caché, aucune page. */
+  /* Toutes les pages de toutes les cartes, dans le mode affiché. Rien ne part d'un plan non mesuré : cadre caché, aucune page. L'export ne porte jamais de pastille rouge ni de ⚠ (DGT.plain). */
   const out = [];
   if (!dgMeasurable()) return out;
-  doc.cards.forEach((c, ci) => {
-    const res = cardPages(c, doc.mode);
-    const cs = slug(c.flight.callsign) || ('carte' + (ci + 1));
-    res.pages.forEach((html, pi) => out.push({ html, card: ci, page: pi + 1, pages: res.pages.length, cs }));
-  });
+  DGT.plain = true;
+  try {
+    doc.cards.forEach((c, ci) => {
+      const res = cardPages(c, doc.mode);
+      const cs = slug(c.flight.callsign) || ('carte' + (ci + 1));
+      res.pages.forEach((html, pi) => out.push({ html, card: ci, page: pi + 1, pages: res.pages.length, cs }));
+    });
+  } finally { DGT.plain = false; }
   return out;
 }
 
@@ -11898,7 +12240,8 @@ function openExportModal() {
   if (pngBtn) pngBtn.textContent = t('ex.png.label');       /* la taille des pages PNG, annoncée à côté de « PNG » */
 }
 function closeExportModal() { uiExportClose(); }
-function dgExportGo(o) {
+async function dgExportGo(o) {
+  if (!(await dgExportRedOk(o))) return;       /* une heure verrouillée qui n'est pas tenue : on demande avant d'exporter ; « Annuler » n'exporte pas */
   if (o.fmt === 'pdf') {
     /* le PDF : le nom devient le titre du document le temps de l'impression ; seules les pages choisies sont posées dans la feuille d'impression */
     DGX.print = o.page === 'all' ? null : dgPickedIdx();       /* la liste des pages choisies (index dans allExportPages), lue avant que la fenêtre ne se ferme */
