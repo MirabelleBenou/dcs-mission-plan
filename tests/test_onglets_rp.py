@@ -2,12 +2,16 @@
 le partage carte / panneau, la ligne de point sur deux lignes sous 520 px, le toast au-dessus de la barre. Joué sur le shell construit (dist/dcs_mission_plan.html,
 chromium, aucun réseau) ; les contrôles passent par le DOM, jamais par une capture."""
 import re
+import sys
 import warnings
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from banc_attente import (attendre, attendre_fenetre, attendre_images, attendre_lecture_stable, attendre_mise_en_page, attendre_outil, attendre_rp,  # noqa: E402
+                          attendre_shell, attendre_toast_parti, exemple)
 CHROMIUM = Path('/opt/pw-browsers/chromium')
 try:
     import playwright.sync_api  # noqa: F401
@@ -85,22 +89,25 @@ def shell(br, w, h, touch=True, lang='fr'):
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto(SHELL, wait_until='commit')
-    pg.wait_for_function("() => typeof window.MP_WORK_EXAMPLE === 'function' && !!document.getElementById('card-hq')", timeout=60000)
-    pg.wait_for_timeout(1300)
+    attendre_shell(pg, 60000)
     for g in ('mc', 'fl'):
-        pg.evaluate('(g) => window.MP_WORK_EXAMPLE(g)', g)
-        pg.wait_for_timeout(700)
+        exemple(pg, g)
     pg.errs = errs
     return pg
 
 
-def open_card(pg, tid, wait=2300):
+def open_card(pg, tid):
     card = pg.locator('#card-' + tid)
     card.scroll_into_view_if_needed()
     card.click()
     pg.wait_for_selector('#iframe-' + tid, state='attached')
-    pg.wait_for_timeout(wait)
-    return pg.query_selector('#iframe-' + tid).content_frame()
+    if tid == 'rp':                                                               # la carte créée, puis la mise en page (partage carte / panneau, barre d'onglets) posée
+        fr = attendre_rp(pg)
+        attendre_mise_en_page(fr)
+        return fr
+    fr = attendre_outil(pg, tid)
+    attendre_images(fr, 3)
+    return fr
 
 
 def rp(br, w, h, touch=True, lang='fr'):
@@ -110,19 +117,31 @@ def rp(br, w, h, touch=True, lang='fr'):
 
 def back(pg):
     pg.evaluate("() => { const f = document.querySelector('iframe:not([style*=\"display: none\"])'); f.contentDocument.querySelector('.mp-back-injected').click(); }")
-    pg.wait_for_timeout(500)
+    attendre(pg, "document.getElementById('landing').style.display !== 'none' && activeModule === null", 'le mur affiché, aucun outil ouvert', lu="[document.getElementById('landing').style.display, activeModule]")
+
+
+TOOL_IDS = {'Datacard Generator': 'dg', 'Route Planner': 'rp', 'Briefing Generator': 'bg'}
 
 
 def pick(pg, fr, name):
+    """Choisit un outil dans la liste de la marque ; les actions du locator attendent la liste et ses lignes, puis l'outil choisi est ouvert (et, pour le Route Planner, remis en page)."""
     fr.locator('.toolbar .tb-brand').click()
-    pg.wait_for_timeout(300)
     fr.locator('.tb-sw-panel li.tbm-opt').filter(has_text=re.compile('^' + re.escape(name) + '$')).first.click()
-    pg.wait_for_timeout(700)
+    tid = TOOL_IDS[name]
+    nf = attendre_outil(pg, tid)
+    if tid == 'rp':
+        attendre_mise_en_page(nf)
+    else:
+        attendre_images(nf, 3)
 
 
 def tab(fr, tid):
     fr.evaluate("(id) => document.querySelector('#tab-bar [data-tab=\"' + id + '\"]').click()", tid)
-    fr.wait_for_timeout(250)
+    attendre(fr, "document.body.dataset.activeTab === arg && document.querySelector('#tab-bar [data-tab=\"' + arg + '\"]').getAttribute('aria-selected') === 'true' "
+                 "&& [...document.querySelectorAll('#panel > .ed-section')].filter(s => s.getClientRects().length > 0).map(s => s.dataset.section).join() === arg",
+             "l'onglet %s seul affiché (data-active-tab, aria-selected, sections visibles)" % tid,
+             lu="[document.body.dataset.activeTab, [...document.querySelectorAll('#panel > .ed-section')].filter(s => s.getClientRects().length > 0).map(s => s.dataset.section).join()]", arg=tid)
+    attendre_images(fr, 2)
 
 
 GEOM = """() => { const r = s => { const e = document.querySelector(s); if (!e || !e.getClientRects().length) return null; const b = e.getBoundingClientRect(); return { top: b.top, h: b.height, w: b.width, bottom: b.bottom }; };
@@ -196,7 +215,9 @@ def test_a_tab_shows_its_section_alone_and_writes_nothing(browser):
     folds = fr.evaluate("() => localStorage.getItem('rp_folds_v1')")
     assert folds and '"route":false' in folds.replace(' ', '')
     pg.set_viewport_size({'width': 412, 'height': 915})
-    pg.wait_for_timeout(1200)
+    attendre_fenetre(pg, 412, 915)
+    attendre_mise_en_page(fr)
+    attendre(fr, "getComputedStyle(document.getElementById('tab-bar')).display !== 'none'", 'la barre d\'onglets affichée à 412 px', lu="getComputedStyle(document.getElementById('tab-bar')).display")
     whole = "() => JSON.stringify(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k)]))"
     snap = fr.evaluate(whole)
     assert 'rp_folds_v1' in snap
@@ -249,17 +270,21 @@ def test_the_layers_tab_without_a_layer_and_with_one(browser, lang):
                order: n.compareDocumentPosition(hp) & Node.DOCUMENT_POSITION_FOLLOWING ? 'note-then-help' : 'help-first', first: sec.querySelector('.ed-body').firstElementChild.id }; }""")
     assert info['shown'] and info['note'] == EMPTY[lang] and info['noteShown'] and not info['clear'] and info['helpShown'] and info['help'].startswith(HELP[lang][:20])
     assert info['order'] == 'note-then-help' and info['first'] == 'layers-empty'
+    attendre(fr, "typeof openCfImport === 'function'", "l'import de calques prêt")
     fr.evaluate("""() => { const res = { theatre: 'Syria', layers: [cfLayer({ id: 'essai', name: 'Essai', visible: true, source: { kind: 'combatflite', file: 'essai.cf' }, items: [{ id: 'p1', type: 'point', name: 'Point', kind: 'target', lat: 35, lon: 36, color: '#0033cc' }] })], pre: [true] }; openCfImport('essai.cf', res); }""")
-    pg.wait_for_timeout(300)
+    attendre(fr, "document.getElementById('cf-import-go').getClientRects().length > 0", "la fenêtre d'import ouverte (bouton « Importer » affiché)")
     fr.evaluate("document.getElementById('cf-import-go').click()")
-    pg.wait_for_timeout(600)
+    attendre(fr, "document.querySelectorAll('#layers-list .cf-row').length === 1", 'le calque importé (une ligne dans la liste)', lu="document.querySelectorAll('#layers-list .cf-row').length")
+    attendre_images(fr, 2)
     info = fr.evaluate("""() => ({ rows: document.querySelectorAll('#layers-list .cf-row').length, note: document.getElementById('layers-empty').getClientRects().length > 0, clear: document.getElementById('btn-layers-clear').getClientRects().length > 0,
       tab: document.body.dataset.activeTab })""")
     assert info['rows'] == 1 and not info['note'] and info['clear'] and info['tab'] == 'layers'
     fr.evaluate("() => document.querySelector('#layers-list .cf-del').click()")                  # on retire le dernier calque : la question, puis la note revient et le bouton part
-    pg.wait_for_timeout(300)
+    attendre(fr, "document.getElementById('ui-confirm').hidden === false", 'la question ouverte', lu="document.getElementById('ui-confirm').hidden")
     fr.evaluate("() => document.getElementById('ui-confirm-ok').click()")
-    pg.wait_for_timeout(500)
+    attendre(fr, "document.querySelectorAll('#layers-list .cf-row').length === 0 && document.getElementById('layers-empty').getClientRects().length > 0", 'le dernier calque retiré (liste vide, note revenue)',
+             lu="[document.querySelectorAll('#layers-list .cf-row').length, document.getElementById('layers-empty').getClientRects().length]")
+    attendre_images(fr, 2)
     info = fr.evaluate("""() => ({ rows: document.querySelectorAll('#layers-list .cf-row').length, note: document.getElementById('layers-empty').getClientRects().length > 0, noteText: document.getElementById('layers-empty').textContent,
       clear: document.getElementById('btn-layers-clear').getClientRects().length > 0, tab: document.body.dataset.activeTab, shown: document.getElementById('sec-layers').getClientRects().length > 0 })""")
     assert info == {'rows': 0, 'note': True, 'noteText': EMPTY[lang], 'clear': False, 'tab': 'layers', 'shown': True}
@@ -276,12 +301,12 @@ def test_a_touch_mode_never_changes_the_tab(browser):
     assert fr.evaluate("() => document.body.dataset.activeTab") == 'nav'
     # le mode Réf. se choisit dans la barre de la carte ; on le prend par son bouton
     fr.evaluate("() => { const b = [...document.querySelectorAll('.tapmode .tb-btn')].find(x => /^(Réf\\.|Ref\\.)$/.test(x.textContent.trim())); b.click(); }")
-    pg.wait_for_timeout(300)
+    attendre(fr, "__RP.tapMode === 'ref'", 'le mode Réf. posé (tapMode)', lu='__RP.tapMode')
     assert fr.evaluate("() => __RP.tapMode") == 'ref' and fr.evaluate("() => document.body.dataset.activeTab") == 'nav'      # le mode posé depuis Nav. : l'onglet ne change pas
     box = fr.evaluate("() => { const r = document.getElementById('map').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }")
     off = pg.evaluate("() => { const r = document.getElementById('iframe-rp').getBoundingClientRect(); return [r.left, r.top]; }")
     pg.touchscreen.tap(box[0] + off[0] - 60, box[1] + off[1] + 60)
-    pg.wait_for_timeout(500)
+    attendre(fr, '__RP.S.refs.length === arg', 'la référence posée par le toucher (S.refs)', lu='__RP.S.refs.length', arg=n0 + 1)
     assert fr.evaluate("() => __RP.S.refs.length") == n0 + 1 and fr.evaluate("() => document.body.dataset.activeTab") == 'nav'
     tab(fr, 'refs')
     assert fr.evaluate("() => __RP.tapMode") == 'ref'                                    # et l'inverse : un onglet ne change pas le mode
@@ -297,7 +322,7 @@ def drag(pg, fr, dy):
     for i in range(1, 9):
         pg.mouse.move(x, y + dy * i / 8)
     pg.mouse.up()
-    pg.wait_for_timeout(300)
+    attendre_lecture_stable(fr, "() => [document.querySelector('.mapwrap').getBoundingClientRect().height, localStorage.getItem('rp_split_v1'), localStorage.getItem('rp_split_land_v1')]", 'la poignée lâchée (hauteur de la carte et clés du partage)')
 
 
 LS_DUMP = "() => JSON.stringify(Object.keys(localStorage).map(k => [k, localStorage.getItem(k)]))"
@@ -320,14 +345,8 @@ def reopen(pg):
         pg.evaluate(LS_PUT, snap)                                                  # le banc a perdu le stockage : on le remet et on recharge
         warnings.warn('bench: localStorage lost across a reload, restored')
     assert not pg.evaluate(LS_LOST, snap), 'localStorage lost three reloads in a row'
-    last, same = None, 0
-    for _ in range(80):
-        h = fr.evaluate("() => document.querySelector('.mapwrap').getBoundingClientRect().height")
-        same = same + 1 if h == last else 0
-        last = h
-        if same >= 4:
-            break
-        pg.wait_for_timeout(250)
+    attendre_mise_en_page(fr, 60000)
+    attendre_lecture_stable(fr, "() => document.querySelector('.mapwrap').getBoundingClientRect().height", 'la carte au repos (hauteur du cadre de la carte)')
     return fr
 
 
@@ -350,7 +369,7 @@ def test_the_handle_drags_remembers_clamps_and_resets(browser, w, h, H, em, ep, 
     # 9 999 : 85 % de H ; 50 : la borne basse
     fr.evaluate("(k) => { localStorage.setItem(k, '9999'); }", 'rp_split_v1' if key == 0 else 'rp_split_land_v1')
     fr.evaluate("() => window.dispatchEvent(new Event('resize'))")
-    pg.wait_for_timeout(300)
+    attendre_images(fr, 2)
     # la lecture de la clé se fait au chargement : on recharge l'outil
     fr = reopen(pg)
     assert abs(fr.evaluate(GEOM)['map']['h'] - 0.85 * H) <= 1
@@ -362,7 +381,8 @@ def test_the_handle_drags_remembers_clamps_and_resets(browser, w, h, H, em, ep, 
     b = fr.evaluate("() => { const r = document.getElementById('rp-split').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }")
     pg.mouse.click(b[0] + off[0], b[1] + off[1])
     pg.mouse.click(b[0] + off[0], b[1] + off[1])
-    pg.wait_for_timeout(300)
+    attendre(fr, "localStorage.getItem(arg) === null", 'le partage remis à celui du tableau (clé effacée)', lu='localStorage.getItem(arg)', arg='rp_split_v1' if key == 0 else 'rp_split_land_v1')
+    attendre_lecture_stable(fr, "() => document.querySelector('.mapwrap').getBoundingClientRect().height", 'la carte à la taille du tableau')
     assert abs(fr.evaluate(GEOM)['map']['h'] - em) <= 1 and fr.evaluate(KEYS)[key] is None
     assert pg.errs == []
 
@@ -375,19 +395,30 @@ KBM = """() => { const r = s => { const e = document.querySelector(s); if (!e ||
 KB_WINDOWS = [(345, 590, 200), (360, 640, 260), (412, 915, 330), (915, 412, 200)]
 
 
+BAR_DISPLAY = "getComputedStyle(document.getElementById('tab-bar')).display"
+
+
+def kb_apres(pg, fr, w, h, ouvert):
+    """Attend la mise en page après le changement de fenêtre du clavier : la fenêtre à la taille donnée, la barre d'onglets cachée (clavier ouvert) ou revenue, puis deux lectures égales de toute la géométrie."""
+    attendre_fenetre(pg, w, h)
+    attendre(fr, BAR_DISPLAY + (" === 'none'" if ouvert else " !== 'none'") + " && document.documentElement.classList.contains('ui-kb') === " + ('true' if ouvert else 'false'),
+             'la barre d\'onglets %s et ui-kb %s' % ('cachée' if ouvert else 'revenue', 'posé' if ouvert else 'retiré'), lu='[' + BAR_DISPLAY + ", document.documentElement.classList.contains('ui-kb')]")
+    attendre_images(fr, 3)
+    attendre_lecture_stable(fr, KBM, 'la géométrie du Route Planner au repos')
+
+
 def kb_open(pg, fr, field, w, h, d):
     """Le clavier de l'écran, simulé : le champ prend le focus, la fenêtre visible perd d pixels."""
     fr.evaluate("(id) => document.getElementById(id).focus()", field)
-    pg.wait_for_timeout(200)
+    attendre(fr, 'document.activeElement.id === arg', 'le champ %s a le focus' % field, lu='document.activeElement.id', arg=field)
     pg.set_viewport_size({'width': w, 'height': h - d})
-    pg.wait_for_timeout(900)
+    kb_apres(pg, fr, w, h - d, True)
 
 
 def kb_close(pg, fr, w, h):
     fr.evaluate("() => document.activeElement.blur()")
-    pg.wait_for_timeout(400)
     pg.set_viewport_size({'width': w, 'height': h})
-    pg.wait_for_timeout(800)
+    kb_apres(pg, fr, w, h, False)
 
 
 def kb_expected_map(g, land):
@@ -413,7 +444,8 @@ def test_the_keyboard_on_a_panel_field_hides_the_bar_keeps_the_field_in_view_and
     f = g['field']
     assert f and f['top'] >= g['panel']['top'] - 1 and f['bottom'] <= g['panel']['bottom'] + 1 and f['bottom'] <= g['vh'] and f['top'] >= 0     # le champ entier est dans le panneau visible, au-dessus du bas de la fenêtre
     fr.evaluate("() => showToast('Essai')")                                       # le toast suit : à 20 px du bas de la fenêtre visible
-    fr.wait_for_timeout(400)
+    attendre(fr, '(%s)() !== null' % TOAST, 'le toast affiché', lu='(%s)()' % TOAST)
+    attendre_lecture_stable(fr, TOAST, 'le toast posé')
     t = fr.evaluate(TOAST)
     assert t and abs(t['gap'] - 20) <= 1
     assert fr.evaluate(KEYS) == keys                                              # rien n'est écrit pendant le clavier
@@ -431,11 +463,14 @@ def test_the_map_search_gets_the_whole_height_with_at_least_three_whole_results(
     pg, fr = rp(browser, w, h)
     before, keys = fr.evaluate(KBM), fr.evaluate(KEYS)
     fr.evaluate("() => document.querySelector('.rp-search-btn').click()")
-    pg.wait_for_timeout(300)
+    attendre(fr, "!!document.getElementById('sr-in') && document.getElementById('sr-in').getClientRects().length > 0", 'la recherche de la carte ouverte (champ affiché)')
     fr.evaluate("() => { const i = document.getElementById('sr-in'); i.focus(); i.value = 'al'; i.dispatchEvent(new Event('input', { bubbles: true })); }")
-    pg.wait_for_timeout(500)
+    attendre(fr, "document.querySelectorAll('#sr-list .sr-row[data-i]').length >= 3", 'au moins trois résultats listés', lu="document.querySelectorAll('#sr-list .sr-row[data-i]').length")
     pg.set_viewport_size({'width': w, 'height': h - d})
-    pg.wait_for_timeout(900)
+    attendre_fenetre(pg, w, h - d)
+    attendre(fr, BAR_DISPLAY + " === 'none'", 'la barre d\'onglets cachée', lu=BAR_DISPLAY)
+    attendre_images(fr, 3)
+    attendre_lecture_stable(fr, KBM, 'la géométrie du Route Planner au repos')
     g = fr.evaluate(KBM)
     hp = g['vh'] - g['app']['top'] - g['split']['h']
     assert g['bar'] is None and abs(g['map']['h'] - hp) <= 1 and g['split'] and g['panel'] is None          # toute la hauteur H' à la carte, le panneau à 0, la poignée reste
@@ -459,21 +494,27 @@ def test_the_keyboard_hides_the_bar_of_the_datacard_and_briefing_generators_then
     bar = "() => { const b = document.getElementById('tab-bar'); return [getComputedStyle(b).display, b.getClientRects().length > 0, getComputedStyle(document.documentElement).getPropertyValue('--mp-toast-bottom').trim()]; }"
     assert f.evaluate(bar)[1]
     toast0 = f.evaluate(bar)[2]
+    attendre(f, '!!(%s)()' % pick.replace('e.focus(); return e.id;', 'return e.id;'), 'un champ de saisie affiché dans l\'éditeur')
     assert f.evaluate(pick)
-    pg.wait_for_timeout(200)
+    attendre(f, "['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)", 'le champ a le focus', lu='document.activeElement.tagName')
     pg.set_viewport_size({'width': 345, 'height': 390})
-    pg.wait_for_timeout(900)
+    attendre_fenetre(pg, 345, 390)
+    attendre(f, "getComputedStyle(document.getElementById('tab-bar')).display === 'none' && document.documentElement.classList.contains('ui-kb')", 'la barre cachée et ui-kb posé')
+    attendre_images(f, 3)
     assert f.evaluate("() => document.activeElement.tagName") in ('INPUT', 'TEXTAREA')
     b = f.evaluate(bar)
     assert b[0] == 'none' and not b[1] and f.evaluate("() => document.documentElement.classList.contains('ui-kb')")
     f.evaluate("() => showToast('Essai')")                                       # le toast du shell : à 20 px du bas de la fenêtre visible
-    pg.wait_for_timeout(450)
+    TSHELL = "() => { const e = document.getElementById('toast'), r = e.getBoundingClientRect(); return [e.classList.contains('show'), r.bottom, innerHeight]; }"
+    attendre(pg, "document.getElementById('toast').classList.contains('show')", 'le toast du shell affiché')
+    attendre_lecture_stable(pg, TSHELL, 'le toast du shell posé')
     t = pg.evaluate("() => { const e = document.getElementById('toast'), r = e.getBoundingClientRect(); return { show: e.classList.contains('show'), gap: innerHeight - r.bottom }; }")
     assert t['show'] and abs(t['gap'] - 20) <= 1, t
     f.evaluate("() => document.activeElement.blur()")
-    pg.wait_for_timeout(400)
     pg.set_viewport_size({'width': 345, 'height': 590})
-    pg.wait_for_timeout(800)
+    attendre_fenetre(pg, 345, 590)
+    attendre(f, "getComputedStyle(document.getElementById('tab-bar')).display !== 'none' && !document.documentElement.classList.contains('ui-kb')", 'la barre revenue et ui-kb retiré')
+    attendre_images(f, 3)
     b = f.evaluate(bar)
     assert b[0] != 'none' and b[1] and b[2] == toast0 and not f.evaluate("() => document.documentElement.classList.contains('ui-kb')")
     assert pg.errs == []
@@ -509,10 +550,9 @@ def test_the_waypoint_row_takes_two_lines_below_520_px_with_a_finger(browser, w,
         row.locator('[data-k=name]').fill('ESSAI')
         row.locator('[data-k=alt]').fill('123')
         row.locator('[data-k=gs]').fill('77')
-        row.locator('.tbm-trigger').tap()                                       # la liste Réf. : on choisit MER (MSL)
-        pg.wait_for_timeout(300)
+        row.locator('.tbm-trigger').tap()                                       # la liste Réf. : on choisit MER (MSL) ; le locator attend la liste affichée
         fr.locator('.tbm-panel li.tbm-opt').filter(has_text=re.compile('^(MER|MSL)$')).first.tap()
-        pg.wait_for_timeout(300)
+        attendre(fr, "__RP.S.points[1].altRef === 'MSL'", 'la référence MER (MSL) posée sur le point 2', lu='__RP.S.points[1].altRef')
         p = fr.evaluate("() => { const p = __RP.S.points[1]; return [p.name, p.alt, p.gs, p.altRef]; }")
         assert p[0] == 'ESSAI' and p[3] == 'MSL' and p[1] == 123 and abs(p[2] - 77) < 1
     assert pg.errs == []
@@ -549,9 +589,10 @@ TOAST = """() => { const t = [...document.querySelectorAll('.toast, #toast, .mp-
 @pytest.mark.parametrize('w,h', [(345, 590), (412, 915)])
 def test_the_toast_sits_12_px_above_the_bar(browser, w, h):
     pg, fr = rp(browser, w, h)
-    pg.wait_for_timeout(13000)                                                  # le toast « Restaurer » de l'exemple est parti
+    attendre_toast_parti(pg, fr)                                                # le toast « Restaurer » de l'exemple est parti (12 s par construction de showToast)
     fr.evaluate("() => showToast('Essai')")
-    fr.wait_for_timeout(400)
+    attendre(fr, '(%s)() !== null' % TOAST, 'le toast affiché', lu='(%s)()' % TOAST)
+    attendre_lecture_stable(fr, TOAST, 'le toast posé')
     t = fr.evaluate(TOAST)
     assert t and abs(t['gap'] - 12) <= 1 and not t['overlaps']
     assert pg.errs == []
@@ -560,9 +601,10 @@ def test_the_toast_sits_12_px_above_the_bar(browser, w, h):
 @needs_pw
 def test_the_toast_stays_20_px_from_the_bottom_with_a_mouse(browser):
     pg, fr = rp(browser, 1280, 800, False)
-    pg.wait_for_timeout(13000)
+    attendre_toast_parti(pg, fr)                                                # le toast « Restaurer » de l'exemple est parti (12 s par construction de showToast)
     fr.evaluate("() => showToast('Essai')")
-    fr.wait_for_timeout(400)
+    attendre(fr, '(%s)() !== null' % TOAST, 'le toast affiché', lu='(%s)()' % TOAST)
+    attendre_lecture_stable(fr, TOAST, 'le toast posé')
     t = fr.evaluate(TOAST)
     assert t and abs(t['gap'] - 20) <= 1
     assert pg.errs == []
@@ -601,10 +643,11 @@ def test_every_reference_point_row_stays_on_one_line_below_520_px(browser, w, h,
     pg, fr = rp(browser, w, h, touch)
     for i in range(4):
         fr.evaluate("(i) => { addRef(35 + i * 0.1, 36 + i * 0.1, 'REF' + i); }", i)
-    pg.wait_for_timeout(300)
+    attendre(fr, '__RP.S.refs.length >= 4', 'les quatre références posées (S.refs)', lu='__RP.S.refs.length')
     tab(fr, 'refs')                                                               # la barre d'onglets est là jusqu'à 1 100 px, souris ou doigt
     fr.wait_for_function("() => { const rows = [...document.querySelectorAll('#refs .pt-row')]; return rows.length >= 4 && rows.every(r => r.getClientRects().length && r.getBoundingClientRect().height > 0); }", timeout=10000)       # les quatre lignes sont posées
-    pg.wait_for_timeout(300)                                                      # et la mise en page de l'onglet est faite avant la mesure
+    attendre_mise_en_page(fr)                                                     # et la mise en page de l'onglet est faite avant la mesure : les lignes ont cessé de bouger
+    attendre_lecture_stable(fr, REFROWS, 'les lignes de références au repos')
     rows = fr.evaluate(REFROWS)
     assert len(rows) >= 4
     for r in rows:

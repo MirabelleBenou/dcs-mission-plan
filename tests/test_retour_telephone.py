@@ -362,7 +362,6 @@ def test_the_field_manual_pages_do_not_add_entries_without_the_navigation_api(br
     tool_attendre(pg, 'fm', "location.hash === '#hq'", 'la page HQ du manuel ouverte (adresse #hq)')
     attendre_navigation_stable(pg)
     assert tool_win(pg, 'fm', 'location.hash') == '#hq'
-    h0 = tool_win(pg, 'fm', 'location.hash')
     tool_win(pg, 'fm', "(document.querySelector('.fmnav-pn a.fmnav-nx:not([hidden])') || document.querySelector('.fmnav-pn a')).click()")
     attendre_navigation_stable(pg)
     tool_win(pg, 'fm', "(document.querySelector('a.fm-lnk') || { click() {} }).click()")

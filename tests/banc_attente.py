@@ -252,3 +252,16 @@ def attendre_python(page, condition, etat, delai=DELAI):
         if time.monotonic() > fin:
             raise AssertionError('état attendu : %s ; état lu : la condition est restée fausse (délai %d ms)' % (etat, delai))
         page.evaluate('() => new Promise(r => setTimeout(r, 25))')       # un tour de la boucle d'évènements de la page : les dialogues et la fermeture sont traités
+
+
+def attendre_lecture_stable(cible, lecture, etat, delai=DELAI):
+    """Deux lectures égales à 100 ms d'écart : `lecture` est une fonction JavaScript (chaîne « () => … ») dont le résultat est comparé, sérialisé, à la lecture précédente."""
+    cible.evaluate('() => { window.__banc_lect = null; }')
+    attendre_etat(cible, "() => { const k = JSON.stringify((%s)()); const avant = window.__banc_lect; window.__banc_lect = k; return avant === k; }" % lecture,
+                  etat + ' (deux lectures égales à 100 ms)', lecture=lecture, delai=delai, polling=100)
+
+
+def attendre_toast_parti(*cibles, delai=20000):
+    """Plus aucun toast affiché dans la page ou le cadre ; le toast à bouton (« Restaurer ») dure 12 s par construction de l'application (showToast), d'où le délai."""
+    for c in cibles:
+        attendre(c, "!document.querySelector('.toast.show')", 'aucun toast affiché', lu="[...document.querySelectorAll('.toast')].map(e => e.className)", delai=delai)

@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tests'))
 from test_rp_menaces import (Bench, SHELL, browser, display, needs_pw, sym)  # noqa: E402,F401
 from test_rp_profil import east_route, pt, rects, route, tick, wait_prof  # noqa: E402,F401
-from banc_attente import (attendre, attendre_etat, attendre_fenetre, attendre_images, attendre_profil_repos, attendre_repos, attendre_rp, attendre_shell, attendre_theatre,  # noqa: E402
+from banc_attente import (attendre, attendre_fenetre, attendre_profil_repos, attendre_repos, attendre_rp, attendre_shell, attendre_theatre,  # noqa: E402
                           exemple)
 
 NB = ' '                      # l'espace fine des milliers, en français
