@@ -103,24 +103,21 @@ def test_before_between_and_after_the_fixed_times():
 
 
 @needs_node
-def test_a_fixed_time_holds_to_five_seconds_then_is_orange_within_the_margin_and_red_beyond_with_its_factor():
+def test_a_fixed_time_holds_to_five_seconds_and_turns_red_beyond_with_its_factor():
     ex = el_at([220] * 5)
     base = 32400 + ex[4]
-    for off, unheld in ((5, False), (-5, False), (5.9, False), (6.5, True), (-6.5, True), (120, True)):
+    for off in (5, -5, 5.9, 6.5, -6.5, 120):
         p = eq_points(LONS); p[0].update(t='09:00:00', tLock=True); p[4].update(t=hms(base + off), tLock=True)
         besoin = secs(hms(base + off)) - 32400
-        want = abs(ex[4] - besoin) > 5                     # l'écart se juge sur les secondes entières posées
-        r = calc(p)                                        # la marge de 15 % : orange, jamais rouge
-        assert r['red'] == [None] * 6 and (r['amb'][4] is not None) == want, (off, r['amb'][4], ex[4] - besoin)
-        if want:
-            assert r['amb'][4]['a'] == 0 and abs(r['amb'][4]['f'] - ex[4] / besoin) < 1e-9 and r['clock'][4] == hms(base + off)       # b garde sa valeur
-            assert r['amb'][4]['free'] == [1, 2, 3, 4] and r['amb'][4]['L'] == 0
-        assert all(x is None for k, x in enumerate(r['amb']) if k != 4)
-        r1 = calc(p, margin=1)                             # la marge de 1 % : rouge « marge » dès que |f − 1| dépasse 1 %
+        want = abs(ex[4] - besoin) > 5                     # l'écart se juge sur les secondes entières posées : on recalcule ici avec ce que le point porte
         far = want and abs(ex[4] / besoin - 1) * 100 > 1
-        assert (r1['red'][4] is not None) == far and (r1['amb'][4] is not None) == (want and not far), (off, r1['red'][4], r1['amb'][4])
+        r = calc(p, margin=1)                              # la marge de 1 % : rouge « marge » dès que |f − 1| dépasse 1 % (en deçà, c'est l'orange : tests/test_route_vitesses.py)
+        assert (r['red'][4] is not None) == far, (off, r['red'][4], ex[4] - besoin)
         if far:
-            assert r1['red'][4]['why'] == 'm' and abs(r1['red'][4]['f'] - ex[4] / besoin) < 1e-9
+            assert r['red'][4]['a'] == 0 and r['red'][4]['why'] == 'm' and abs(r['red'][4]['f'] - ex[4] / besoin) < 1e-9 and abs(r['red'][4]['besoin'] - besoin) < 1e-9
+            assert r['clock'][4] == hms(base + off)                       # b garde sa valeur
+        assert all(x is None for k, x in enumerate(r['red']) if k != 4)
+    assert far                                             # le dernier cas (120 s) est bien rouge à 1 %
 
 
 @needs_node
@@ -264,6 +261,7 @@ def tm_type(fr, pg, i, text, enter=True):
 
 def set_margin(fr, v):
     fr.locator('#mg-def').fill(str(v))
+    fr.locator('#mg-def').press('Tab')                                    # un chiffre de 1 à 5 attend la suite : il s'écrit en quittant le champ
     attendre(fr, 'S.speedMargin === arg', 'la marge à %s' % v, arg=v, lu='S.speedMargin')
 
 

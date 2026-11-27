@@ -76,7 +76,7 @@ function rtmKm(a, b) {
   const h = Math.sin((p2 - p1) / 2) * Math.sin((p2 - p1) / 2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
   return 2 * RTM_R_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
-/* Les temps d'une route : { n, legs (par branche : km, v, sec, lock ; rec et amb sur une branche libre d'un tronçon orange), el (temps écoulé non arrondi), km, sec, has (une heure fixe au moins), fixed, lock, t (secondes non arrondies, ou null sans heure), red, amb }.
+/* Les temps d'une route : { n, legs (par branche : km, v, sec, lock ; rec et amb sur une branche libre d'un tronçon orange), el (temps écoulé non arrondi), km, sec (la durée totale, les branches orange à leurs vitesses recommandées), has (une heure fixe au moins), fixed, lock, t (secondes non arrondies, ou null sans heure), red, amb }.
    Entre deux heures fixes a et b qui ne tiennent pas à 5 s près : L est le temps des branches verrouillées (gsLock), les autres sont libres, f = (actuel − L) / (besoin − L) ;
    red[b] : null, ou { a, besoin, actuel, f, L, why } : why '0' (besoin nul), 'lk' (aucune branche libre), 'lt' (besoin ≤ L), 'm' (|f − 1| × 100 au-delà de la marge) ;
    amb[b] : null, ou { a, besoin, actuel, f, L, free (les rangs des branches libres) } : dans la marge ; chaque branche libre prend v × f (legs[i].rec), et les heures de a à b se calculent à ces vitesses (b garde sa valeur) */
@@ -130,6 +130,8 @@ function rtmCompute(points, gsDefault, margin) {
     }
     F.forEach(i => { t[i] = T(i); });
   }
+  sec = 0;       /* la durée totale compte les branches d'un tronçon orange à leurs vitesses recommandées (la durée et l'arrivée s'accordent) ; sans orange, c'est la somme des durées des branches */
+  for (let i = 1; i < n; i++) sec += legs[i].amb !== undefined && amb[legs[i].amb] ? legs[i].sec / amb[legs[i].amb].f : legs[i].sec;
   return { n: n, legs: legs, el: el, km: km, sec: sec, has: F.length > 0, fixed: fixed, lock: lock, t: t, red: red, amb: amb };
 }
 /* Les vitesses d'un tronçon orange (b : son point d'arrivée) écrites dans les branches libres : v × f arrondie par round (km/h → km/h de l'unité affichée, entier) ; une branche verrouillée et les autres tronçons ne bougent pas ; faux sans tronçon orange en b */

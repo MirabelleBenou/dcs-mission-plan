@@ -444,10 +444,10 @@ select.in { appearance: none; -webkit-appearance: none; padding-right: 22px;
 /* le cadenas de vitesse : dans le champ, à droite (ni colonne ni largeur de plus) */
 .gs-wrap { position: relative; display: block; min-width: 0; }
 .gs-wrap > input.in { width: 100%; box-sizing: border-box; }
-.pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-right: 24px; }
-.gs-lock { position: absolute; right: 0; top: 0; bottom: 0; width: 22px; min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; color: #1f1c16; opacity: .5; background: transparent; border: 0; border-radius: 0; cursor: pointer; }
+.pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-left: 3px; padding-right: 22px; }
+.gs-lock { position: absolute; right: 0; top: 0; bottom: 0; width: 20px; min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--ink); opacity: .65; background: transparent; border: 0; border-radius: 0; cursor: pointer; }
 .gs-lock.on { opacity: 1; }
-.gs-lock .tm-ico { width: 14px; height: 14px; }
+.gs-lock .tm-ico { width: 13px; height: 13px; }
 .gs-lock:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; opacity: 1; }
 .in:disabled { background: transparent; border: 1px dashed var(--amber-dark); color: var(--khaki-light); -webkit-text-fill-color: var(--khaki-light);
   text-align: center; cursor: not-allowed; opacity: 1; padding-left: 5px; }
@@ -1219,22 +1219,22 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .wp-time { display: inline-flex; align-items: center; gap: 4px; }
 .wp-time .tm-ico { flex: none; width: 11px; height: 11px; }
 .wp-time.red { background: var(--mp-sig-red); color: #fff; }
-.wp-time.amb { background: var(--mp-sig-orange); color: #1f1c16; }
+.wp-time.amb { background: var(--mp-sig-orange); color: var(--ink); }
 .tm-warn { margin-left: 2px; }
 .tm-wrap { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
 .tm-t { box-sizing: border-box; display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 6px; margin: 0 0 0 -6px; font: inherit; letter-spacing: 0; color: inherit; background: transparent; border: 1px solid transparent; border-radius: 0; cursor: pointer; }
 .tm-t:hover { border-color: #463f30; }
 .tm-t:focus-visible, .tm-lock:focus-visible, .tm-in:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
 .tm-t.red { margin-left: 0; color: #fff; background: var(--mp-sig-red); border-color: var(--mp-sig-red); }
-.tm-t.amb { margin-left: 0; color: #1f1c16; background: var(--mp-sig-orange); border-color: var(--mp-sig-orange); }
+.tm-t.amb { margin-left: 0; color: var(--ink); background: var(--mp-sig-orange); border-color: var(--mp-sig-orange); }
 .tm-in { box-sizing: border-box; width: 9em; height: 28px; padding: 0 6px; font: 400 12px var(--f-mono); letter-spacing: 0; color: #1f1c16; background: #fffdf6; border: 2px solid var(--amber); border-radius: 0; }
 .tm-lock { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; padding: 0; color: #1f1c16; background: transparent; border: 1px solid #463f30; border-radius: 0; cursor: pointer; }
 .tm-lock .tm-ico { width: 16px; height: 16px; }
 .tm-lock[aria-pressed="true"] { color: #f0e8d6; background: #1f1c16; }
 .tm-lock:disabled { opacity: .4; cursor: default; }
-/* l'orange (C13 bis) : le contour des boîtes du tronçon, l'étiquette en pastille sous chacune, le bandeau et son bouton */
+/* l'orange : le contour des boîtes du tronçon, l'étiquette en pastille sous chacune, le bandeau et son bouton */
 .lb-amb .lb-bg { stroke: var(--mp-sig-orange-line); stroke-width: 2.4; }
-.amb-lab { white-space: nowrap; font-family: var(--f-mono); font-size: 11.5px; font-weight: 400; line-height: 1.3; color: #1f1c16; background: var(--mp-sig-orange); padding: 1px 6px; }
+.amb-lab { white-space: nowrap; font-family: var(--f-mono); font-size: 11.5px; font-weight: 400; line-height: 1.3; color: var(--ink); background: var(--mp-sig-orange); padding: 1px 6px; }
 .amb-lab.amb-box { position: absolute; left: 50%; transform: translateX(-50%); }
 .amb-lab.amb-solo { display: inline-block; transform: translate(-50%, 14px); }
 .ui-bandeau.amb { border-left-color: var(--mp-sig-orange); }
@@ -1258,12 +1258,13 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   /* les commandes de la carte (dans .leaflet-container, que la règle commune n'atteint pas) : le zoom, le bouton de recherche (son champ et sa croix sont déjà à 44 px) et la barre des modes */
   .leaflet-control-zoom a, .rp-search-btn, .tapmode .tb-btn { min-width: 44px; min-height: 44px; }
   .pt-num, .pt-del { min-width: 0; }                                /* les lignes de références gardent leurs largeurs ; la ligne de point d'une seule rangée a sa règle plus bas (44 × 44) */
-  .gs-lock { width: 28px; }                                         /* le cadenas de vitesse : 28 de large sur toute la hauteur du champ (44) */
-  .pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-right: 28px; }
+  .gs-lock { width: 24px; }                                         /* le cadenas de vitesse : 24 de large sur toute la hauteur du champ (44) ; quatre chiffres à côté */
+  .pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-left: 3px; padding-right: 23px; }
 }
 /* sous 520 px au doigt, le texte est à 16 px dans une colonne de 63 px : trois chiffres tiennent à côté du cadenas en serrant la marge de gauche */
 @media (pointer: coarse) and (max-width: 519.98px) {
-  .pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-left: 3px; }
+  .gs-lock { width: 28px; }
+  .pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-left: 3px; padding-right: 28px; }
 }
 /* la ligne de point d'une seule rangée (à partir de 520,02 px) : n° et ✕ d'au moins 44 × 44 px, les colonnes ALT., VIT. et RÉF. inchangées, le nom prend le reste */
 @media (pointer: coarse) and (min-width: 520.02px) {
@@ -1457,7 +1458,7 @@ __CSS__
           <div><div class="lbl" data-i18n="f.ticks">Traits des minutes</div><span class="tb-group" role="group" data-i18n-aria-label="f.ticks" aria-label="Traits des minutes"><button type="button" class="tb-btn" data-tck="route" aria-pressed="true" data-i18n="col.route">Couleur</button><button type="button" class="tb-btn" data-tck="black" aria-pressed="false" data-i18n="col.black">Noir</button></span></div>
         </div>
         <p class="ui-note" id="mg-note" data-i18n="nav.margin.n">Marge : variation permise des vitesses pour tenir les heures verrouillées.</p>
-        <div id="nav-amb"></div>
+        <div id="nav-amb" role="status"></div>
         <div class="hdg">
           <div><div class="lbl" data-i18n="f.ref">Cap</div><span class="tb-group" role="group"><button type="button" class="tb-btn" data-ref="true" aria-pressed="true" data-i18n="ref.true">Vrai</button><button type="button" class="tb-btn" data-ref="mag" aria-pressed="false" data-i18n="ref.mag">Magnétique</button></span></div>
           <div><div class="lbl" data-i18n="f.diss">DISS-15</div><span class="tb-group" role="group" data-i18n-aria-label="f.diss" aria-label="DISS-15"><button type="button" class="tb-btn" data-diss="off" aria-pressed="true" data-i18n="diss.off">Masquer</button><button type="button" class="tb-btn" data-diss="on" aria-pressed="false" data-i18n="diss.on">Afficher</button></span></div>
@@ -6304,22 +6305,26 @@ function drawDecorNow() {
     const leg = tm.legs[i];
     if (len > 0) drawTicks(i, pa, (pb.x - pa.x) / len, (pb.y - pa.y) / len, len, leg);
     const amb = TMX.plain ? '' : ambLabel(tm, i);       /* « → 240 km/h (+9 %) » sous la boîte d'une branche libre d'un tronçon orange ; jamais à l'export */
+    const solo = () => {                  /* l'étiquette orange seule, au milieu de la branche : chaque branche orange a la sienne, sans condition de longueur */
+      const a = pts[i - 1], b = pts[i];
+      L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], {
+        interactive: false, keyboard: false,
+        icon: L.divIcon({ className: 'leg-label-icon', iconSize: [0, 0], html: '<span class="amb-lab amb-solo">' + esc(amb) + '</span>' })
+      }).addTo(decorGroup);
+    };
     if (S.legBoxes === 'none') {
-      /* « Aucune » : l'étiquette « cap · distance » de toujours */
+      /* « Aucune » : l'étiquette « cap · distance » de toujours (branche d'au moins 120 px) */
       if (len >= LEG_LABEL_MIN_PX) {
         const a = pts[i - 1], b = pts[i];
         L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], {
           interactive: false, keyboard: false,
           icon: L.divIcon({ className: 'leg-label-icon', iconSize: [0, 0], html: '<span class="leg-label">' + leg.cap + '° · ' + esc(fmtDist(leg.km)) + '</span>' })
         }).addTo(decorGroup);
-        if (amb) L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], {
-          interactive: false, keyboard: false,
-          icon: L.divIcon({ className: 'leg-label-icon', iconSize: [0, 0], html: '<span class="amb-lab amb-solo">' + esc(amb) + '</span>' })
-        }).addTo(decorGroup);
       }
+      if (amb) solo();
     } else if (len >= BOX_MIN_PX) {
       drawBox(i, pa, pb, len, leg, amb);
-    }
+    } else if (amb) solo();
   }
 }
 
@@ -9033,12 +9038,17 @@ function toggleSpeedLock(i) {
   if (!p || i < 1) return;
   if (p.gsLock === true) rtmUnlockGs(S.points, i); else rtmLockGs(S.points, i, S.groundSpeed);
   afterEdit(true);
+  const again = document.querySelector('#pts .pt-row[data-i="' + i + '"] .gs-lock');      /* les lignes sont refaites : le focus revient au cadenas de la même ligne */
+  if (again) again.focus();
 }
 /* Appliquer : les vitesses recommandées du tronçon orange qui arrive au point b, écrites (entier de l'unité affichée) dans ses branches libres */
-function roundSpeed(kmh) { const n = Math.max(1, speedDisp(kmh)); return S.units.distance === 'nm' ? r4(n * NM_KM) : n; }
+function roundSpeed(kmh) { const n = Math.min(GS_MAX_IN, Math.max(1, speedDisp(kmh))); return S.units.distance === 'nm' ? r4(n * NM_KM) : n; }
 function applyAmb(b) {
   if (!rtmApply(S.points, timing().h, b, roundSpeed)) return;
   afterEdit(true);
+  const left = [...document.querySelectorAll('#nav-amb [data-apply]')];                  /* le focus va à « Appliquer » du bandeau suivant, sinon au champ de la marge */
+  const nxt = left.find(x => parseInt(x.dataset.apply, 10) > b) || left[0];
+  if (nxt) nxt.focus(); else $('mg-def').focus();
 }
 function onRowChange(ev, kind) {
   const row = ev.target.closest('.pt-row');
@@ -11971,14 +11981,21 @@ function bindEvents() {
     persistState(); renderNav(); drawDecor(); updateTimes(); syncSpeedPlaceholders();
   });
   $('gs-def').addEventListener('change', e => { e.target.value = speedDisp(S.groundSpeed); });
-  /* La marge des vitesses (± %) : un entier de 1 à 50 ; une saisie hors règle ne change rien, le champ reprend la valeur gardée en quittant */
+  /* La marge des vitesses (± %) : un entier de 1 à 50. À la frappe, elle s'écrit quand la saisie est dans les bornes et n'est pas le début d'une saisie plus longue (un chiffre de 1 à 5 peut devenir 10 à 50) ;
+     en quittant le champ, une saisie hors bornes rend la valeur qu'il avait à l'entrée (taper « 60 » depuis 15 rend 15), une saisie valide s'écrit. */
+  const marginRead = str => { const m = /^\s*(\d{1,2})\s*$/.exec(str), v = m ? parseInt(m[1], 10) : 0; return v >= 1 && v <= 50 ? v : 0; };
+  const marginSet = v => { if (v === S.speedMargin) return; S.speedMargin = v; persistState(); renderNav(); drawDecor(); updateTimes(); };
+  $('mg-def').addEventListener('focus', e => { e.target.dataset.before = String(S.speedMargin); });
   $('mg-def').addEventListener('input', e => {
-    const m = /^\s*(\d{1,2})\s*$/.exec(e.target.value), v = m ? parseInt(m[1], 10) : 0;
-    if (v < 1 || v > 50) return;
-    S.speedMargin = v;
-    persistState(); renderNav(); drawDecor(); updateTimes();
+    const v = marginRead(e.target.value);
+    if (!v || (v < 10 && !/^\s*0/.test(e.target.value) && v <= 5)) return;
+    marginSet(v);
   });
-  $('mg-def').addEventListener('change', e => { e.target.value = String(S.speedMargin); });
+  $('mg-def').addEventListener('change', e => {
+    const v = marginRead(e.target.value), before = parseInt(e.target.dataset.before, 10);
+    marginSet(v || (before >= 1 && before <= 50 ? before : S.speedMargin));
+    e.target.value = String(S.speedMargin);
+  });
   $('decl').addEventListener('input', e => {
     S.navDisplay.decl = e.target.value;
     persistState(); renderNav(); drawRoute(); syncControls();

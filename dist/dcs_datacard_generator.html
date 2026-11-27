@@ -1199,9 +1199,9 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 
 /* heures de la route : la pastille rouge de l'aperçu (C13 bis) ; la ligne « Point » des Horaires, le cadenas et le champ Heure de la nav */
 .tm-red { display: inline-block; padding: 0 .18em; color: #fff; background: var(--mp-sig-red); }
-.tm-amb { display: inline-block; padding: 0 .18em; color: #1f1c16; background: var(--mp-sig-orange); }
+.tm-amb { display: inline-block; padding: 0 .18em; color: var(--ink); background: var(--mp-sig-orange); }
 .ui-bandeau.amb { border-left-color: var(--mp-sig-orange); }
-.ed-field input.tm-ambin, .ed-field input.tm-ambin:focus { color: #1f1c16; background: var(--mp-sig-orange); border-color: var(--mp-sig-orange); border-left-color: var(--mp-sig-orange); }
+.ed-field input.tm-ambin, .ed-field input.tm-ambin:focus { color: var(--ink); background: var(--mp-sig-orange); border-color: var(--mp-sig-orange); border-left-color: var(--mp-sig-orange); }
 .tm-warn { margin-left: .2em; font-size: .7em; vertical-align: .1em; }
 .tp-row { grid-template-columns: minmax(0, 1fr) 44px; align-items: end; }
 .tp-lock { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; color: var(--paper-light); background: var(--olive); border: 1px solid var(--khaki); border-radius: 0; cursor: pointer; }
@@ -5771,7 +5771,7 @@ function rwMinimalState(set, th) {
     format: RW_ROUTE_FORMAT, name: act && typeof act.name === 'string' ? act.name : '', theatre: act && rtThOk(act.theatre) ? act.theatre : (rtThOk(th) ? th : rwRefTheatre(null)),
     units: { distance: rwObj(un) && un.distance === 'nm' ? 'nm' : 'km', altitude: rwObj(un) && un.altitude === 'ft' ? 'ft' : 'm' },
     navDisplay: { ref: nd.ref === 'mag' ? 'mag' : 'true', decl: typeof nd.decl === 'string' ? nd.decl : '', mode: nd.mode === 'manual' ? 'manual' : 'calc', year: typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year) ? nd.year : '', force: nd.force === true },
-    groundSpeed: RW_GS_DEFAULT, legBoxes: 'full',
+    groundSpeed: RW_GS_DEFAULT, speedMargin: 15, legBoxes: 'full',
     points: act ? act.points : [], refs: [],
     ui: { layer: 'topo', grid: true, places: false, towns: true, airfields: true, trace: 'route', ticks: 'route' }
   };
@@ -5981,7 +5981,7 @@ function rtmKm(a, b) {
   const h = Math.sin((p2 - p1) / 2) * Math.sin((p2 - p1) / 2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
   return 2 * RTM_R_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
-/* Les temps d'une route : { n, legs (par branche : km, v, sec, lock ; rec et amb sur une branche libre d'un tronçon orange), el (temps écoulé non arrondi), km, sec, has (une heure fixe au moins), fixed, lock, t (secondes non arrondies, ou null sans heure), red, amb }.
+/* Les temps d'une route : { n, legs (par branche : km, v, sec, lock ; rec et amb sur une branche libre d'un tronçon orange), el (temps écoulé non arrondi), km, sec (la durée totale, les branches orange à leurs vitesses recommandées), has (une heure fixe au moins), fixed, lock, t (secondes non arrondies, ou null sans heure), red, amb }.
    Entre deux heures fixes a et b qui ne tiennent pas à 5 s près : L est le temps des branches verrouillées (gsLock), les autres sont libres, f = (actuel − L) / (besoin − L) ;
    red[b] : null, ou { a, besoin, actuel, f, L, why } : why '0' (besoin nul), 'lk' (aucune branche libre), 'lt' (besoin ≤ L), 'm' (|f − 1| × 100 au-delà de la marge) ;
    amb[b] : null, ou { a, besoin, actuel, f, L, free (les rangs des branches libres) } : dans la marge ; chaque branche libre prend v × f (legs[i].rec), et les heures de a à b se calculent à ces vitesses (b garde sa valeur) */
@@ -6035,6 +6035,8 @@ function rtmCompute(points, gsDefault, margin) {
     }
     F.forEach(i => { t[i] = T(i); });
   }
+  sec = 0;       /* la durée totale compte les branches d'un tronçon orange à leurs vitesses recommandées (la durée et l'arrivée s'accordent) ; sans orange, c'est la somme des durées des branches */
+  for (let i = 1; i < n; i++) sec += legs[i].amb !== undefined && amb[legs[i].amb] ? legs[i].sec / amb[legs[i].amb].f : legs[i].sec;
   return { n: n, legs: legs, el: el, km: km, sec: sec, has: F.length > 0, fixed: fixed, lock: lock, t: t, red: red, amb: amb };
 }
 /* Les vitesses d'un tronçon orange (b : son point d'arrivée) écrites dans les branches libres : v × f arrondie par round (km/h → km/h de l'unité affichée, entier) ; une branche verrouillée et les autres tronçons ne bougent pas ; faux sans tronçon orange en b */
@@ -8128,6 +8130,8 @@ function dgRouteFail(why) {
   else if (why === 'full') showToast(t('toast.rwFull'), { type: 'err', ms: 6000 });
 }
 /* Après une écriture : la fiche des groupes (la copie de route du groupe a pu changer), les cartes, l'enregistrement */
+/* Un point qui arrive au rang 0 n'a pas de branche qui l'atteint : ni vitesse ni verrou de vitesse, comme au Route Planner */
+function dgNoGs0(route) { const p0 = route.points[0]; if (rwObj(p0)) { delete p0.gs; delete p0.gsLock; } }
 function dgAfterRouteWrite(full) {
   gsApplyAll();
   dgSyncRoutes();
@@ -8281,7 +8285,7 @@ function dgNavAct(c, act, i) {
       const pid = x.pid, rid = info.rid, vars = { n: hasText(x.name) ? x.name.trim() : t('nav.rm.point', { k: i }), r: info.name || t('nav.rm.route') };
       askConfirm({ title: t('nav.rm.confirm.title', vars), text: t('nav.rm.confirm.text', vars), verb: t('ui.verb.remove'), danger: true }).then(ok => {
         if (!ok || doc.cards.indexOf(c) < 0) return;
-        const r = rwUpdateRoute(rid, route => { const k = route.points.findIndex(q => rwObj(q) && q.pid === pid); if (k < 0) return false; route.points.splice(k, 1); });
+        const r = rwUpdateRoute(rid, route => { const k = route.points.findIndex(q => rwObj(q) && q.pid === pid); if (k < 0) return false; route.points.splice(k, 1); dgNoGs0(route); });
         if (!r.ok && r.why !== 'abort') { dgRouteFail(r.why); return; }
         const j = c.nav.findIndex(q => q && q.pid === pid);
         if (j >= 0) c.nav.splice(j, 1);
@@ -8307,6 +8311,7 @@ function dgNavAct(c, act, i) {
       const p = route.points.splice(a, 1)[0];
       const b = route.points.findIndex(q => rwObj(q) && q.pid === np);
       route.points.splice(dir < 0 ? b : b + 1, 0, p);
+      dgNoGs0(route);
     });
     if (!r.ok) { if (r.why !== 'abort') dgRouteFail(r.why); return true; }
     dgAfterRouteWrite(true);

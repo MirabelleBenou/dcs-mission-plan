@@ -133,7 +133,7 @@ function rwMinimalState(set, th) {
     format: RW_ROUTE_FORMAT, name: act && typeof act.name === 'string' ? act.name : '', theatre: act && rtThOk(act.theatre) ? act.theatre : (rtThOk(th) ? th : rwRefTheatre(null)),
     units: { distance: rwObj(un) && un.distance === 'nm' ? 'nm' : 'km', altitude: rwObj(un) && un.altitude === 'ft' ? 'ft' : 'm' },
     navDisplay: { ref: nd.ref === 'mag' ? 'mag' : 'true', decl: typeof nd.decl === 'string' ? nd.decl : '', mode: nd.mode === 'manual' ? 'manual' : 'calc', year: typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year) ? nd.year : '', force: nd.force === true },
-    groundSpeed: RW_GS_DEFAULT, legBoxes: 'full',
+    groundSpeed: RW_GS_DEFAULT, speedMargin: 15, legBoxes: 'full',
     points: act ? act.points : [], refs: [],
     ui: { layer: 'topo', grid: true, places: false, towns: true, airfields: true, trace: 'route', ticks: 'route' }
   };

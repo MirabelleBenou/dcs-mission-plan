@@ -5,6 +5,7 @@ Au navigateur (le shell construit, chromium, aucun réseau ; 1 280 × 800 à la 
 la route écrite), le Datacard Generator orange égal au Route Planner, les cibles de 44 px. Les contrôles passent par le DOM, jamais par une capture."""
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from test_route_heures import (CHROMIUM, MAPT, NAVT, OFF, PTS, R, geom, hms, nee
 from banc_attente import attendre, attendre_mise_en_page, cadre_export  # noqa: E402
 
 ORANGE, ORANGE_LINE = 'rgb(224, 122, 18)', 'rgb(169, 86, 4)'
+INK = """() => { const e = document.createElement('i'); e.style.color = 'var(--ink)'; document.body.appendChild(e); const c = getComputedStyle(e).color; e.remove(); return c; }"""      # --ink : l'encre du thème, jamais une couleur en dur
 LONS = [0, 0.5, 1.2, 1.5, 2.3, 2.5]
 LEG_KM = [R * math.radians(b - a) for a, b in zip(LONS, LONS[1:])]
 SIZES = [(1280, 800, False), (768, 1024, True)]
@@ -30,7 +32,7 @@ def pts(**extra):
 
 
 def calc(points, margin=15, gs=220):
-    return node('const p = %s; const T = rtmCompute(p, %s, %s); out({ t: T.t, clock: T.t.map(x => x === null ? null : rtmClock(x)), red: T.red, amb: T.amb, legs: T.legs, el: T.el });' % (json.dumps(points), gs, margin))
+    return node('const p = %s; const T = rtmCompute(p, %s, %s); out({ t: T.t, clock: T.t.map(x => x === null ? null : rtmClock(x)), red: T.red, amb: T.amb, legs: T.legs, el: T.el, sec: T.sec, km: T.km });' % (json.dumps(points), gs, margin))
 
 
 def times_for(speeds):
@@ -60,8 +62,30 @@ def test_orange_within_the_margin_gives_each_free_leg_its_recommended_speed_and_
     for i in range(4):
         assert abs(r['t'][i] - (t0 + ex[i] / f)) < 1e-6
     assert r['clock'][4] == hms(want_b) and abs(r['t'][5] - (secs(hms(want_b)) + (ex[5] - ex[4]))) < 1e-6
+    # la durée totale compte les branches du tronçon à leurs vitesses recommandées : elle s'accorde à l'arrivée ; sans orange, elle est la somme des durées des branches
+    assert abs(r['sec'] - (r['t'][5] - r['t'][0])) < 1e-6 and abs(r['sec'] - (besoin + ex[5] - ex[4])) < 1e-6 and r['sec'] < ex[5] - 1
+    assert abs(calc(pts())['sec'] - ex[5]) < 1e-9 and abs(calc(pts(p0={'t': '09:00:00', 'tLock': True}, p4={'t': hms(t0 + ex[4]), 'tLock': True}))['sec'] - ex[5]) < 1e-9
     assert calc(p, margin=5)['red'][4]['why'] == 'm' and calc(p, margin=7)['red'][4]['why'] == 'm'                    # |f − 1| = 7,5 % : 5 et 7 ne tiennent pas, 8 tient
     assert calc(p, margin=8)['amb'][4] is not None and calc(p, margin=8)['red'][4] is None
+
+
+@needs_node
+def test_a_fixed_time_holds_to_five_seconds_then_is_orange_within_the_margin_and_red_beyond():
+    ex = times_for([220] * 5)
+    base = 32400 + ex[4]
+    for off in (5, -5, 5.9, 6.5, -6.5, 120, 800):
+        p = pts(p0={'t': '09:00:00', 'tLock': True}, p4={'t': hms(base + off), 'tLock': True})
+        besoin = secs(hms(base + off)) - 32400
+        unheld = abs(ex[4] - besoin) > 5                         # l'écart se juge sur les secondes entières posées
+        r = calc(p)                                              # la marge de 15 %
+        f = ex[4] / besoin
+        wide = unheld and abs(f - 1) * 100 > 15
+        assert (r['amb'][4] is not None) == (unheld and not wide) and (r['red'][4] is not None) == wide, (off, r['amb'][4], r['red'][4])
+        if r['amb'][4] is not None:
+            assert abs(r['amb'][4]['f'] - f) < 1e-9 and r['clock'][4] == hms(base + off)
+        if wide:
+            assert r['red'][4]['why'] == 'm'
+    assert wide and unheld                                       # le dernier cas (800 s, plus de 15 %) est rouge
 
 
 @needs_node
@@ -133,8 +157,8 @@ def test_mixed_speeds_give_no_common_speed_in_the_messages_and_the_percentage_is
 def test_apply_writes_the_free_legs_rounded_to_the_displayed_unit_and_nothing_else():
     ex = times_for([220] * 5)
     t0 = 32400
-    p = pts(p0={'t': '09:00:00', 'tLock': True}, p4={'t': hms(t0 + ex[4] * 0.93), 'tLock': True}, p2={'gs': 230, 'gsLock': True}, p5={'gs': 250})
-    f = (times_for([220, 230, 220, 220, 250])[4] - (times_for([220, 230, 220, 220, 250])[2] - times_for([220, 230, 220, 220, 250])[1])) / (secs(hms(t0 + ex[4] * 0.93)) - t0 - (times_for([220, 230, 220, 220, 250])[2] - times_for([220, 230, 220, 220, 250])[1]))
+    p = pts(p0={'t': '09:00:00', 'tLock': True}, p4={'t': hms(t0 + ex[4] * 0.94), 'tLock': True}, p2={'gs': 230, 'gsLock': True}, p5={'gs': 250})
+    f = (times_for([220, 230, 220, 220, 250])[4] - (times_for([220, 230, 220, 220, 250])[2] - times_for([220, 230, 220, 220, 250])[1])) / (secs(hms(t0 + ex[4] * 0.94)) - t0 - (times_for([220, 230, 220, 220, 250])[2] - times_for([220, 230, 220, 220, 250])[1]))
     kmh = node("const p = %s; const T = rtmCompute(p, 220, 15); const ok = rtmApply(p, T, 4, x => Math.round(x)); out([ok, p.map(q => q.gs === undefined ? null : q.gs), p.map(q => q.gsLock === true), rtmApply(p, T, 3, x => Math.round(x))]);" % json.dumps(p))
     assert kmh[0] is True and kmh[3] is False
     assert kmh[1][1] == round(220 * f) and kmh[1][3] == round(220 * f) and kmh[1][4] == round(220 * f)         # les branches libres, arrondies
@@ -146,7 +170,7 @@ def test_apply_writes_the_free_legs_rounded_to_the_displayed_unit_and_nothing_el
     for j in (1, 3, 4):
         p2[j]['gs'] = round(220 * f)
     r = calc(p2)
-    assert r['red'][4] is None and (r['amb'][4] is None or abs(r['amb'][4]['f'] - 1) < 0.02)
+    assert r['red'][4] is None and r['amb'][4] is None                         # tenu : l'écart restant est sous 5 s
 
 
 @needs_node
@@ -197,8 +221,8 @@ def lock_speed(fr, i, touch):
     attendre(fr, 'S.points[arg].gsLock === true', 'la vitesse du point %d verrouillée' % i, arg=i, lu='S.points[arg].gsLock')
 
 
-def b1(fr, pg, margin=None):
-    """B1 : point 0 verrouillé à 09:45:00, point 4 verrouillé à 10:14:00"""
+def lock_two(fr, pg, margin=None):
+    """deux heures verrouillées, 09:45 → 10:14 (points 0 et 4)"""
     nav_open(fr)
     tm_type(fr, pg, 0, '09:45'); tm_lock(fr, 0)
     tm_type(fr, pg, 4, '10:14'); tm_lock(fr, 4)
@@ -266,19 +290,39 @@ def test_margin_field_and_speed_padlocks_are_aligned_and_follow_the_rules(browse
     assert abs(gs['w'] - mg['w']) < 0.6 and abs(gs['h'] - mg['h']) < 0.6 and abs(gs['top'] - mg['top']) < 0.6 and abs(gs['lt'] - mg['lt']) < 0.6 and abs(gs['lb'] - mg['lb']) < 0.6, g
     assert mg['left'] > gs['left'] + gs['w'] - 1 and abs(mg['ll'] - mg['left']) < 0.6 and mg['text'] == 'Marge (± %)' and mg['v'] == '15'
     assert fr.evaluate("() => document.getElementById('mg-note').textContent") == 'Marge : variation permise des vitesses pour tenir les heures verrouillées.'
-    # saisie : un entier de 1 à 50, sinon rien ne change et le champ reprend la valeur gardée
+    # saisie : un entier de 1 à 50 ; à la frappe, il s'écrit s'il n'est pas le début d'une saisie plus longue ; en quittant le champ, hors bornes il rend la valeur d'avant l'entrée
     m = fr.locator('#mg-def')
+    spm = lambda: fr.evaluate('() => S.speedMargin')
     m.fill('30')
-    assert fr.evaluate('() => S.speedMargin') == 30
+    assert spm() == 30
     for bad in ('0', '51', 'abc', '7,5', ''):
         m.fill(bad)
-        assert fr.evaluate('() => S.speedMargin') == 30, bad
+        assert spm() == 30, bad                                                                                      # hors règle : rien ne change pendant la frappe
     m.evaluate('e => e.dispatchEvent(new Event("change", { bubbles: true }))')
-    assert m.input_value() == '30'
-    m.fill('50'); assert fr.evaluate('() => S.speedMargin') == 50
-    m.fill('1'); assert fr.evaluate('() => S.speedMargin') == 1
-    m.fill('15'); m.evaluate('e => e.dispatchEvent(new Event("change", { bubbles: true }))')
-    assert fr.evaluate("() => JSON.parse(localStorage.getItem('route_state_v1')).speedMargin") == 15
+    assert m.input_value() == '15' and spm() == 15                                                                   # en quittant : la valeur d'avant l'entrée (15), pas celle de la dernière frappe valide
+    # taper « 60 » depuis 15 : « 6 » ne peut pas devenir un entier de 1 à 50 (il s'écrit), « 60 » est hors bornes : le champ rend 15
+    m.click(); m.press('Control+A'); m.press('6')
+    assert spm() == 6
+    m.press('0')
+    assert m.input_value() == '60' and spm() == 6
+    m.press('Tab')
+    attendre(fr, 'S.speedMargin === 15', 'la marge rendue à 15', lu='S.speedMargin')
+    assert m.input_value() == '15' and fr.evaluate("() => JSON.parse(localStorage.getItem('route_state_v1')).speedMargin") == 15
+    # un chiffre de 1 à 5 peut être le début de 10 à 50 : il attend la suite, et s'écrit en quittant le champ ; deux chiffres s'écrivent à la frappe
+    m.click(); m.press('Control+A'); m.press('3')
+    assert spm() == 15
+    m.press('Tab')
+    attendre(fr, 'S.speedMargin === 3', 'la marge à 3', lu='S.speedMargin')
+    m.click(); m.press('Control+A'); m.press('5')
+    assert spm() == 3
+    m.press('0')
+    assert spm() == 50
+    m.press('Tab')
+    m.click(); m.press('Control+A'); m.type('1'); m.press('Tab')
+    attendre(fr, 'S.speedMargin === 1', 'la marge à 1', lu='S.speedMargin')
+    m.click(); m.press('Control+A'); m.type('15'); m.press('Tab')
+    attendre(fr, 'S.speedMargin === 15', 'la marge à 15', lu='S.speedMargin')
+    assert fr.evaluate("() => JSON.parse(localStorage.getItem('route_state_v1')).speedMargin") == 15 and m.input_value() == '15'
     # le cadenas de vitesse : un par point sauf le 0, à l'intérieur du champ, ni colonne ni largeur de plus
     route_tab(fr)
     assert fr.evaluate("() => [...document.querySelectorAll('#pts .pt-row.pts')].map(r => r.querySelectorAll('.gs-lock').length)") == [0, 1, 1, 1, 1, 1]
@@ -287,7 +331,14 @@ def test_margin_field_and_speed_padlocks_are_aligned_and_follow_the_rules(browse
       return { iw: i.width, ih: i.height, bl: b.left - i.left, br: i.right - b.right, bt: b.top - i.top, bb: i.bottom - b.bottom, bw: b.width, bh: b.height, zw: z.width, sw: e.scrollWidth, cw: e.clientWidth }; }""")
     assert abs(d['iw'] - 62) <= 1 and abs(d['iw'] - d['zw']) < 0.6                                                  # la colonne VIT. de la base
     assert d['bl'] >= 0 and d['br'] >= -0.5 and d['br'] <= 2 and d['bt'] >= -0.5 and d['bb'] >= -0.5                    # dans le champ, à droite
-    assert abs(d['bw'] - (28 if touch else 22)) < 0.6 and abs(d['bh'] - d['ih']) < 1.2 and (d['ih'] >= 43.9 if touch else True)
+    assert abs(d['bw'] - (24 if touch else 20)) < 0.6 and abs(d['bh'] - d['ih']) < 1.2 and (d['ih'] >= 43.9 if touch else True)
+    # le cadenas ouvert se voit : contraste d'au moins 3 : 1 sur le fond du champ
+    ratio = fr.evaluate("""() => { const r = document.querySelectorAll('#pts .pt-row.pts')[2], b = r.querySelector('.gs-lock'), i = r.querySelector('[data-k=gs]');
+      const rgb = c => c.match(/[\\d.]+/g).map(Number), fg = rgb(getComputedStyle(b).color), bg = rgb(getComputedStyle(i).backgroundColor), o = parseFloat(getComputedStyle(b).opacity);
+      const lum = c => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]); };
+      const mix = [0, 1, 2].map(k => o * fg[k] + (1 - o) * bg[k]), L1 = lum(mix), L2 = lum(bg.slice(0, 3));
+      return [(Math.max(L1, L2) + .05) / (Math.min(L1, L2) + .05), o]; }""")
+    assert ratio[0] >= 3 and ratio[1] >= 0.62, ratio
     assert d['sw'] <= d['cw']                                                                                        # « 220 » se lit, le cadenas déduit
     lbl = lambda: fr.evaluate("() => { const b = document.querySelectorAll('#pts .pt-row.pts')[2].querySelector('.gs-lock'); return [b.getAttribute('aria-label'), b.title, b.hasAttribute('aria-pressed')]; }")
     assert lbl() == ['Verrouiller la vitesse', 'Verrouiller la vitesse', False]
@@ -296,6 +347,9 @@ def test_margin_field_and_speed_padlocks_are_aligned_and_follow_the_rules(browse
     assert fr.evaluate("() => [S.points[2].gs, S.points[2].gsLock, document.querySelectorAll('#pts .pt-row.pts')[2].querySelector('[data-k=gs]').value]") == [220, True, '220']
     assert lbl() == ['Déverrouiller la vitesse', 'Déverrouiller la vitesse', False]
     row = fr.locator('#pts .pt-row.pts').nth(2)
+    row.locator('[data-k=gs]').fill('1100')                                                                          # quatre chiffres à côté du cadenas, sans élargir la colonne
+    fit = fr.evaluate("() => { const e = document.querySelectorAll('#pts .pt-row.pts')[2].querySelector('[data-k=gs]'); return [e.value, e.scrollWidth <= e.clientWidth, e.getBoundingClientRect().width]; }")
+    assert fit[0] == '1100' and fit[1] is True and abs(fit[2] - 62) <= 1, fit
     row.locator('[data-k=gs]').fill('250')                                                                           # une vitesse verrouillée se saisit encore : le verrou reste
     assert fr.evaluate("() => [S.points[2].gs, S.points[2].gsLock]") == [250, True]
     hit(row.locator('.gs-lock'), touch)
@@ -303,6 +357,12 @@ def test_margin_field_and_speed_padlocks_are_aligned_and_follow_the_rules(browse
     assert fr.evaluate("() => [S.points[2].gs, S.points[2].gsLock === undefined]") == [250, True] and lbl()[0] == 'Verrouiller la vitesse'       # déverrouiller garde p.gs
     hit(row.locator('.gs-lock'), touch)
     attendre(fr, 'S.points[2].gsLock === true', 'reverrouillé', lu='S.points[2].gsLock')
+    row.locator('.gs-lock').focus(); pg.keyboard.press('Enter')                                                       # au clavier : le focus reste sur le cadenas de la même ligne
+    attendre(fr, 'S.points[2].gsLock !== true', 'le verrou retiré au clavier', lu='S.points[2].gsLock')
+    assert fr.evaluate("() => [document.activeElement.classList.contains('gs-lock'), document.activeElement.closest('.pt-row').dataset.i]") == [True, '2']
+    pg.keyboard.press('Space')
+    attendre(fr, 'S.points[2].gsLock === true', 'reverrouillé au clavier', lu='S.points[2].gsLock')
+    assert fr.evaluate("() => [document.activeElement.classList.contains('gs-lock'), document.activeElement.closest('.pt-row').dataset.i]") == [True, '2']
     row.locator('[data-k=gs]').fill('')                                                                              # vider : plus de vitesse, plus de verrou
     assert fr.evaluate("() => [S.points[2].gs === undefined, S.points[2].gsLock === undefined]") == [True, True] and lbl()[0] == 'Verrouiller la vitesse'
     # au doigt : le n° et la croix font au moins 44 × 44, la colonne VIT. reste celle de la base
@@ -324,7 +384,7 @@ def test_an_orange_leg_shows_its_label_outline_banner_and_apply_writes_the_route
     fr_ = lang == 'fr'
     pg = shell(browser, w, h, touch=touch, lang=lang)
     fr = open_rp(pg)
-    b1(fr, pg)
+    lock_two(fr, pg)
     st = fr.evaluate(READ)
     assert st['pts'][0]['tLock'] and st['pts'][4]['tLock'] and st['state'] == ['none', 'none', 'none', 'none', 'amb', 'none']
     ex = expect(st['pts'], 0, 4, secs('09:45:00'), secs('10:14:00'), 15)
@@ -332,7 +392,8 @@ def test_an_orange_leg_shows_its_label_outline_banner_and_apply_writes_the_route
     assert fr.evaluate(NAVT)[:5] == clk and fr.evaluate(MAPT)[:5] == clk and st['clocks'][:5] == clk                   # les heures de a à b, à ces vitesses ; b à son heure
     # la pastille orange : variable commune, texte à l'encre, sans ⚠, avec le cadenas de b
     css = fr.evaluate("""() => { const m = document.querySelectorAll('.wp-time')[4], t = document.querySelector('#nav-body .tm-t.amb'); return [getComputedStyle(m).backgroundColor, getComputedStyle(m).color, m.textContent, m.querySelectorAll('svg').length, getComputedStyle(t).backgroundColor, t.textContent]; }""")
-    assert css[0] == ORANGE and css[1] == 'rgb(31, 28, 22)' and '⚠' not in css[2] and css[3] == 1 and css[4] == ORANGE and '⚠' not in css[5]
+    ink = fr.evaluate(INK)
+    assert css[0] == ORANGE and css[1] == ink and sum(int(x) for x in re.findall(r'\d+', ink)[:3]) < 200 and '⚠' not in css[2] and css[3] == 1 and css[4] == ORANGE and '⚠' not in css[5]
     # les boîtes (complète) : contour orange, une étiquette en pastille sous chacune
     names = names_of(fr)
     labels = fr.evaluate("() => [...document.querySelectorAll('.amb-box')].map(e => e.textContent)")
@@ -340,7 +401,7 @@ def test_an_orange_leg_shows_its_label_outline_banner_and_apply_writes_the_route
     assert labels == [want] * 4 and fr.evaluate("() => [...document.querySelectorAll('.lb-amb')].map(e => +e.dataset.leg)") == [1, 2, 3, 4]
     box = fr.evaluate("""() => { const b = document.querySelector('.lb-amb'), l = b.querySelector('.amb-lab'), p = b.querySelector('.lb-bg'), r = b.getBoundingClientRect(), q = l.getBoundingClientRect();
       return [getComputedStyle(p).stroke, getComputedStyle(l).backgroundColor, getComputedStyle(l).color, document.querySelectorAll('.lb:not(.lb-amb)').length, q.width > 0]; }""")
-    assert box == [ORANGE_LINE, ORANGE, 'rgb(31, 28, 22)', 1, True]                                                  # la branche 5, hors du tronçon, garde sa boîte et son trait
+    assert box == [ORANGE_LINE, ORANGE, ink, 1, True]                                                  # la branche 5, hors du tronçon, garde sa boîte et son trait
     # le bandeau : le bandeau commun (pas « err »), son filet orange, le texte, puis « Appliquer »
     ban = fr.evaluate("""() => [...document.querySelectorAll('#nav-amb .ui-bandeau')].map(e => ({ cls: e.className, text: e.querySelector('.amb-t').textContent, bold: [...e.querySelectorAll('b')].map(b => b.textContent), bl: getComputedStyle(e).borderLeftColor, btn: e.querySelector('button').textContent, bh: e.querySelector('button').getBoundingClientRect().height }))""")
     assert len(ban) == 1 and 'err' not in ban[0]['cls'] and ban[0]['bl'] == ORANGE and ban[0]['btn'] == ('Appliquer' if fr_ else 'Apply') and (ban[0]['bh'] >= 43.9 if touch else True)
@@ -349,9 +410,17 @@ def test_an_orange_leg_shows_its_label_outline_banner_and_apply_writes_the_route
     assert fr.evaluate("() => document.getElementById('nav-red').hidden") is True
     # « Aucune » : l'étiquette seule, au milieu de la branche, sans boîte
     fr.evaluate("() => { S.legBoxes = 'none'; persistState(); drawDecorNow(); }")
+    long_legs = fr.evaluate("() => S.points.slice(1).filter((q, k) => map.latLngToContainerPoint([S.points[k].lat, S.points[k].lon]).distanceTo(map.latLngToContainerPoint([q.lat, q.lon])) >= LEG_LABEL_MIN_PX).length")
     solo = fr.evaluate("() => [document.querySelectorAll('.lb').length, [...document.querySelectorAll('.amb-solo')].map(e => e.textContent), document.querySelectorAll('.leg-label').length]")
-    assert solo[0] == 0 and len(solo[1]) >= 1 and set(solo[1]) == {want} and solo[2] - 1 <= len(solo[1]) <= solo[2]           # une étiquette seule par branche qui a sa ligne « cap · distance » (la branche 5 n'est pas orange)
+    assert solo[0] == 0 and solo[1] == [want] * 4 and solo[2] == long_legs                                                           # une étiquette seule par branche orange (1 à 4), sans condition de longueur ; les lignes « cap · distance » restent celles des branches d'au moins 120 px
+    # très loin : les branches sont plus courtes que les 60 px d'une boîte et que les 120 px d'une ligne « cap · distance » ; chaque branche orange a encore son étiquette
+    fr.evaluate("() => { window.__z = map.getZoom(); map.setZoom(4, { animate: false }); drawDecorNow(); }")
+    short = fr.evaluate("() => [[...document.querySelectorAll('.amb-solo')].map(e => e.textContent), document.querySelectorAll('.leg-label').length]")
+    assert short == [[want] * 4, 0], short
     fr.evaluate("() => { S.legBoxes = 'full'; persistState(); drawDecorNow(); }")
+    short = fr.evaluate("() => [[...document.querySelectorAll('.amb-solo')].map(e => e.textContent), document.querySelectorAll('.lb').length, document.querySelectorAll('.amb-box').length]")
+    assert short == [[want] * 4, 0, 0], short                                                                       # avec boîtes : la boîte n'est pas dessinée, l'étiquette seule au milieu de la branche
+    fr.evaluate("() => { map.setZoom(window.__z, { animate: false }); drawDecorNow(); }")
     # « Appliquer » : p.gs de chaque branche libre, l'entier de l'unité ; ni point 0 ni autre champ ; la route se recalcule
     pack0 = fr.evaluate("() => JSON.stringify(packRoutePoints({ points: S.points.map(p => Object.assign({}, p)) }))")
     hit(fr.locator('#nav-amb [data-apply="4"]'), touch)
@@ -382,7 +451,7 @@ def test_a_locked_speed_is_not_applied_two_stretches_apply_one_at_a_time_and_kt_
     pg = shell(browser, w, h, touch=touch)
     fr = open_rp(pg)
     nav_open(fr)
-    tm_type(fr, pg, 0, '09:45'); tm_lock(fr, 0); tm_type(fr, pg, 4, '10:15'); tm_lock(fr, 4)                       # B3 : la branche du point 2 verrouillée (à 220)
+    tm_type(fr, pg, 0, '09:45'); tm_lock(fr, 0); tm_type(fr, pg, 4, '10:15'); tm_lock(fr, 4)                       # la branche du point 2 verrouillée (à 220)
     lock_speed(fr, 2, touch)
     nav_open(fr)
     st = fr.evaluate(READ)
@@ -410,6 +479,8 @@ def test_a_locked_speed_is_not_applied_two_stretches_apply_one_at_a_time_and_kt_
     assert first == [2, 4]
     hit(fr.locator('#nav-amb [data-apply="%d"]' % first[0]), touch)                                               # « Appliquer » d'un seul tronçon
     attendre(fr, "S.points.some(p => p.gs !== undefined)", 'des vitesses écrites', lu='S.points.map(p => p.gs)')
+    FOC = "() => { const a = document.activeElement; return a ? [a.id, a.dataset.apply || null] : null; }"
+    assert fr.evaluate(FOC) == ['', str(first[1])]                                                                    # le focus va à « Appliquer » du bandeau suivant
     written = fr.evaluate("() => S.points.map(p => p.gs === undefined ? null : p.gs)")
     lo, hi = (1, 2) if first[0] == 2 else (3, 4)
     other = (3, 4) if first[0] == 2 else (1, 2)
@@ -419,6 +490,9 @@ def test_a_locked_speed_is_not_applied_two_stretches_apply_one_at_a_time_and_kt_
         assert abs(written[j] - round(n * 1.852, 4)) < 1e-9 and round(written[j] / 1.852) == n, (j, written, exp)            # kt entiers, stockés en km/h
     assert all(written[j] is None for j in other)                                                                   # l'autre tronçon ne bouge pas
     assert fr.evaluate("() => document.querySelectorAll('#pts .pt-row.pts')[%d].querySelector('[data-k=gs]').value" % lo) == str(round(exp[lo] / 1.852))
+    pg.keyboard.press('Enter')                                                                                      # « Appliquer » du dernier bandeau, au clavier : il n'en reste plus, le focus va au champ de la marge
+    attendre(fr, "document.querySelectorAll('#nav-amb [data-apply]').length === 0", 'plus de bandeau orange')
+    assert fr.evaluate(FOC) == ['mg-def', None]
     assert pg.errs == []
 
 
@@ -426,7 +500,7 @@ def test_a_locked_speed_is_not_applied_two_stretches_apply_one_at_a_time_and_kt_
 def test_a_red_stretch_tells_its_cause_and_the_export_asks_only_for_red_not_for_orange(browser):
     pg = shell(browser, 1280, 800)
     fr = open_rp(pg)
-    b1(fr, pg)
+    lock_two(fr, pg)
     fr.evaluate("""() => { window.__shots = []; window.html2canvas = function () { window.__shots.push({ lb: document.querySelectorAll('.lb-amb').length, lab: document.querySelectorAll('.amb-lab').length, amb: document.querySelectorAll('.wp-time.amb').length,
       times: [...document.querySelectorAll('.wp-time')].map(e => e.textContent + '|' + e.querySelectorAll('svg').length), stroke: [...document.querySelectorAll('.lb-bg')].map(e => getComputedStyle(e).stroke) }); return Promise.reject(new Error('banc')); }; }""")
     cadre_export(fr, True)
@@ -457,7 +531,7 @@ def test_a_red_stretch_tells_its_cause_and_the_export_asks_only_for_red_not_for_
 def test_datacard_orange_equals_the_route_planner_and_the_route_is_read_back_with_its_locks(browser, w, h, touch):
     pg = shell(browser, w, h, touch=touch)
     fr = open_rp(pg)
-    b1(fr, pg)
+    lock_two(fr, pg)
     lock_speed(fr, 3, touch)                                                                                     # une vitesse verrouillée suit la route jusqu'au DG
     nav_open(fr)
     set_margin(fr, 20)
@@ -495,4 +569,43 @@ def test_datacard_orange_equals_the_route_planner_and_the_route_is_read_back_wit
       const r = parseRoute(o).route, bad = parseRoute(Object.assign(JSON.parse(JSON.stringify(S)), { speedMargin: 51 })).route, bad2 = parseRoute(Object.assign(JSON.parse(JSON.stringify(S)), { speedMargin: 2.5 })).route, none = parseRoute(Object.assign(JSON.parse(JSON.stringify(S)), { speedMargin: undefined })).route;
       return { m: r.speedMargin, locks: r.points.map(p => p.gsLock === true), mm: [bad.speedMargin, bad2.speedMargin, none.speedMargin], kept: r.points[3].gsLock === true && r.points[3].gs === 220 }; }""")
     assert rd['m'] == 33 and rd['locks'] == [False, True, False, True, False, False] and rd['mm'] == [15, 15, 15] and rd['kept']
+    assert pg.errs == []
+
+
+@needs_pw
+def test_apply_caps_the_recommended_speed_at_the_input_limit(browser):
+    pg = shell(browser, 1280, 800)
+    fr = open_rp(pg)
+    nav_open(fr)
+    fr.locator('#gs-def').fill('1900')
+    attendre(fr, 'S.groundSpeed === 1900', 'la vitesse de la route à 1900', lu='S.groundSpeed')
+    tm_type(fr, pg, 0, '09:00'); tm_lock(fr, 0); tm_type(fr, pg, 4, '09:03:15'); tm_lock(fr, 4)                    # +12,6 % : la vitesse recommandée (2 139) dépasse 2 000
+    attendre(fr, "timing().h.amb[4] !== null", 'le tronçon orange', lu='timing().h.amb[4]')
+    assert fr.evaluate("() => timing().h.legs[1].rec") > 2000
+    hit(fr.locator('#nav-amb [data-apply="4"]'), False)
+    attendre(fr, "S.points[1].gs !== undefined", 'les vitesses écrites', lu='S.points[1].gs')
+    assert fr.evaluate("() => S.points.map(p => p.gs === undefined ? null : p.gs)") == [None, 2000, 2000, 2000, 2000, None]      # plafonnée comme une saisie
+    assert pg.errs == []
+
+
+@needs_pw
+@pytest.mark.parametrize('how', ['up', 'remove'])
+def test_datacard_a_point_that_arrives_at_rank_zero_loses_its_speed_and_its_padlock(browser, how):
+    pg = shell(browser, 1280, 800)
+    fr = open_rp(pg)
+    lock_speed(fr, 1, False)                                                                                        # la branche qui arrive au point 1 : 220, verrouillée
+    dg = open_dg(pg)
+    attendre(dg, "dgRouteInfo(curCard()).state === 'linked'", 'la carte suit la route', lu='dgRouteInfo(curCard()).state')
+    GS = "() => rwReadState().points.map(p => [p.name, p.gs === undefined ? null : p.gs, p.gsLock === true])"
+    before = dg.evaluate(GS)
+    assert before[0][1:] == [None, False] and before[1][1:] == [220, True]
+    if how == 'up':
+        dg.evaluate("() => dgNavAct(curCard(), 'up', 1)")                                                           # le point 1 passe au rang 0
+    else:
+        dg.evaluate("() => dgNavAct(curCard(), 'remove', 0)")                                                       # le point 0 part : le point 1 devient le rang 0
+        dg.locator('#ui-confirm button.danger').click()
+    attendre(dg, "rwReadState().points[0].name === arg", 'le point 1 au rang 0', arg=before[1][0], lu='rwReadState().points.map(p => p.name)')
+    assert dg.evaluate("() => rwMinimalState(null, null)")['speedMargin'] == 15                                      # l'état minimal que le DG écrit sans Route Planner porte la marge par défaut
+    after = dg.evaluate(GS)
+    assert after[0][0] == before[1][0] and after[0][1:] == [None, False]                                              # ni vitesse ni verrou au rang 0
     assert pg.errs == []

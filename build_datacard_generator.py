@@ -1071,9 +1071,9 @@ body {
 
 /* heures de la route : la pastille rouge de l'aperçu (C13 bis) ; la ligne « Point » des Horaires, le cadenas et le champ Heure de la nav */
 .tm-red { display: inline-block; padding: 0 .18em; color: #fff; background: var(--mp-sig-red); }
-.tm-amb { display: inline-block; padding: 0 .18em; color: #1f1c16; background: var(--mp-sig-orange); }
+.tm-amb { display: inline-block; padding: 0 .18em; color: var(--ink); background: var(--mp-sig-orange); }
 .ui-bandeau.amb { border-left-color: var(--mp-sig-orange); }
-.ed-field input.tm-ambin, .ed-field input.tm-ambin:focus { color: #1f1c16; background: var(--mp-sig-orange); border-color: var(--mp-sig-orange); border-left-color: var(--mp-sig-orange); }
+.ed-field input.tm-ambin, .ed-field input.tm-ambin:focus { color: var(--ink); background: var(--mp-sig-orange); border-color: var(--mp-sig-orange); border-left-color: var(--mp-sig-orange); }
 .tm-warn { margin-left: .2em; font-size: .7em; vertical-align: .1em; }
 .tp-row { grid-template-columns: minmax(0, 1fr) 44px; align-items: end; }
 .tp-lock { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; color: var(--paper-light); background: var(--olive); border: 1px solid var(--khaki); border-radius: 0; cursor: pointer; }
@@ -4021,6 +4021,8 @@ function dgRouteFail(why) {
   else if (why === 'full') showToast(t('toast.rwFull'), { type: 'err', ms: 6000 });
 }
 /* Après une écriture : la fiche des groupes (la copie de route du groupe a pu changer), les cartes, l'enregistrement */
+/* Un point qui arrive au rang 0 n'a pas de branche qui l'atteint : ni vitesse ni verrou de vitesse, comme au Route Planner */
+function dgNoGs0(route) { const p0 = route.points[0]; if (rwObj(p0)) { delete p0.gs; delete p0.gsLock; } }
 function dgAfterRouteWrite(full) {
   gsApplyAll();
   dgSyncRoutes();
@@ -4174,7 +4176,7 @@ function dgNavAct(c, act, i) {
       const pid = x.pid, rid = info.rid, vars = { n: hasText(x.name) ? x.name.trim() : t('nav.rm.point', { k: i }), r: info.name || t('nav.rm.route') };
       askConfirm({ title: t('nav.rm.confirm.title', vars), text: t('nav.rm.confirm.text', vars), verb: t('ui.verb.remove'), danger: true }).then(ok => {
         if (!ok || doc.cards.indexOf(c) < 0) return;
-        const r = rwUpdateRoute(rid, route => { const k = route.points.findIndex(q => rwObj(q) && q.pid === pid); if (k < 0) return false; route.points.splice(k, 1); });
+        const r = rwUpdateRoute(rid, route => { const k = route.points.findIndex(q => rwObj(q) && q.pid === pid); if (k < 0) return false; route.points.splice(k, 1); dgNoGs0(route); });
         if (!r.ok && r.why !== 'abort') { dgRouteFail(r.why); return; }
         const j = c.nav.findIndex(q => q && q.pid === pid);
         if (j >= 0) c.nav.splice(j, 1);
@@ -4200,6 +4202,7 @@ function dgNavAct(c, act, i) {
       const p = route.points.splice(a, 1)[0];
       const b = route.points.findIndex(q => rwObj(q) && q.pid === np);
       route.points.splice(dir < 0 ? b : b + 1, 0, p);
+      dgNoGs0(route);
     });
     if (!r.ok) { if (r.why !== 'abort') dgRouteFail(r.why); return true; }
     dgAfterRouteWrite(true);
