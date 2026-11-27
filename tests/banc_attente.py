@@ -159,3 +159,27 @@ def attendre_fenetre(cible, w, h, delai=DELAI):
     """La page (ou le cadre) a la taille de fenêtre demandée et des images de rendu sont passées (après set_viewport_size)."""
     attendre(cible, 'innerWidth === arg[0] && innerHeight === arg[1]', 'la fenêtre à %d × %d' % (w, h), lu='[innerWidth, innerHeight]', arg=[w, h], delai=delai)
     attendre_images(cible, 3, delai)
+
+
+# --- le Route Planner au repos : le profil et les menaces ont fini de se dessiner ---
+# lecture comparée à la précédente (polling 100 ms) : la signature du dernier dessin du profil (PROF.rsig), la hauteur du bandeau, la longueur de son SVG, sa boîte et celle de la carte, la version et l'état des menaces
+REPOS = """() => { const P = __RP.prof, T = __RP.thr, s = document.querySelector('#rp-prof .prof-svg'), p = document.getElementById('rp-prof'), r = p ? p.getBoundingClientRect() : null, m = __RP.map.getSize();
+  if (DISP.threats && T.state === 'ok' && T.jobs.size > 0) return false;
+  const k = JSON.stringify([P.rsig, P.shown, P.h, s ? s.innerHTML.length : -1, r && [r.x, r.y, r.width, r.height], m.x, m.y, T.ver, T.state, T.jobs.size, S.points.length, S.theatre]);
+  const avant = window.__banc_repos; window.__banc_repos = k; return avant === k; }"""
+REPOS_LU = """() => { const P = __RP.prof, T = __RP.thr; return { rsig_court: String(P.rsig).slice(0, 60), shown: P.shown, h: P.h, menaces: [T.state, T.jobs.size, T.ver], derniere_lecture: String(window.__banc_repos).slice(0, 120) }; }"""
+
+
+def attendre_repos(fr, delai=DELAI):
+    """Le Route Planner est au repos après un geste : des images de rendu sont passées, aucun calcul de menaces n'est en cours, et deux lectures du dernier dessin du profil, des boîtes de la carte et du bandeau, à 100 ms d'écart, sont égales."""
+    attendre_images(fr, 2, delai)
+    fr.evaluate('() => { window.__banc_repos = null; }')
+    attendre_etat(fr, REPOS, 'le Route Planner au repos (dessin du profil, boîtes, menaces : deux lectures égales à 100 ms)', lecture=REPOS_LU, delai=delai, polling=100)
+
+
+def attendre_profil_repos(fr, zones=False, delai=60000):
+    """Le profil est prêt (clé courante, vue posée) et dessiné : le Route Planner est au repos ; zones=True attend en plus qu'au moins une zone de menace soit dessinée."""
+    attendre_profil(fr, delai)
+    if zones:
+        attendre(fr, '__RP.prof.zones.length > 0 && document.querySelectorAll("path.prof-zone").length > 0', 'au moins une zone de menace dessinée dans le profil', lu='[__RP.prof.zones.length, document.querySelectorAll("path.prof-zone").length]', delai=delai)
+    attendre_repos(fr, delai)

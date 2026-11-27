@@ -14,6 +14,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tests'))
 from test_rp_menaces import (Bench, SHELL, browser, display, needs_pw, sym)  # noqa: E402,F401
 from test_rp_profil import east_route, pt, rects, route, tick, wait_prof  # noqa: E402,F401
+from banc_attente import (attendre, attendre_etat, attendre_fenetre, attendre_images, attendre_profil_repos, attendre_repos, attendre_rp, attendre_shell, attendre_theatre,  # noqa: E402
+                          exemple)
 
 NB = ' '                      # l'espace fine des milliers, en français
 THREAT = [sym(0, 'sa-6', name='S6')]
@@ -52,13 +54,10 @@ def open_t(br, w, h, touch, lang='fr'):
     pg.route('**/*', pg.bench.handler)
     pg.goto('about:blank')
     pg.goto(SHELL, wait_until='commit')
-    pg.wait_for_function("typeof NAV !== 'undefined' && typeof openModule === 'function'", timeout=30000)
-    pg.wait_for_timeout(600)
-    pg.evaluate("MP_WORK_EXAMPLE('fl')")
-    pg.wait_for_timeout(1200)
+    attendre_shell(pg)
+    exemple(pg, 'fl')
     pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(2300)
-    fr = next(f for f in pg.frames if f != pg.main_frame and f.evaluate("typeof window.__RP !== 'undefined'"))
+    fr = attendre_rp(pg)
     return pg, fr
 
 
@@ -66,8 +65,7 @@ def start(br, w=1280, h=800, touch=None, lang='fr', items=None, pts=None):
     pg, fr = open_t(br, w, h, w < 700 if touch is None else touch, lang)
     tick(fr, pg)
     route(fr, pts or east_route(), THREAT if items is None else items)
-    wait_prof(fr)
-    pg.wait_for_timeout(700)
+    attendre_profil_repos(fr)
     return pg, fr
 
 
@@ -82,19 +80,20 @@ def scale(fr):
 
 def unit(fr, pg, u):
     fr.evaluate("S.units.altitude = '%s'; renderAll();" % u)
-    pg.wait_for_timeout(500)
-    wait_prof(fr)
+    attendre(fr, 'S.units.altitude === arg', "l'altitude en %s (S.units.altitude)" % u, lu='S.units.altitude', arg=u)
+    attendre_profil_repos(fr)
 
 
 def set_top(fr, pg, val):
     """Règle le curseur comme le ferait un glisser : la valeur, l'événement input."""
     fr.evaluate("(x) => { const i = document.querySelector('.prof-sli'); i.value = String(x); i.dispatchEvent(new Event('input', { bubbles: true })); }", val)
-    pg.wait_for_timeout(200)
+    attendre_repos(fr)
 
 
 def auto(fr, pg):
     fr.evaluate("document.querySelector('.prof-sla').click()")
-    pg.wait_for_timeout(200)
+    attendre(fr, '__RP.prof.topM === null', "l'échelle en Auto (PROF.topM nul)", lu='__RP.prof.topM')
+    attendre_repos(fr)
 
 
 def col(fr):
@@ -274,16 +273,14 @@ def test_bounds_follow_the_ground_and_a_high_route_raises_the_top(browser):
     pg.bench.elev = __import__('test_rp_menaces').png(256, 256, lambda x, y: __import__('test_rp_menaces').rgb(1000))
     tick(fr, pg)
     route(fr, [pt('A', 60 / 256, .5, 1500, 'MSL'), pt('B', 250 / 256, .5, 1500, 'MSL')])
-    wait_prof(fr)
-    pg.wait_for_timeout(700)
+    attendre_profil_repos(fr)
     c = col(fr)
     assert (c['min'], c['max'], c['step']) == ('800', '6100', '100'), c
     unit(fr, pg, 'ft')
     assert (col(fr)['min'], col(fr)['max'], col(fr)['step']) == ('3000', '20000', '500')
     # une route à 7 000 m : le haut automatique dépasse 6 100 m, le curseur monte au haut automatique arrondi au pas supérieur
     route(fr, [pt('A', 60 / 256, .5, 7000, 'MSL'), pt('B', 250 / 256, .5, 7000, 'MSL')])
-    wait_prof(fr)
-    pg.wait_for_timeout(700)
+    attendre_profil_repos(fr)
     unit(fr, pg, 'm')
     c, sc = col(fr), scale(fr)
     assert sc['top'] > 6100 and float(c['max']) == math.ceil(sc['top'] / 100) * 100 and float(c['value']) == float(c['max']), (c, sc)
@@ -328,24 +325,25 @@ def test_the_column_is_absent_on_a_low_graph_and_when_folded_and_the_scale_is_au
     assert scale(fr)['top'] == 2000 and scale(fr)['set'] is True
     # le téléphone plié : 345 × 590, un graphique de 60 px
     pg.set_viewport_size({'width': 345, 'height': 590})
-    pg.wait_for_timeout(900)
-    wait_prof(fr)
+    attendre_fenetre(pg, 345, 590)
+    attendre_profil_repos(fr)
     c, sc = col(fr), scale(fr)
     assert rects(fr)['svg'][3] == 60 and c['shown'] is False and sc['set'] is False and sc['mr'] == 8 and sc['top'] in (800, 1000), (c, sc)
     assert fr.evaluate("document.querySelector('.prof-sl').hidden") is True and c['sl'][2] == 0
     assert fr.evaluate("document.querySelector('#rp-prof').scrollWidth") == fr.evaluate("document.querySelector('#rp-prof').clientWidth")
     # le haut réglé ne s'applique pas tant que la colonne est absente ; il revient avec elle
     pg.set_viewport_size({'width': 412, 'height': 915})
-    pg.wait_for_timeout(900)
-    wait_prof(fr)
+    attendre_fenetre(pg, 412, 915)
+    attendre_profil_repos(fr)
     assert col(fr)['shown'] is True and scale(fr)['top'] == 2000 and scale(fr)['set'] is True
     # le bandeau replié : pas de colonne
     fr.evaluate("document.querySelector('#rp-prof .prof-fb').click()")
-    pg.wait_for_timeout(400)
+    attendre(fr, 'DISP.profFold === true', 'le bandeau replié (DISP.profFold)', lu='DISP.profFold')
+    attendre_repos(fr)
     assert col(fr)['shown'] is False
     fr.evaluate("document.querySelector('#rp-prof .prof-fb').click()")
-    pg.wait_for_timeout(500)
-    wait_prof(fr)
+    attendre(fr, 'DISP.profFold === false', 'le bandeau déplié (DISP.profFold)', lu='DISP.profFold')
+    attendre_profil_repos(fr)
     assert col(fr)['shown'] is True and scale(fr)['top'] == 2000
     assert pg.errs == []
     pg.context.close()
@@ -360,8 +358,8 @@ def test_a_graph_of_100_px_holds_the_column_with_a_44_px_auto(browser):
     # une carte de 412 × 915 qui n'a que 100 px de graphique : la hauteur de .mapwrap fixe gh (la carte garde 140 px)
     for hgt in (580, 560):
         pg.set_viewport_size({'width': 412, 'height': hgt})
-        pg.wait_for_timeout(900)
-        wait_prof(fr)
+        attendre_fenetre(pg, 412, hgt)
+        attendre_profil_repos(fr)
         r = rects(fr)
         gh = r['svg'][3]
         c = col(fr)
@@ -372,11 +370,12 @@ def test_a_graph_of_100_px_holds_the_column_with_a_44_px_auto(browser):
         else:
             assert c['shown'] is False, (gh, c)
     pg.set_viewport_size({'width': 412, 'height': 915})
-    pg.wait_for_timeout(900)
+    attendre_fenetre(pg, 412, 915)
+    attendre_profil_repos(fr)
     # le seuil exact : 100 px → présente, 99 px → absente
     for gh, want in ((100, True), (99, False)):
         fr.evaluate("""(gh) => { const G = profGeom; window.__oldGeom = window.__oldGeom || G; profGeom = function () { const g = window.__oldGeom(); g.gh = gh; g.slOk = gh >= PROF_SL_MIN_GH; g.H = g.head + gh; return g; }; PROF.rsig = ''; profRender(); }""", gh)
-        pg.wait_for_timeout(400)
+        attendre_repos(fr)
         c = col(fr)
         assert c['shown'] is want, (gh, c)
         if want:
@@ -395,60 +394,61 @@ def test_back_to_auto_at_another_route_a_new_route_a_deletion_the_theatre_and_th
     set_top(fr, pg, 2500)
     assert scale(fr)['top'] == 2500
     fr.evaluate("S.points[1].lat += 1e-6; renderAll();")                                 # un point déplacé
-    pg.wait_for_timeout(1700)
-    wait_prof(fr)
+    attendre_profil_repos(fr)
     assert scale(fr)['top'] == 2500 and scale(fr)['set'] is True and col(fr)['pressed'] == 'false'
     fr.evaluate("S.points[0].alt = 700; renderAll();")                                    # une altitude
-    pg.wait_for_timeout(500)
-    wait_prof(fr)
+    attendre_profil_repos(fr)
     assert scale(fr)['top'] == 2500
     fr.evaluate("S.points.push(Object.assign({}, S.points[1], { pid: 'pz', name: 'C' })); S.points[2].lat += 0.01; renderAll();")        # un point ajouté
-    pg.wait_for_timeout(1700)
-    wait_prof(fr)
+    attendre_profil_repos(fr)
     assert scale(fr)['top'] == 2500 and scale(fr)['set'] is True
     fr.evaluate("S.points.pop(); renderAll();")                                          # un point supprimé
-    pg.wait_for_timeout(1700)
-    wait_prof(fr)
+    attendre_profil_repos(fr)
     assert scale(fr)['top'] == 2500 and scale(fr)['set'] is True
     # une route neuve : Auto
+    n_routes = fr.evaluate("RSET.routes.length")
     fr.evaluate("addRoute()")
-    pg.wait_for_timeout(600)
+    attendre(fr, 'RSET.routes.length === arg + 1 && RSET.active === arg', 'une route neuve ajoutée et choisie (RSET)', lu='[RSET.routes.length, RSET.active]', arg=n_routes)
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.topM") is None
     # revenir à la première route : Auto aussi (une autre route)
     fr.evaluate("activateRoute(0)")
-    pg.wait_for_timeout(1800)
-    wait_prof(fr)
+    attendre(fr, 'RSET.active === 0', 'la première route choisie (RSET.active)', lu='RSET.active')
+    attendre_profil_repos(fr)
     assert scale(fr)['set'] is False and scale(fr)['topM'] is None
     set_top(fr, pg, 3000)
     assert scale(fr)['top'] == 3000
     fr.evaluate("activateRoute(1)")                                                       # la route neuve, vide
-    pg.wait_for_timeout(600)
+    attendre(fr, 'RSET.active === 1', 'la route neuve choisie (RSET.active)', lu='RSET.active')
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.topM") is None
     fr.evaluate("void deleteRoute()")                                                          # la route vide choisie est supprimée sans question : la première revient
-    pg.wait_for_timeout(1800)
-    wait_prof(fr)
+    attendre(fr, 'RSET.routes.length === 1 && RSET.active === 0', 'la route vide supprimée, la première revenue (RSET)', lu='[RSET.routes.length, RSET.active]')
+    attendre_profil_repos(fr)
     assert fr.evaluate("RSET.routes.length") == 1 and scale(fr)['set'] is False
     # la route choisie supprimée : une copie (choisie), réglée, puis supprimée
     fr.evaluate("duplicateRoute()")
-    pg.wait_for_timeout(1800)
-    wait_prof(fr)
+    attendre(fr, 'RSET.routes.length === 2', 'la route copiée (RSET.routes)', lu='RSET.routes.length')
+    attendre_profil_repos(fr)
     assert fr.evaluate("RSET.routes.length") == 2 and scale(fr)['set'] is False
     set_top(fr, pg, 3000)
     assert scale(fr)['top'] == 3000
     fr.evaluate("void deleteRoute()")
-    pg.wait_for_timeout(500)
+    attendre(fr, "!!document.getElementById('ui-confirm-ok') && document.getElementById('ui-confirm-ok').offsetParent !== null", 'la question de suppression affichée (#ui-confirm-ok visible)', lu='!!document.getElementById("ui-confirm-ok")')
     fr.evaluate("document.getElementById('ui-confirm-ok').click()")
-    pg.wait_for_timeout(1800)
-    wait_prof(fr)
+    attendre(fr, 'RSET.routes.length === 1', 'la copie supprimée (RSET.routes)', lu='RSET.routes.length')
+    attendre_profil_repos(fr)
     assert fr.evaluate("RSET.routes.length") == 1 and fr.evaluate("__RP.prof.topM") is None and scale(fr)['set'] is False
     set_top(fr, pg, 3000)
     assert scale(fr)['top'] == 3000
     # un autre théâtre : Auto
     fr.evaluate("(id) => { const s = document.getElementById('theatre'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); }", 'Caucasus')
-    pg.wait_for_timeout(800)
+    attendre_theatre(fr, 'Caucasus')
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.topM") is None
     fr.evaluate("(id) => { const s = document.getElementById('theatre'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); }", 'Syria')
-    pg.wait_for_timeout(1200)
+    attendre_theatre(fr, 'Syria')
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.topM") is None
     assert pg.errs == []
     pg.context.close()
@@ -470,29 +470,29 @@ def test_back_to_auto_at_clear_at_the_opening_of_a_route_file_and_of_a_route_set
     set_top(fr, pg, 3000)
     assert scale(fr)['top'] == 3000
     fr.evaluate("clrRun(['one'])")
-    pg.wait_for_timeout(300)
+    attendre(fr, 'S.points.length === 0', 'la route effacée (S.points vide)', lu='S.points.length')
+    attendre_repos(fr)
     assert fr.evaluate("RSET.routes[RSET.active].rid") == rid0 and fr.evaluate("__RP.prof.topM") is None
     fr.evaluate(redraw, pts)
-    pg.wait_for_timeout(1700)
-    wait_prof(fr)
+    attendre_profil_repos(fr)
     assert scale(fr)['set'] is False and col(fr)['pressed'] == 'true'
     # « Effacer » toutes les routes
     set_top(fr, pg, 3000)
     fr.evaluate("clrRun(['routes'])")
-    pg.wait_for_timeout(300)
+    attendre(fr, 'S.points.length === 0', 'les routes effacées (S.points vide)', lu='S.points.length')
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.topM") is None
     fr.evaluate(redraw, pts)
-    pg.wait_for_timeout(1700)
-    wait_prof(fr)
+    attendre_profil_repos(fr)
     assert scale(fr)['set'] is False
     # « Ouvrir » une route seule, dans la route active vidée à la main (le rid reste)
     set_top(fr, pg, 3000)
     fr.evaluate("S.points.length = 0; renderAll();")
-    pg.wait_for_timeout(300)
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.topM") == 3000
     fr.evaluate("(t) => openRouteFile(new File([t], 'r.json'))", rtxt)
-    pg.wait_for_timeout(2200)
-    wait_prof(fr)
+    attendre(fr, 'S.points.length >= 2', 'la route du fichier ouverte (S.points)', lu='S.points.length', delai=30000)
+    attendre_profil_repos(fr)
     assert fr.evaluate("__RP.prof.topM") is None and scale(fr)['set'] is False
     # « Ouvrir » un jeu de routes : les rid du fichier sont gardés
     set_top(fr, pg, 3000)
@@ -500,22 +500,20 @@ def test_back_to_auto_at_clear_at_the_opening_of_a_route_file_and_of_a_route_set
     rid1 = fr.evaluate("RSET.routes[RSET.active].rid")
     stxt = fr.evaluate("JSON.stringify(setObject())")                                    # le jeu de la route d'aujourd'hui : son rid survit à l'ouverture
     fr.evaluate("(t) => openRouteFile(new File([t], 's.json'))", stxt)
-    pg.wait_for_timeout(2200)
-    wait_prof(fr)
+    attendre(fr, 'S.points.length >= 2', 'le jeu de routes du fichier ouvert (S.points)', lu='S.points.length', delai=30000)
+    attendre_profil_repos(fr)
     assert fr.evaluate("RSET.routes[RSET.active].rid") == rid1 and fr.evaluate("__RP.prof.topM") is None and scale(fr)['set'] is False
     # « Restaurer » après un remplacement : Auto aussi
     set_top(fr, pg, 3000)
     fr.evaluate("rpBack(rpMem())")
-    pg.wait_for_timeout(1700)
-    wait_prof(fr)
+    attendre(fr, 'S.points.length >= 2', 'la route restaurée (S.points)', lu='S.points.length')
+    attendre_profil_repos(fr)
     assert fr.evaluate("__RP.prof.topM") is None
     # l'Exemple : le shell rouvre l'outil, qui repart de Auto
     set_top(fr, pg, 3000)
-    pg.evaluate("MP_WORK_EXAMPLE('fl')")
-    pg.wait_for_timeout(1500)
+    exemple(pg, 'fl')
     pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(2500)
-    fr2 = next(f for f in pg.frames if f != pg.main_frame and f.evaluate("typeof window.__RP !== 'undefined'"))
+    fr2 = attendre_rp(pg)
     assert fr2.evaluate("__RP.prof.topM") is None
     assert pg.errs == []
     pg.context.close()
@@ -529,7 +527,7 @@ def test_a_long_bubble_never_covers_the_column(browser):
     seen = 0
     for fx in (0.1, 0.3, 0.5, 0.7, 0.9):
         pg.touchscreen.tap(sv[0] + fx * (sv[2] - 52), sv[1] + 60)
-        pg.wait_for_timeout(250)
+        attendre(fr, "document.querySelector('.prof-bub').hidden === false", 'la bulle du profil posée au toucher', lu="document.querySelector('.prof-bub').hidden")
         r = fr.evaluate("""() => { const b = document.querySelector('.prof-bub').getBoundingClientRect(), s = document.querySelector('.prof-sl').getBoundingClientRect(), g = document.querySelector('.prof-g').getBoundingClientRect();
           return { hidden: document.querySelector('.prof-bub').hidden, right: b.right, left: b.left - g.left, colLeft: s.left, w: b.width, txt: document.querySelector('.prof-bub').textContent }; }""")
         assert r['hidden'] is False and r['right'] <= r['colLeft'] + 0.01 and r['left'] >= -0.01, (fx, r)
@@ -550,7 +548,7 @@ def test_back_to_auto_at_a_reload_and_nothing_is_written(browser):
     assert 'topM' not in disp and 'top' not in disp
     for val in (1000, 6100, 300):
         set_top(fr, pg, val)
-    pg.wait_for_timeout(300)
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.topM") == 300
     assert fr.evaluate(store) == s0 and fr.evaluate(work) == w0                          # le stockage du navigateur et le fichier de travail : identiques
     unit(fr, pg, 'ft')
@@ -562,11 +560,9 @@ def test_back_to_auto_at_a_reload_and_nothing_is_written(browser):
     assert 'rp_display_v1' in d1 and all('topM' not in v and 'prof-sl' not in v for v in d1.values())
     # un rechargement : Auto
     pg.reload(wait_until='commit')
-    pg.wait_for_function("typeof NAV !== 'undefined' && typeof openModule === 'function'", timeout=30000)
-    pg.wait_for_timeout(2000)
+    attendre_shell(pg)
     pg.evaluate("openModule('rp')")
-    pg.wait_for_timeout(2500)
-    fr2 = next(f for f in pg.frames if f != pg.main_frame and f.evaluate("typeof window.__RP !== 'undefined'"))
+    fr2 = attendre_rp(pg)
     assert fr2.evaluate("__RP.prof.topM") is None
     assert pg.errs == []
     pg.context.close()
@@ -582,25 +578,30 @@ def test_the_keyboard_sets_the_top_by_one_step_and_enter_goes_back_to_auto(brows
     fr.evaluate("document.querySelector('.prof-sli').focus()")
     start_v = float(col(fr)['value'])
     pg.keyboard.press('ArrowUp')
-    pg.wait_for_timeout(200)
+    attendre(fr, "parseFloat(document.querySelector('.prof-sli').value) === arg", 'le curseur du haut monté d\'un pas', lu="document.querySelector('.prof-sli').value", arg=start_v + 100)
+    attendre_repos(fr)
     c = col(fr)
     assert float(c['value']) == start_v + 100 and scale(fr)['top'] == start_v + 100 and c['pressed'] == 'false', c
     assert c['vtext'] == c['text'] and c['text'].endswith(' m')
     pg.keyboard.press('ArrowUp')
     pg.keyboard.press('ArrowDown')
-    pg.wait_for_timeout(200)
+    attendre(fr, "parseFloat(document.querySelector('.prof-sli').value) === arg", 'le curseur du haut revenu à son pas', lu="document.querySelector('.prof-sli').value", arg=start_v + 100)
+    attendre_repos(fr)
     assert float(col(fr)['value']) == start_v + 100 and scale(fr)['top'] == start_v + 100
     pg.keyboard.press('Home')
-    pg.wait_for_timeout(200)
+    attendre(fr, "document.querySelector('.prof-sli').value === '300'", 'le curseur du haut au minimum (300)', lu="document.querySelector('.prof-sli').value")
+    attendre_repos(fr)
     assert scale(fr)['top'] == 300 and col(fr)['value'] == '300'
     pg.keyboard.press('Home')
     pg.keyboard.press('ArrowDown')
-    pg.wait_for_timeout(200)
+    attendre(fr, "document.querySelector('.prof-sli').value === '300'", 'le curseur du haut au minimum (300), sans passer dessous', lu="document.querySelector('.prof-sli').value")
+    attendre_repos(fr)
     assert scale(fr)['top'] == 300                                                       # jamais sous le bas + 300 m
     # AUTO à Entrée
     fr.evaluate("document.querySelector('.prof-sla').focus()")
     pg.keyboard.press('Enter')
-    pg.wait_for_timeout(300)
+    attendre(fr, '__RP.prof.topM === null', "l'échelle en Auto (PROF.topM nul)", lu='__RP.prof.topM')
+    attendre_repos(fr)
     c = col(fr)
     assert c['pressed'] == 'true' and scale(fr)['set'] is False and scale(fr)['top'] == 800 and fr.evaluate("document.activeElement.className") == 'prof-sla'
     # en pieds : un pas de 500 ft ; le texte a son unité
@@ -608,7 +609,8 @@ def test_the_keyboard_sets_the_top_by_one_step_and_enter_goes_back_to_auto(brows
     fr.evaluate("document.querySelector('.prof-sli').focus()")
     v0 = float(col(fr)['value'])
     pg.keyboard.press('ArrowUp')
-    pg.wait_for_timeout(200)
+    attendre(fr, "parseFloat(document.querySelector('.prof-sli').value) === arg", 'le curseur du haut monté de 500 ft', lu="document.querySelector('.prof-sli').value", arg=v0 + 500)
+    attendre_repos(fr)
     c = col(fr)
     assert float(c['value']) == v0 + 500 and c['text'].endswith(' ft') and c['vtext'] == c['text'], c
     assert pg.errs == []
@@ -638,7 +640,8 @@ def test_dragging_the_slider_with_the_mouse_moves_neither_the_profile_cursor_nor
     pg.mouse.move(x, y - 40, steps=5)
     pg.mouse.move(x, y - 80, steps=5)
     pg.mouse.up()
-    pg.wait_for_timeout(300)
+    attendre(fr, '__RP.prof.topM !== null', "un haut réglé par le glisser (PROF.topM)", lu='__RP.prof.topM')
+    attendre_repos(fr)
     c2 = col(fr)
     assert float(c2['value']) > float(c['value']) and c2['pressed'] == 'false' and scale(fr)['top'] == float(c2['value'])
     assert fr.evaluate("__RP.prof.cur") is None and fr.evaluate("document.querySelector('.prof-bub').hidden") is True
@@ -646,7 +649,7 @@ def test_dragging_the_slider_with_the_mouse_moves_neither_the_profile_cursor_nor
     # un curseur du profil posé, puis le même glisser : le curseur reste au même échantillon, avec sa bulle
     sv = c2['svg']
     pg.mouse.move(sv[0] + 300, sv[1] + 90)
-    pg.wait_for_timeout(300)
+    attendre(fr, "__RP.prof.cur !== null && !document.querySelector('.prof-bub').hidden", 'le curseur du profil posé (PROF.cur, bulle)', lu='[__RP.prof.cur, document.querySelector(".prof-bub").hidden]')
     k0 = fr.evaluate("__RP.prof.cur")
     txt0 = fr.evaluate("document.querySelector('.prof-bub').textContent")
     assert k0 is not None
@@ -656,14 +659,15 @@ def test_dragging_the_slider_with_the_mouse_moves_neither_the_profile_cursor_nor
     pg.mouse.down()
     pg.mouse.move(x, y + 40, steps=5)
     pg.mouse.up()
-    pg.wait_for_timeout(300)
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.cur") == k0 and fr.evaluate("document.querySelector('.prof-bub').hidden") is False and fr.evaluate("document.querySelector('.prof-bub').textContent").split(' · ')[0] == txt0.split(' · ')[0]
     assert fr.evaluate("document.querySelectorAll('.rp-prof-dot').length") == 1 and fr.evaluate("document.querySelectorAll('#prof-cur .prof-cl').length") == 1
     b = fr.evaluate("""() => { const g = document.querySelector('.prof-g').getBoundingClientRect(), b = document.querySelector('.prof-bub').getBoundingClientRect(), s = document.querySelector('.prof-sl').getBoundingClientRect(); return [b.left - g.left, b.right <= s.left + 0.01]; }""")
     assert b[0] >= -0.01 and b[1] is True                                                # la bulle ne recouvre pas la colonne
     # la souris quitte la colonne : le curseur du profil s'efface
     pg.mouse.move(5, 5)
-    pg.wait_for_timeout(250)
+    attendre(fr, '__RP.prof.cur === null', 'le curseur du profil effacé (PROF.cur nul)', lu='__RP.prof.cur')
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.cur") is None and fr.evaluate("document.querySelectorAll('.rp-prof-dot').length") == 0
     assert map_state(fr)[:4] == m0[:4]
     assert pg.errs == []
@@ -687,19 +691,20 @@ def test_touching_and_dragging_the_slider_with_a_finger_moves_neither_the_profil
     sv = c['svg']
     # le curseur du profil posé au toucher
     pg.touchscreen.tap(sv[0] + 150, sv[1] + 60)
-    pg.wait_for_timeout(300)
+    attendre(fr, "__RP.prof.cur !== null && !document.querySelector('.prof-bub').hidden", 'le curseur du profil posé au toucher (PROF.cur, bulle)', lu='[__RP.prof.cur, document.querySelector(".prof-bub").hidden]')
     k0 = fr.evaluate("__RP.prof.cur")
     assert k0 is not None and fr.evaluate("document.querySelector('.prof-bub').hidden") is False
     txt0 = fr.evaluate("document.querySelector('.prof-bub').textContent").split(' · ')[0]
     # toucher la colonne (AUTO, la valeur) : le curseur du profil reste
     a = c['auto']
     pg.touchscreen.tap(a[0] + 22, a[1] + 22)
-    pg.wait_for_timeout(300)
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.cur") == k0 and fr.evaluate("document.querySelector('.prof-bub').hidden") is False
     # un glisser du doigt sur le curseur
     x, y = thumb_xy(c, (float(c['value']) - float(c['min'])) / (float(c['max']) - float(c['min'])))
     touch_drag(pg, x, y, x, y - 60)
-    pg.wait_for_timeout(400)
+    attendre(fr, '__RP.prof.topM !== null', "un haut réglé par le glisser du doigt (PROF.topM)", lu='__RP.prof.topM')
+    attendre_repos(fr)
     c2 = col(fr)
     assert float(c2['value']) > float(c['value']) and c2['pressed'] == 'false' and scale(fr)['top'] == float(c2['value']), (c, c2)
     assert fr.evaluate("__RP.prof.cur") == k0 and fr.evaluate("document.querySelector('.prof-bub').textContent").split(' · ')[0] == txt0
@@ -708,12 +713,14 @@ def test_touching_and_dragging_the_slider_with_a_finger_moves_neither_the_profil
     a = c2['auto']
     assert a[2] >= 44 and a[3] >= 44
     pg.touchscreen.tap(a[0] + 22, a[1] + 22)
-    pg.wait_for_timeout(300)
+    attendre(fr, '__RP.prof.topM === null', "l'échelle en Auto (PROF.topM nul)", lu='__RP.prof.topM')
+    attendre_repos(fr)
     assert scale(fr)['set'] is False and col(fr)['pressed'] == 'true' and fr.evaluate("__RP.prof.cur") == k0
     assert map_state(fr)[:4] == m0[:4]
     # un toucher hors du graphique et de la colonne efface toujours le curseur du profil
     pg.touchscreen.tap(200, 100)
-    pg.wait_for_timeout(300)
+    attendre(fr, '__RP.prof.cur === null', 'le curseur du profil effacé (PROF.cur nul)', lu='__RP.prof.cur')
+    attendre_repos(fr)
     assert fr.evaluate("__RP.prof.cur") is None
     assert pg.errs == []
     pg.context.close()

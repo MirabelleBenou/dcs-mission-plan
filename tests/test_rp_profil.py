@@ -11,8 +11,11 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tests'))
 from test_rp_menaces import (png, rgb, CREST_M, NBSP, PLAIN_M, TCOL, TX, TY, browser, display, needs_pw, open_rp, ready, setup, sym, tile_ll)  # noqa: E402,F401
+from banc_attente import (attendre, attendre_etat, attendre_fenetre, attendre_images, attendre_profil, attendre_profil_repos, attendre_repos, attendre_theatre,  # noqa: E402
+                          PROFIL_LU)
 
 PROF_READY = "(() => { const P = __RP.prof; return !!P.data && !P.data.fail && P.data.key === profKey() && !!P.view; })()"
+FAILED = "() => { const P = __RP.prof; return !!P.data && P.data.fail === true; }"
 
 
 def pt(name, fx, fy, alt=30, ref='AGL', tx=TX, ty=TY):
@@ -24,7 +27,8 @@ def tick(fr, pg, key='profile', on=True):
     display(fr, pg, True)
     if bool(fr.evaluate("DISP.%s" % key)) != on:
         fr.evaluate("document.querySelector('#dsp-panel [data-k=%s]').click()" % key)
-        pg.wait_for_timeout(300)
+        attendre(fr, '!!DISP[arg[0]] === arg[1]', 'la case %s %s (DISP.%s)' % (key, 'cochée' if on else 'décochée', key), lu='DISP[arg[0]]', arg=[key, on])
+        attendre_images(fr, 2)
     display(fr, pg, False)
 
 
@@ -33,7 +37,20 @@ def route(fr, pts, items=None):
 
 
 def wait_prof(fr, timeout=60000):
-    fr.wait_for_function(PROF_READY, timeout=timeout)
+    attendre_profil(fr, timeout)
+
+
+def choisir_theatre(fr, th):
+    """Choisit le théâtre dans la liste de la barre et attend qu'il soit celui de l'application, la page au repos."""
+    fr.evaluate("(id) => { const s = document.getElementById('theatre'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); }", th)
+    attendre_theatre(fr, th)
+    attendre_images(fr, 2)
+
+
+def ligne_profil(fr, desactivee):
+    """La ligne « Profil du sol » du menu Affichage est grisée (ou non) : l'état que le théâtre pose."""
+    attendre(fr, "document.querySelector('#dsp-panel [data-k=profile]').getAttribute('aria-disabled') === (arg ? 'true' : null)", 'la ligne Profil du sol %s' % ('grisée' if desactivee else 'active'),
+             lu="document.querySelector('#dsp-panel [data-k=profile]').getAttribute('aria-disabled')", arg=desactivee)
 
 
 def rects(fr):
@@ -61,7 +78,7 @@ def test_the_display_row_order_default_storage_theatres_and_dot(browser):
                    'title': 'Le sol sous la route, relevé dans DCS', 'txt': 'Profil du sol'}
     assert fr.evaluate("Array.from(document.querySelectorAll('#dsp-panel .dsp-opt')).slice(0, 3).map(e => e.getAttribute('data-k'))") == ['relief', 'threats', 'profile']
     fr.evaluate("document.querySelector('#dsp-panel [data-k=profile]').click()")
-    pg.wait_for_timeout(300)
+    attendre(fr, "DISP.profile === true && document.getElementById('dsp-dot').hidden === false", 'la case Profil du sol cochée et le point du menu allumé', lu='[DISP.profile, document.getElementById("dsp-dot").hidden]')
     assert fr.evaluate("DISP.profile") is True and fr.evaluate("document.getElementById('dsp-dot').hidden") is False
     st = json.loads(fr.evaluate("localStorage.getItem('rp_display_v1')"))
     assert st['profile'] is True and st['profFold'] is False and st['threats'] is True and st['thrStep'] == 2
@@ -69,17 +86,17 @@ def test_the_display_row_order_default_storage_theatres_and_dot(browser):
     assert 'profile' not in fr.evaluate("localStorage.getItem('route_state_v1')") and 'profile' not in (fr.evaluate("localStorage.getItem('route_layers_v1')") or '')
     display(fr, pg, False)
     # hors des trois théâtres : grisée, infobulle, aucun bandeau
-    fr.evaluate("(id) => { const s = document.getElementById('theatre'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); }", 'Nevada')
-    pg.wait_for_timeout(600)
+    choisir_theatre(fr, 'Nevada')
     display(fr, pg, True)
+    ligne_profil(fr, True)
     off = fr.evaluate("(() => { const r = document.querySelector('#dsp-panel [data-k=profile]'); return [r.getAttribute('aria-disabled'), r.title, r.getAttribute('aria-checked')]; })()")
     assert off == ['true', 'Profil du sol — absent de ce théâtre', 'false']
     fr.evaluate("document.querySelector('#dsp-panel [data-k=profile]').click()")
-    pg.wait_for_timeout(200)
+    attendre_images(fr, 3)                                                                                          # le clic sur une ligne grisée ne change rien : on laisse passer le rendu avant de le constater
     assert fr.evaluate("DISP.profile") is True and fr.evaluate("document.getElementById('rp-prof')") is None       # le clic sur une ligne grisée ne change rien
     for th in ('Caucasus', 'GermanyCW', 'Syria'):
-        fr.evaluate("(id) => { const s = document.getElementById('theatre'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); }", th)
-        pg.wait_for_timeout(500)
+        choisir_theatre(fr, th)
+        ligne_profil(fr, False)
         assert fr.evaluate("document.querySelector('#dsp-panel [data-k=profile]').getAttribute('aria-disabled')") is None, th
         assert fr.evaluate("document.querySelector('#dsp-panel [data-k=profile]').title") == 'Le sol sous la route, relevé dans DCS'
     assert pg.errs == []
@@ -91,8 +108,8 @@ def test_the_display_row_in_english(browser):
     pg, fr = open_rp(browser, lang='en')
     display(fr, pg, True)
     assert fr.evaluate("(() => { const r = document.querySelector('#dsp-panel [data-k=profile]'); return [r.textContent.trim(), r.title]; })()") == ['Ground profile', 'The ground under the route, read in DCS']
-    fr.evaluate("(id) => { const s = document.getElementById('theatre'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); }", 'Nevada')
-    pg.wait_for_timeout(500)
+    choisir_theatre(fr, 'Nevada')
+    ligne_profil(fr, True)
     assert fr.evaluate("document.querySelector('#dsp-panel [data-k=profile]').title") == 'Ground profile — not available for this theatre'
     pg.context.close()
 
@@ -108,8 +125,7 @@ def test_the_strip_shrinks_the_map_folds_and_is_kept_on_reload(browser):
     style0 = fr.evaluate("document.querySelector('.mapwrap').getAttribute('style')")
     assert fr.evaluate("getComputedStyle(document.querySelector('.mapwrap')).getPropertyValue('--prof-h')") == ''
     tick(fr, pg)
-    wait_prof(fr)
-    pg.wait_for_timeout(300)
+    attendre_profil_repos(fr)
     on = rects(fr)
     cs = fr.evaluate("(() => { const c = getComputedStyle(document.getElementById('rp-prof')); return [c.backgroundColor, c.borderTopWidth, c.borderTopStyle, c.fontFamily.split(',')[0]]; })()")
     assert cs == ['rgb(26, 28, 20)', '2px', 'solid', 'Oswald']
@@ -122,7 +138,8 @@ def test_the_strip_shrinks_the_map_folds_and_is_kept_on_reload(browser):
     fb = fr.evaluate("(() => { const b = document.querySelector('#rp-prof button'); return [b.textContent, b.getAttribute('aria-label'), b.getAttribute('aria-expanded')]; })()")
     assert fb == ['▾', 'Replier le profil', 'true']
     fr.evaluate("document.querySelector('#rp-prof button').click()")
-    pg.wait_for_timeout(300)
+    attendre(fr, 'DISP.profFold === true', 'le bandeau replié (DISP.profFold)', lu='DISP.profFold')
+    attendre_repos(fr)
     fold = rects(fr)
     assert fold['prof'][3] == 26 and fold['map'][3] == base['map'][3] - 26                                  # la carte reprend la place : 26 px restent
     assert fr.evaluate("document.querySelector('.prof-g').hidden") is True
@@ -135,10 +152,11 @@ def test_the_strip_shrinks_the_map_folds_and_is_kept_on_reload(browser):
     pg, fr = open_rp(browser, seed={'rp_display_v1': store})
     assert fr.evaluate("DISP.profile") is True and fr.evaluate("DISP.profFold") is True
     route(fr, [pt('A', 100 / 256, .5, ref='MSL', alt=500), pt('B', 200 / 256, .5, ref='MSL', alt=500)])
-    pg.wait_for_timeout(500)
+    attendre_repos(fr)
     assert rects(fr)['prof'][3] == 26
     fr.evaluate("document.querySelector('#rp-prof button').click()")
-    pg.wait_for_timeout(300)
+    attendre(fr, 'DISP.profFold === false', 'le bandeau déplié (DISP.profFold)', lu='DISP.profFold')
+    attendre_repos(fr)
     assert rects(fr)['prof'][3] == 216
     # décoché : le bandeau part, la carte a sa taille d'avant
     tick(fr, pg, on=False)
@@ -154,11 +172,13 @@ def test_fewer_than_two_points_say_so_and_a_theatre_without_relief_has_no_strip(
     pg, fr = open_rp(browser)
     route(fr, [pt('A', .4, .5)])
     tick(fr, pg)
-    pg.wait_for_timeout(500)
+    attendre(fr, "document.getElementById('rp-prof') !== null && !!document.querySelector('.prof-svg')", 'le bandeau du profil posé, son SVG dessiné', lu='[!!document.getElementById("rp-prof"), !!document.querySelector(".prof-svg")]')
+    attendre_repos(fr)
     assert fr.evaluate("document.getElementById('rp-prof') !== null") is True
     assert fr.evaluate("document.querySelector('.prof-svg').textContent") == 'Tracez au moins deux points.'
-    fr.evaluate("(id) => { const s = document.getElementById('theatre'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); }", 'Nevada')
-    pg.wait_for_timeout(600)
+    choisir_theatre(fr, 'Nevada')
+    attendre(fr, "document.getElementById('rp-prof') === null", 'plus de bandeau hors des théâtres à relief', lu='!!document.getElementById("rp-prof")')
+    attendre_repos(fr)
     assert fr.evaluate("document.getElementById('rp-prof')") is None and rects(fr)['map'][3] == rects(fr)['wrap'][3]
     assert pg.errs == []
     pg.context.close()
@@ -171,20 +191,20 @@ def test_a_leg_across_the_crest_and_a_leg_that_runs_beside_it(browser):
     tick(fr, pg)
     # une branche qui coupe la crête : point le plus haut 300 m, sécurité 600 m et 2 000 ft
     route(fr, [pt('A', 100 / 256, .5), pt('B', 200 / 256, .5)])
-    wait_prof(fr)
-    pg.wait_for_timeout(400)
+    attendre_profil_repos(fr)
     g = legs(fr)[0]
     assert g['hi'] == pytest.approx(CREST_M, abs=0.01) and g['safe'] == pytest.approx(CREST_M, abs=0.01) and g['unk'] is False
     assert prof_rows(fr) == ['▲ Point le plus haut 300 m · sécurité 600 m']
     fr.evaluate("unChoose('ft')")
-    pg.wait_for_timeout(500)
+    attendre(fr, "S.units.altitude === 'ft'", "l'altitude en pieds (S.units.altitude)", lu='S.units.altitude')
+    attendre_profil_repos(fr)
     assert prof_rows(fr) == ['▲ Point le plus haut 984 ft · sécurité 2' + NBSP + '000 ft']
     fr.evaluate("unChoose('m')")
-    pg.wait_for_timeout(300)
+    attendre(fr, "S.units.altitude === 'm'", "l'altitude en mètres (S.units.altitude)", lu='S.units.altitude')
+    attendre_repos(fr)
     # une branche à moins de 5 NM de la crête sans la couper : 100 m, 600 m
     route(fr, [pt('A', 100 / 256, .3), pt('B', 100 / 256, .7)])
-    wait_prof(fr)
-    pg.wait_for_timeout(400)
+    attendre_profil_repos(fr)
     g = legs(fr)[0]
     assert g['hi'] == pytest.approx(PLAIN_M, abs=0.01) and g['safe'] == pytest.approx(CREST_M, abs=0.01)
     assert prof_rows(fr) == ['▲ Point le plus haut 100 m · sécurité 600 m']
@@ -201,18 +221,17 @@ def test_a_corridor_that_leaves_the_relief_is_marked_with_at_least(browser):
     tick(fr, pg)
     # à 0,05° du bord ouest du relief (35,15° E) : le couloir de 5 NM en sort
     route(fr, [{'name': 'A', 'lat': 33.60, 'lon': 35.20, 'alt': 30, 'altRef': 'AGL'}, {'name': 'B', 'lat': 33.80, 'lon': 35.20, 'alt': 30, 'altRef': 'AGL'}])
-    wait_prof(fr)
-    pg.wait_for_timeout(400)
+    attendre_profil_repos(fr)
     g = legs(fr)[0]
     assert g['unk'] is True and g['safe'] == pytest.approx(CREST_M, abs=0.01)
     assert prof_rows(fr) == ['▲ Point le plus haut 100 m · sécurité ≥ 600 m'] or prof_rows(fr) == ['▲ Point le plus haut 300 m · sécurité ≥ 600 m']
     fr.evaluate("unChoose('ft')")
-    pg.wait_for_timeout(400)
+    attendre(fr, "S.units.altitude === 'ft'", "l'altitude en pieds (S.units.altitude)", lu='S.units.altitude')
+    attendre_profil_repos(fr)
     assert prof_rows(fr)[0].endswith('sécurité ≥ 2' + NBSP + '000 ft')
     # tout le couloir dans le relief : pas de « ≥ »
     route(fr, [pt('A', 100 / 256, .3), pt('B', 100 / 256, .7)])
-    wait_prof(fr)
-    pg.wait_for_timeout(400)
+    attendre_profil_repos(fr)
     assert '≥' not in prof_rows(fr)[0]
     assert pg.errs == []
     pg.context.close()
@@ -237,8 +256,7 @@ def test_the_ground_is_read_without_the_relief_box_and_a_missing_tile_leaves_a_g
     pg.route('**/elevation/**', missing)
     tick(fr, pg)
     route(fr, [pt('A', 200 / 256, .5), pt('B', 100 / 256, .5, tx=TX + 1)])
-    wait_prof(fr)
-    pg.wait_for_timeout(300)
+    attendre_profil_repos(fr)
     r = fr.evaluate("""() => { const g = __RP.prof.data.flat.g; let nan = 0, ok = 0; for (let i = 0; i < g.length; i++) { if (g[i] !== g[i]) nan++; else ok++; } return { nan: nan, ok: ok, total: g.length }; }""")
     assert r['nan'] > 0 and r['ok'] > 0
     # un trou au graphique : plus d'une suite de sol dans le bord
@@ -259,8 +277,7 @@ def test_the_zone_starts_at_the_larger_of_the_ground_and_the_visibility_height_a
     pg, fr = open_rp(browser)
     tick(fr, pg)
     route(fr, east_route(), [sym(0, 'sa-8', name='S8')])
-    wait_prof(fr)
-    pg.wait_for_timeout(800)
+    attendre_profil_repos(fr, zones=True)
     z = fr.evaluate("__RP.prof.zones.map(z => ({ id: z.id, name: z.name, top: z.top, n: z.runs.length }))")
     assert len(z) == 1 and z[0]['id'] == 'sa-8' and z[0]['name'] == 'S8' and z[0]['n'] >= 1
     chk = fr.evaluate("""() => {
@@ -287,7 +304,8 @@ def test_the_zone_starts_at_the_larger_of_the_ground_and_the_visibility_height_a
     assert 'vu et à portée de tir des menaces' in fr.evaluate("document.querySelector('.prof-leg').textContent")
     # « Menaces » décochée : ni zone, ni barre, la légende de base
     tick(fr, pg, 'threats', False)
-    pg.wait_for_timeout(500)
+    attendre(fr, "document.querySelectorAll('path.prof-zone, rect.prof-seen').length === 0", 'plus de zone ni de barre dans le profil', lu='document.querySelectorAll("path.prof-zone, rect.prof-seen").length')
+    attendre_repos(fr)
     assert fr.evaluate("document.querySelectorAll('path.prof-zone, rect.prof-seen').length") == 0
     assert fr.evaluate("document.querySelector('.prof-leg').textContent") == '━ point le plus haut · ╍╍ sécurité'
     assert pg.errs == []
@@ -300,8 +318,7 @@ def test_the_route_seen_bar_is_the_set_the_map_halo_is_drawn_from(browser):
     tick(fr, pg)
     fr.evaluate("window.__runs = []; const o = thrRouteSet; thrRouteSet = function (s, r) { window.__runs.push(r); return o.apply(this, arguments); }; 0")
     route(fr, east_route(), [sym(0, 'sa-8', name='S8')])
-    wait_prof(fr)
-    pg.wait_for_timeout(1200)
+    attendre_profil_repos(fr, zones=True)
     runs = fr.evaluate("window.__runs[window.__runs.length - 1]")
     bars = fr.evaluate("Array.from(document.querySelectorAll('rect.prof-seen')).map(e => [parseFloat(e.getAttribute('data-d0')), parseFloat(e.getAttribute('data-d1')), e.getAttribute('height'), e.getAttribute('y')])")
     assert runs and len(bars) == len(runs)
@@ -319,7 +336,8 @@ def test_the_route_seen_bar_is_the_set_the_map_halo_is_drawn_from(browser):
     assert all(float(b[3]) == axis + 1 for b in bars)                                                # sous l'axe horizontal
     # la zone et la barre disparaissent avec la menace
     fr.evaluate("CF_LAYERS.length = 0; renderAll();")
-    pg.wait_for_timeout(1000)
+    attendre(fr, "document.querySelectorAll('path.prof-zone, rect.prof-seen').length === 0", 'plus de zone ni de barre dans le profil', lu='document.querySelectorAll("path.prof-zone, rect.prof-seen").length')
+    attendre_repos(fr)
     assert fr.evaluate("document.querySelectorAll('path.prof-zone, rect.prof-seen').length") == 0
     assert pg.errs == []
     pg.context.close()
@@ -329,18 +347,18 @@ def test_the_route_seen_bar_is_the_set_the_map_halo_is_drawn_from(browser):
 def test_the_navigation_rows_come_before_the_threat_row_and_the_table_is_the_base_when_unticked(browser):
     pg, fr = open_rp(browser)
     route(fr, east_route(), [sym(0, 'sa-8', name='S8')])
-    pg.wait_for_timeout(800)
+    attendre_repos(fr)
     base = fr.evaluate("document.getElementById('nav-body').innerHTML")
     assert 'class="thr"' in base and 'class="prof"' not in base
     tick(fr, pg)
-    wait_prof(fr)
-    pg.wait_for_timeout(500)
+    attendre_profil_repos(fr)
     order = fr.evaluate("Array.from(document.querySelectorAll('#nav-body tr')).map(e => e.className)")
     assert order == ['', 'leg', 'prof', 'thr', '']
     assert fr.evaluate("document.querySelector('#nav-body tr.prof').nextElementSibling.className") == 'thr'
     thr_text = fr.evaluate("document.querySelector('#nav-body tr.thr').textContent")
     tick(fr, pg, on=False)
-    pg.wait_for_timeout(500)
+    attendre(fr, "document.getElementById('rp-prof') === null && !document.querySelector('#nav-body tr.prof')", 'plus de bandeau ni de ligne de profil', lu='[!!document.getElementById("rp-prof"), !!document.querySelector("#nav-body tr.prof")]')
+    attendre_repos(fr)
     assert fr.evaluate("document.getElementById('nav-body').innerHTML") == base                           # case décochée : le tableau de la base
     assert fr.evaluate("document.querySelector('#nav-body tr.thr').textContent") == thr_text               # les lignes « Vu par … » ne changent pas
     assert pg.errs == []
@@ -351,7 +369,7 @@ def test_the_navigation_rows_come_before_the_threat_row_and_the_table_is_the_bas
 def test_unticked_the_map_is_the_base(browser):
     pg, fr = open_rp(browser)
     route(fr, east_route())
-    pg.wait_for_timeout(500)
+    attendre_repos(fr)
     a = fr.evaluate("""() => { const q = s => { const b = document.querySelector(s).getBoundingClientRect(); return [b.x, b.y, b.width, b.height]; };
       return { map: q('#map'), wrap: q('.mapwrap'), nav: q('#nav-body'), size: [__RP.map.getSize().x, __RP.map.getSize().y], prof: document.getElementById('rp-prof') }; }""")
     assert a['prof'] is None and a['map'][3] == a['wrap'][3] and a['size'] == [a['map'][2], a['map'][3]]
@@ -365,14 +383,14 @@ def test_the_cursor_bubble_stays_in_the_frame_and_the_map_gets_a_yellow_dot(brow
     pg, fr = open_rp(browser)
     tick(fr, pg)
     route(fr, east_route(), [sym(0, 'sa-8', name='S8')])
-    wait_prof(fr)
-    pg.wait_for_timeout(1000)
+    attendre_profil_repos(fr, zones=True)
     sv = fr.evaluate("(() => { const b = document.querySelector('.prof-svg').getBoundingClientRect(); return [b.x, b.y, b.width, b.height]; })()")
     seen_txt = None
     vw = fr.evaluate("(() => { const v = __RP.prof.view; return [v.ml, v.pw]; })()")                       # la colonne du curseur du haut prend la droite du SVG : « au bord droit » se prend à 98 % de la largeur tracée, puis au bord droit du tracé (ml + pw)
     for fx in (0.0, 0.02, 0.35, 0.5, 0.98, 1.0):
         pg.mouse.move(sv[0] + (vw[0] + 0.98 * vw[1] if fx == 0.98 else vw[0] + vw[1] if fx == 1.0 else fx * (sv[2] - 1) + (0.5 if fx == 0 else 0)), sv[1] + 90)
-        pg.wait_for_timeout(250)
+        attendre(fr, "!document.querySelector('.prof-bub').hidden && !!document.querySelector('#prof-cur .prof-cl') && document.querySelectorAll('.rp-prof-dot').length === 1", 'le curseur du profil posé (bulle, ligne, rond jaune)',
+                 lu="[document.querySelector('.prof-bub').hidden, !!document.querySelector('#prof-cur .prof-cl'), document.querySelectorAll('.rp-prof-dot').length]")
         r = fr.evaluate("""() => { const b = document.querySelector('.prof-bub').getBoundingClientRect(), g = document.querySelector('.prof-g').getBoundingClientRect();
           return { hidden: document.querySelector('.prof-bub').hidden, l: b.left - g.left, r: g.right - b.right, txt: document.querySelector('.prof-bub').textContent,
                    line: !!document.querySelector('#prof-cur .prof-cl'), dot: !!document.querySelector('#prof-cur .prof-cd'), mark: document.querySelectorAll('.rp-prof-dot').length }; }""")
@@ -385,7 +403,7 @@ def test_the_cursor_bubble_stays_in_the_frame_and_the_map_gets_a_yellow_dot(brow
     p = fr.evaluate("""() => { const P = __RP.prof, k = P.cur, F = P.data.flat; const m = P.mark.getLatLng(); return [m.lat - F.lat[k], m.lng - F.lon[k]]; }""")
     assert p == [0, 0]
     pg.mouse.move(5, 5)
-    pg.wait_for_timeout(250)
+    attendre(fr, "document.querySelector('.prof-bub').hidden === true && document.querySelectorAll('.rp-prof-dot').length === 0", 'le curseur du profil effacé', lu="[document.querySelector('.prof-bub').hidden, document.querySelectorAll('.rp-prof-dot').length]")
     assert fr.evaluate("document.querySelector('.prof-bub').hidden") is True and fr.evaluate("document.querySelectorAll('.rp-prof-dot').length") == 0
     assert pg.errs == []
     pg.context.close()
@@ -399,8 +417,7 @@ def test_the_strip_on_a_phone_fits_the_touch_button_and_the_bubble(browser, w, h
     route(fr, [pt('DÉPART', 60 / 256, .5), pt('COL', 150 / 256, .5, 1900, 'MSL'), pt('RETOUR', 250 / 256, .5)])
     before = rects(fr)
     tick(fr, pg)
-    wait_prof(fr)
-    pg.wait_for_timeout(500)
+    attendre_profil_repos(fr)
     on = rects(fr)
     gh = max(60, min(130, before['wrap'][3] - 44 - 140))                                                    # sous 760 px : la carte garde 140 px, le graphique entre 60 et 130 px
     assert on['prof'][3] == 44 + gh and on['prof'][2] == on['map'][2]                                       # au doigt, l'en-tête fait 44 px
@@ -415,16 +432,17 @@ def test_the_strip_on_a_phone_fits_the_touch_button_and_the_bubble(browser, w, h
     sv = fr.evaluate("(() => { const b = document.querySelector('.prof-svg').getBoundingClientRect(); return [b.x, b.y, b.width, b.height]; })()")
     for fx in (0.0, 1.0):
         pg.touchscreen.tap(sv[0] + fx * (sv[2] - 1) + (1 if fx == 0 else 0), sv[1] + sv[3] / 2)
-        pg.wait_for_timeout(300)
+        attendre(fr, "document.querySelector('.prof-bub').hidden === false", 'la bulle du profil posée au toucher', lu="document.querySelector('.prof-bub').hidden")
         r = fr.evaluate("""() => { const b = document.querySelector('.prof-bub').getBoundingClientRect(), g = document.querySelector('.prof-g').getBoundingClientRect(); return { hidden: document.querySelector('.prof-bub').hidden, l: b.left - g.left, r: g.right - b.right }; }""")
         assert r['hidden'] is False and r['l'] >= -0.01 and r['r'] >= -0.01, (fx, r)
     # le toucher reste jusqu'au toucher suivant hors du graphique
     pg.touchscreen.tap(w / 2, 100)
-    pg.wait_for_timeout(300)
+    attendre(fr, "document.querySelector('.prof-bub').hidden === true", 'la bulle du profil effacée par un toucher hors du graphique', lu="document.querySelector('.prof-bub').hidden")
     assert fr.evaluate("document.querySelector('.prof-bub').hidden") is True
     # repli au doigt : 26 px restent
     fr.evaluate("document.querySelector('#rp-prof button').click()")
-    pg.wait_for_timeout(300)
+    attendre(fr, 'DISP.profFold === true', 'le bandeau replié (DISP.profFold)', lu='DISP.profFold')
+    attendre_repos(fr)
     assert rects(fr)['prof'][3] == 44 and abs(rects(fr)['map'][3] - (before['map'][3] - 44)) < 0.1
     assert pg.errs == []
     pg.context.close()
@@ -454,14 +472,12 @@ def test_a1_the_leg_row_is_still_there_after_a_tiny_move_of_a_point(browser):
     pg, fr = open_rp(browser)
     tick(fr, pg)
     route(fr, [pt('A', 60 / 256, .5), pt('B', 250 / 256, .5)])
-    wait_prof(fr)
-    pg.wait_for_timeout(400)
+    attendre_profil_repos(fr)
     assert len(prof_rows(fr)) == 1
     for _ in range(2):
         fr.evaluate("S.points[1].lat += 1e-6; renderAll();")                                      # la clé change, le relevé rend les mêmes chiffres
         assert prof_rows(fr) == []                                                                # le relevé est périmé : pas de ligne en attendant
-        pg.wait_for_timeout(1500)
-        wait_prof(fr)
+        attendre_profil_repos(fr)                                                                 # le recalcul rend la clé courante, le profil est redessiné
         assert len(prof_rows(fr)) == 1, 'la ligne tr.prof manque après le recalcul'
     assert fr.evaluate("PROF.nsig") == fr.evaluate("profNavSig()")
     assert pg.errs == []
@@ -474,13 +490,13 @@ def test_a2_the_fold_button_stays_in_the_header_open_or_folded(browser, w, h, to
     pg, fr = open_rp(browser, w, h)
     route(fr, [pt('A', 60 / 256, .5), pt('B', 250 / 256, .5)])
     tick(fr, pg)
-    wait_prof(fr)
-    pg.wait_for_timeout(400)
+    attendre_profil_repos(fr)
     head = 44 if touch else 26
     for fold in (False, True):
         if fold:
             fr.evaluate("document.querySelector('#rp-prof button').click()")
-            pg.wait_for_timeout(300)
+            attendre(fr, 'DISP.profFold === true', 'le bandeau replié (DISP.profFold)', lu='DISP.profFold')
+            attendre_repos(fr)
         r = rects(fr)
         assert r['prof'][3] == head + (0 if fold else (130 if touch else 190))                               # l'en-tête : 26 px à la souris, 44 px au doigt
         assert r['btn'][2] == 44 and r['btn'][3] == head, r                                                  # le bouton : 44 de large, la hauteur de l'en-tête (44 × 44 au doigt)
@@ -507,14 +523,13 @@ def test_a3_the_graph_gives_way_so_that_the_map_keeps_its_room_on_a_small_phone(
     route(fr, [pt('A', 60 / 256, .5), pt('B', 250 / 256, .5)])
     base = rects(fr)
     tick(fr, pg)
-    wait_prof(fr)
-    pg.wait_for_timeout(400)
+    attendre_profil_repos(fr)
     on = rects(fr)
     assert on['svg'][3] == 130 and on['map'][3] >= 140 and abs(on["map"][3] - (base["map"][3] - 174)) < 0.1
     # le téléphone rétréci : le graphique cède, jamais sous 60 px
     pg.set_viewport_size({'width': 345, 'height': 590})
-    pg.wait_for_timeout(900)
-    wait_prof(fr)
+    attendre_fenetre(pg, 345, 590)
+    attendre_profil_repos(fr)
     small = rects(fr)
     gh = max(60, min(130, small['wrap'][3] - 44 - 140))
     assert small['svg'][3] == gh == 60 and small['prof'][3] == 44 + gh and small['map'][3] == small['wrap'][3] - 44 - gh
@@ -523,10 +538,12 @@ def test_a3_the_graph_gives_way_so_that_the_map_keeps_its_room_on_a_small_phone(
     assert min(z) >= 0, z                                                                                  # le « − » du zoom est entier dans la carte
     # le calcul se refait quand .mapwrap change de taille
     pg.set_viewport_size({'width': 412, 'height': 915})
-    pg.wait_for_timeout(900)
+    attendre_fenetre(pg, 412, 915)
+    attendre_profil_repos(fr)
     assert rects(fr)['svg'][3] == 130
     pg.set_viewport_size({'width': 390, 'height': 700})
-    pg.wait_for_timeout(900)
+    attendre_fenetre(pg, 390, 700)
+    attendre_profil_repos(fr)
     r = rects(fr)
     assert abs(r['svg'][3] - max(60, min(130, r['wrap'][3] - 44 - 140))) <= 1 and 60 <= r['svg'][3] <= 130          # clientHeight arrondit la hauteur de .mapwrap
     assert pg.errs == []
@@ -538,12 +555,13 @@ def test_a4_the_route_seen_bar_is_never_drawn_for_the_altitude_before(browser):
     pg, fr = open_rp(browser)
     tick(fr, pg)
     route(fr, east_route(), [sym(0, 'sa-8', name='S8')])
-    wait_prof(fr)
-    pg.wait_for_timeout(1500)
+    attendre_profil_repos(fr, zones=True)
+    attendre(fr, "document.querySelectorAll('rect.prof-seen').length >= 1", 'la barre « route vue » dessinée', lu='document.querySelectorAll("rect.prof-seen").length')
     assert fr.evaluate("document.querySelectorAll('rect.prof-seen').length") >= 1
     n = fr.evaluate("""() => { S.points[0].alt = 400; S.points[1].alt = 400; renderAll(); return document.querySelectorAll('rect.prof-seen').length; }""")
     assert n == 0, 'la barre de l\'altitude d\'avant est encore dessinée'
-    pg.wait_for_timeout(1500)
+    attendre(fr, "THR.spans.pk.split('400').length > 2 && document.querySelectorAll('rect.prof-seen').length === THR.spans.list.length", "les étendues vues recalculées à 400 m et la barre redessinée", lu='[THR.spans.pk, THR.spans.list.length, document.querySelectorAll("rect.prof-seen").length]')
+    attendre_repos(fr)
     k = fr.evaluate("document.querySelectorAll('rect.prof-seen').length")
     assert k == fr.evaluate("THR.spans.list.length") and fr.evaluate("THR.spans.pk").count('400') >= 2
     assert pg.errs == []
@@ -563,16 +581,15 @@ def test_a5_a_failed_reading_is_shown_and_read_again(browser, what):
     pg.route('**/elevation/**' if what == 'tile' else '**/relief.json', refuse)
     tick(fr, pg)
     route(fr, [pt('A', 60 / 256, .5), pt('B', 250 / 256, .5)])
-    fr.wait_for_function("(() => { const P = __RP.prof; return !!P.data && P.data.fail === true; })()", timeout=30000)
-    pg.wait_for_timeout(300)
+    attendre_etat(fr, FAILED, 'le relevé du profil en échec (P.data.fail)', lecture=PROFIL_LU, delai=30000)
+    attendre_repos(fr)
 
     txt = fr.evaluate("Array.from(document.querySelectorAll('.prof-err')).map(e => e.textContent)")
     assert txt == ['⚠ Profil indisponible :', 'relief illisible ou absent du réseau.'], txt
     assert fr.evaluate("PROF.key") == '' and prof_rows(fr) == []
     state['fail'] = False
     fr.evaluate("renderAll()")                                                                      # un redessin relance le relevé
-    wait_prof(fr)
-    pg.wait_for_timeout(300)
+    attendre_profil_repos(fr)
     assert len(prof_rows(fr)) == 1 and fr.evaluate("document.querySelectorAll('.prof-err').length") == 0
     assert fr.evaluate("PROF_TILES") == 96
     pg.context.close()
@@ -580,8 +597,8 @@ def test_a5_a_failed_reading_is_shown_and_read_again(browser, what):
     pg.route('**/elevation/**', lambda rt: rt.abort())
     tick(fr, pg)
     route(fr, [pt('A', 60 / 256, .5), pt('B', 250 / 256, .5)])
-    fr.wait_for_function("(() => { const P = __RP.prof; return !!P.data && P.data.fail === true; })()", timeout=30000)
-    pg.wait_for_timeout(300)
+    attendre_etat(fr, FAILED, 'le relevé du profil en échec (P.data.fail)', lecture=PROFIL_LU, delai=30000)
+    attendre_repos(fr)
     assert fr.evaluate("Array.from(document.querySelectorAll('.prof-err')).map(e => e.textContent)") == ['⚠ Profile unavailable:', 'relief unreadable or not reachable.']
     pg.context.close()
 
@@ -591,8 +608,7 @@ def test_a7_the_last_label_is_checked_against_the_last_label_kept(browser):
     pg, fr = open_rp(browser, 412, 915)
     tick(fr, pg)
     route(fr, [pt('A', 20 / 256, .5), pt('BBBBBBBB', 170 / 256, .5), pt('CCCCCCCC', 205 / 256, .5), pt('DDDDDDDDDDDDDDDDDD', 250 / 256, .5)])       # 170 et 205 (150 et 200 avant) : la colonne du curseur du haut, marge droite de 52 px à 412 px, rétrécit le tracé
-    wait_prof(fr)
-    pg.wait_for_timeout(400)
+    attendre_profil_repos(fr)
     shown = fr.evaluate("Array.from(document.querySelectorAll('.prof-pn')).map(e => e.getAttribute('data-i'))")
     assert shown[0] == '0' and shown[-1] == '3', shown                                              # la première et la dernière restent toujours
     # aucune étiquette gardée, hors la première, n'en recouvre une autre (largeur estimée comme le dessin : 6,2 px par lettre)
@@ -610,11 +626,11 @@ def test_a3_a_wide_but_low_map_gives_the_graph_the_same_way(browser):
     pg, fr = open_rp(browser, 1280, 800)
     route(fr, [pt('A', 60 / 256, .5), pt('B', 250 / 256, .5)])
     tick(fr, pg)
-    wait_prof(fr)
-    pg.wait_for_timeout(300)
+    attendre_profil_repos(fr)
     assert rects(fr)['svg'][3] == 190                                                              # 1 280 × 800 : rien ne change
     pg.set_viewport_size({'width': 1280, 'height': 360})                                           # la fenêtre basse : .mapwrap ne laisse plus 190 + 140 px
-    pg.wait_for_timeout(900)
+    attendre_fenetre(pg, 1280, 360)
+    attendre_profil_repos(fr)
     r = rects(fr)
     gh = max(60, min(190, r['wrap'][3] - 26 - 140))
     assert abs(r['svg'][3] - gh) <= 1 and gh < 190 and r['prof'][1] >= r['wrap'][1] and r['map'][3] >= 140 - 1, r
@@ -629,13 +645,12 @@ def scale_of(browser, pixel, pts, lang='fr'):
     pg.bench.elev = png(256, 256, pixel)
     tick(fr, pg)
     route(fr, pts)
-    wait_prof(fr)
-    pg.wait_for_timeout(500)
+    attendre_profil_repos(fr)
     out = {}
     for unit in ('m', 'ft'):
         fr.evaluate("S.units.altitude = '%s'; renderAll();" % unit)
-        pg.wait_for_timeout(700)
-        wait_prof(fr)
+        attendre(fr, 'S.units.altitude === arg', "l'altitude en %s (S.units.altitude)" % unit, lu='S.units.altitude', arg=unit)
+        attendre_profil_repos(fr)
         out[unit] = fr.evaluate("""() => { const v = __RP.prof.view, F = __RP.prof.data.flat; let nan = 0, lo = Infinity, hi = -Infinity;
           for (let k = 0; k < F.N; k++) { const g = F.g[k]; if (g !== g) nan++; else { if (g < lo) lo = g; if (g > hi) hi = g; } }
           const ticks = Array.from(document.querySelectorAll('text.prof-ax')).filter(e => !e.classList.contains('prof-un') && e.getAttribute('text-anchor') === 'end').map(e => parseFloat(e.textContent.replace(/[^0-9.-]/g, '').replace('\u2212', '-')));
