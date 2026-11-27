@@ -25,7 +25,7 @@ SHELL = 'file://' + str(ROOT / 'dist' / 'dcs_mission_plan.html')
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'tests'))
 from public_host_block import build_block  # noqa: E402
-from banc_attente import (attendre, attendre_images, attendre_relief_pose, attendre_relief_repos, attendre_rp, attendre_shell, attendre_theatre, exemple, viser)  # noqa: E402
+from banc_attente import (attendre, attendre_images, attendre_relief_pose, attendre_relief_cle, attendre_relief_repos, attendre_rp, attendre_shell, attendre_theatre, exemple, viser)  # noqa: E402
 
 PT = re.search(r"PUBLIC_TILES = '([^']+)'", build_block()).group(1)        # l'adresse publique des tuiles, lue du bloc que le Route Planner insère
 BOUNDS = [[33.15, 35.15], [34.75, 36.95]]
@@ -134,8 +134,14 @@ def tick_relief(fr, pg):
     want = not fr.evaluate("DISP.relief")
     fr.evaluate("document.querySelector('#dsp-panel [data-k=relief]').click()")
     attendre(fr, 'DISP.relief === arg', 'la case Relief %s' % ('cochée' if want else 'décochée'), lu='DISP.relief', arg=want)
-    attendre_relief_pose(fr)
+    attendre_relief_cle(fr)                                   # ce que le geste produit tout de suite ; la couche posée : tick_relief_pose
     menu(fr, pg, False)
+
+
+def tick_relief_pose(fr, pg):
+    """tick_relief, puis la couche posée (ou le toast) : pour les tests qui en ont besoin ; pas pour ceux qui tiennent relief.json en retard."""
+    tick_relief(fr, pg)
+    attendre_relief_pose(fr)
 
 
 def theatre(fr, pg, tid):
@@ -169,7 +175,7 @@ def test_row_first_off_by_default_kept_in_the_screen_settings_only(browser):
     menu(fr, pg, False)
     before = fr.evaluate("localStorage.getItem('route_state_v1')")
     n0 = len(pg.bench.relief())
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     assert fr.evaluate("localStorage.getItem('route_state_v1')") == before                       # le fichier de travail ne change pas, à l'octet
     assert json.loads(fr.evaluate("localStorage.getItem('rp_display_v1')"))['relief'] is True
     assert fr.evaluate("document.getElementById('dsp-dot').hidden") is False                      # le point ambre
@@ -225,7 +231,7 @@ def test_row_is_greyed_out_where_there_is_no_relief_and_the_keyboard_reaches_it_
 @needs_pw
 def test_failures_are_announced_once_per_theatre(browser):
     pg, fr = open_rp(browser)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     theatre(fr, pg, 'GermanyCW')
     assert fr.evaluate("__toasts") == ['⚠ Relief indisponible : le serveur des tuiles ne répond pas.']
     theatre(fr, pg, 'Caucasus')
@@ -245,7 +251,7 @@ def test_failures_are_announced_once_per_theatre(browser):
 @needs_pw
 def test_elevation_is_read_from_the_terrain_rgb_tile_and_kept_in_a_small_cache(browser):
     pg, fr = open_rp(browser)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     ask = lambda la, lo: fr.evaluate("([a, b]) => __RP.reliefAltAt(a, b)", [la, lo])
     for fx, fy in ((.25, .25), (.75, .25), (.25, .75), (.9, .9)):                                  # le pixel floor(fraction × 256), colonne et ligne
         la, lo = tile_ll(1228, 819, fx, fy)
@@ -272,7 +278,7 @@ def test_elevation_is_read_from_the_terrain_rgb_tile_and_kept_in_a_small_cache(b
     attendre_images(fr, 2)                                                                         # les deux appels sont rendus (evaluate attend les promesses) : les requêtes sont comptées
     assert count(tiles[-1]) == 1 and count(first) == 2
     # sans relief posé : null
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     assert ask(*tile_ll(1228, 819, .25, .5)) is None
     assert pg.errs == []
     pg.context.close()
@@ -282,7 +288,7 @@ def test_elevation_is_read_from_the_terrain_rgb_tile_and_kept_in_a_small_cache(b
 @pytest.mark.parametrize('lang,unit,label,suffix', [('fr', 'm', 'Alt. sol', 'm'), ('en', 'ft', 'Ground', 'ft')])
 def test_tag_follows_the_mouse_and_stays_inside_the_map(browser, lang, unit, label, suffix):
     pg, fr = open_rp(browser, lang=lang)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     menu(fr, pg, True)
     fr.evaluate("(u) => document.querySelector('#dsp-panel [data-un=\"' + u + '\"]').click()", unit)
     menu(fr, pg, False)
@@ -324,7 +330,7 @@ def test_tag_follows_the_mouse_and_stays_inside_the_map(browser, lang, unit, lab
 @needs_pw
 def test_touch_in_read_mode_shows_the_tag_and_the_ring_and_nothing_else(browser):
     pg, fr = open_rp(browser, w=412, h=900, touch=True)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     la, lo = tile_ll(1228, 819, .25, .5)
     viser(fr, la, lo, 11)
     box = fr.frame_element().bounding_box()
@@ -364,7 +370,7 @@ def test_relief_never_changes_the_fallback_and_credits_its_source_only_while_sho
     viser(fr, 33.85, 35.95, 10)
     attr = lambda: fr.evaluate("document.querySelector('.leaflet-control-attribution').textContent")
     assert 'Relief' not in attr()
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     assert ATTR_FR in attr()
     fr.evaluate("setLang('en')")
     assert ATTR_EN in attr() and ATTR_FR not in attr()
@@ -374,7 +380,7 @@ def test_relief_never_changes_the_fallback_and_credits_its_source_only_while_sho
     attendre(fr, 'timerElapsed === true && __RP.inFallback === true', 'le repli en grille seule (le délai FALLBACK_MS de l\'application écoulé, fonds en ligne bloqués)', lu='[timerElapsed, __RP.inFallback]', delai=20000)
     shaded = fr.evaluate("({ fb: __RP.inFallback, tiles: document.querySelectorAll('.leaflet-relief-pane img').length })")
     assert shaded['fb'] is True and shaded['tiles'] > 0                                            # l'ombrage reste visible en repli
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     assert 'Relief' not in attr()
     fr.evaluate("__RP.setBase()")
     attendre(fr, 'timerElapsed === true && __RP.inFallback === true', 'le repli en grille seule (le délai FALLBACK_MS de l\'application écoulé, fonds en ligne bloqués)', lu='[timerElapsed, __RP.inFallback]', delai=20000)
@@ -396,7 +402,7 @@ TAG = """(() => { const b = document.getElementById('rp-alt'), x = document.getE
 @needs_pw
 def test_nothing_is_read_below_min_zoom_and_an_absent_tile_waits_for_the_pointer(browser):
     pg, fr = open_rp(browser)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     box_ = lambda: (fr.frame_element().bounding_box(), fr.evaluate("(() => { const r = __RP.map.getContainer().getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; })()"))
     viser(fr, 33.95, 36.05, 8)                                                                    # minZoom 8 : le plus bas zoom où la carte se lit ; le centre des bornes
     box, mb = box_()
@@ -426,7 +432,7 @@ def test_nothing_is_read_below_min_zoom_and_an_absent_tile_waits_for_the_pointer
 @needs_pw
 def test_touch_below_min_zoom_reads_nothing(browser):
     pg, fr = open_rp(browser, w=412, h=900, touch=True)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     viser(fr, 33.85, 35.95, 6)
     n0 = len(pg.bench.relief('elevation'))
     tap_at(pg, fr, 0, 0)
@@ -437,7 +443,7 @@ def test_touch_below_min_zoom_reads_nothing(browser):
 @needs_pw
 def test_a_touch_on_a_marker_clears_the_tag_and_opens_the_sheet_and_a_touch_closing_the_search_shows_none(browser):
     pg, fr = open_rp(browser, w=412, h=900, touch=True)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     la, lo = 33.852, 35.987                                                                       # Rayak
     viser(fr, la, lo, 11)
     tap_at(pg, fr, -50, 40)
@@ -460,7 +466,7 @@ def test_a_touch_on_a_marker_clears_the_tag_and_opens_the_sheet_and_a_touch_clos
 @needs_pw
 def test_the_kind_of_a_click_comes_from_the_last_pointerdown(browser):
     pg, fr = open_rp(browser)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     viser(fr, *tile_ll(1228, 819, .25, .25), 11)
     click = """(type) => { const h = __RP.map.getContainer(), r = h.getBoundingClientRect(), o = { clientX: r.left + r.width / 2 - 40, clientY: r.top + r.height / 2 + 40, bubbles: true };
         h.dispatchEvent(new PointerEvent('pointerdown', { ...o, pointerType: type })); h.dispatchEvent(new MouseEvent('click', o)); }"""     # le click ne porte aucun pointerType
@@ -478,7 +484,7 @@ def test_the_kind_of_a_click_comes_from_the_last_pointerdown(browser):
 @needs_pw
 def test_the_pointer_on_a_map_control_hides_the_tag(browser):
     pg, fr = open_rp(browser)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     viser(fr, *tile_ll(1228, 819, .25, .25), 11)
     box = fr.frame_element().bounding_box()
     mb = fr.evaluate("(() => { const r = __RP.map.getContainer().getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; })()")
@@ -504,17 +510,17 @@ def test_the_pointer_on_a_map_control_hides_the_tag(browser):
 def test_a_description_with_another_tile_size_or_latitudes_off_the_mercator_is_unreadable(browser):
     pg, fr = open_rp(browser)
     pg.bench.doc = {**DOC, 'tileSize': 512}
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     attendre(fr, "__toasts.length === 1", "l'échec annoncé (un toast)", lu='__toasts')
     assert fr.evaluate("__toasts") == ['⚠ Relief indisponible : la description reçue du serveur est illisible.'] and fr.evaluate("!!__RP.reliefLayer") is False
-    tick_relief(fr, pg)
-    tick_relief(fr, pg)                                                                           # décocher puis recocher : pas de second toast
+    tick_relief_pose(fr, pg)
+    tick_relief_pose(fr, pg)                                                                           # décocher puis recocher : pas de second toast
     attendre_images(fr, 3)
     assert len(fr.evaluate("__toasts")) == 1
     pg.context.close()
     pg, fr = open_rp(browser)
     pg.bench.doc = {**DOC, 'bounds': [[33.15, 35.15], [85.1, 36.95]]}
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     attendre(fr, "__toasts.length === 1", "l'échec annoncé (un toast)", lu='__toasts')
     assert len(fr.evaluate("__toasts")) == 1 and fr.evaluate("!!__RP.reliefLayer") is False
     pg.context.close()
@@ -524,7 +530,7 @@ def test_a_description_with_another_tile_size_or_latitudes_off_the_mercator_is_u
 def test_the_export_leaves_the_tag_and_the_ring_out_of_the_image(browser):
     pg, fr = open_rp(browser, w=412, h=900, touch=True)
     pg.evaluate("window.MP_SEND_MAP = (o) => { window.__sent = o; }")
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     viser(fr, *tile_ll(1228, 819, .25, .25), 11)
     tap_at(pg, fr, -50, 40)
     assert fr.evaluate(TAG)['tag'] is True

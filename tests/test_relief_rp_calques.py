@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from test_relief_rp import (CHANGELOG_LINE, DOC, PT, ROOT, SHELL, Bench, browser, menu, needs_pw, open_rp, theatre, tick_relief, tile_ll)  # noqa: E402,F401
+from test_relief_rp import (CHANGELOG_LINE, DOC, PT, ROOT, SHELL, Bench, browser, menu, needs_pw, open_rp, theatre, tick_relief, tick_relief_pose, tile_ll)  # noqa: E402,F401
 
 LINE = ('- With it on, the ground elevation is shown next to the mouse pointer (on a phone, tap the map in Read mode), in the altitude unit you chose; '
         'in Read mode, tapping or clicking an imported layer shows the elevation instead of the layer\'s details — untick Relief to read them.')
@@ -101,7 +101,7 @@ def test_touch_with_relief_shows_the_elevation_and_no_sheet_and_without_relief_t
     tap(pg, fr, 0, 0)
     assert fr.evaluate(FICHE) == 1 and fr.evaluate(TAG)['tag'] is False
     close_fiche(fr, pg)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     assert fr.evaluate("reliefLive()") is True
     dx = point_dx(fr)
     for x, y in ((0, 0), (dx, 0)):                                                                # la zone, puis le point
@@ -113,7 +113,7 @@ def test_touch_with_relief_shows_the_elevation_and_no_sheet_and_without_relief_t
     want = fr.evaluate("(() => { const p = __RP.map.latLngToContainerPoint([%f, %f]); return [p.x, p.y]; })()" % (CENTER[0], CENTER[1] + .07))
     assert abs(ring[0] - want[0]) < 30 and abs(ring[1] - want[1]) < 30                              # l'anneau est au toucher (à quelques pixels : le doigt a pris le point)
     # Relief décoché : le même toucher rouvre la fiche, sans cartouche
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     assert fr.evaluate("reliefLive()") is False
     tap(pg, fr, 0, 0)
     assert fr.evaluate(FICHE) == 1 and fr.evaluate(TAG)['tag'] is False
@@ -127,7 +127,7 @@ def test_touch_with_relief_shows_the_elevation_and_no_sheet_and_without_relief_t
 @needs_pw
 def test_mouse_click_with_relief_opens_nothing_and_the_hover_tag_stays(browser):
     pg, fr = setup(browser, False, 1280, 800)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     x, y = spot(fr, 0, 0)
     pg.mouse.move(x - 5, y - 5)
     pg.mouse.move(x, y)
@@ -138,7 +138,7 @@ def test_mouse_click_with_relief_opens_nothing_and_the_hover_tag_stays(browser):
     pg.wait_for_timeout(500)
     assert fr.evaluate(FICHE) == 0 and fr.evaluate(TAG) == {'tag': True, 'ring': False, 'text': text}
     # Relief décoché : le clic ouvre la fiche
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     pg.mouse.click(x, y)
     pg.wait_for_timeout(500)
     assert fr.evaluate(FICHE) == 1
@@ -152,13 +152,13 @@ def test_an_open_sheet_closes_when_relief_comes_on_without_reload(browser):
     fr.evaluate("window.__same = 1")
     tap(pg, fr, 0, 0)
     assert fr.evaluate(FICHE) == 1
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     assert fr.evaluate(FICHE) == 0 and fr.evaluate("window.__same") == 1                          # fermée, sans recharger
     assert fr.evaluate("document.querySelectorAll('.cf-hit').length") == 0                        # plus de trait de touche
     assert fr.evaluate("document.querySelectorAll('.leaflet-layers-pane .cf-obj.leaflet-interactive').length") == 0
     tap(pg, fr, 0, 0)
     assert fr.evaluate(FICHE) == 0 and fr.evaluate(TAG)['ring'] is True
-    tick_relief(fr, pg)                                                                           # décochée : le calque se touche de nouveau tout de suite
+    tick_relief_pose(fr, pg)                                                                           # décochée : le calque se touche de nouveau tout de suite
     assert fr.evaluate("document.querySelectorAll('.cf-hit, .leaflet-layers-pane .cf-obj.leaflet-interactive').length") > 0
     assert pg.errs == []
     pg.context.close()
@@ -168,7 +168,7 @@ def test_an_open_sheet_closes_when_relief_comes_on_without_reload(browser):
 @pytest.mark.parametrize('tid', ['Nevada', 'GermanyCW'])
 def test_no_relief_on_the_theatre_the_sheet_opens_as_before(browser, tid):
     pg, fr = setup(browser, True, 412, 900)
-    tick_relief(fr, pg)                                                                           # la case reste cochée sur le théâtre suivant
+    tick_relief_pose(fr, pg)                                                                           # la case reste cochée sur le théâtre suivant
     theatre(fr, pg, tid)
     pg.wait_for_timeout(600)
     assert fr.evaluate("DISP.relief") is True and fr.evaluate("reliefLive()") is False
@@ -203,7 +203,7 @@ def test_relief_json_late_the_sheet_opens_before_and_not_after(browser):
     fr = next(f for f in pg.frames if f != pg.main_frame and f.evaluate("typeof window.__RP !== 'undefined'"))
     import_layer(fr, pg)
     view(fr, pg)
-    tick_relief(fr, pg)
+    tick_relief(fr, pg)                                                                           # relief.json est tenu en retard : la couche ne peut pas être posée
     assert len(pg.bench.held) == 1 and fr.evaluate("reliefLive()") is False
     pg.wait_for_timeout(2000)                                                                     # relief.json en retard de 2 s
     tap(pg, fr, 0, 0)
@@ -222,7 +222,7 @@ def test_relief_json_late_the_sheet_opens_before_and_not_after(browser):
 @needs_pw
 def test_point_mode_with_relief_a_touch_on_the_layer_lays_a_point(browser):
     pg, fr = setup(browser, True, 412, 900)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     fr.evaluate("setTapMode('wp')")
     pg.wait_for_timeout(300)
     n = fr.evaluate("__RP.S.points.length")
@@ -237,7 +237,7 @@ def test_point_mode_with_relief_a_touch_on_the_layer_lays_a_point(browser):
 @needs_pw
 def test_an_airfield_keeps_its_sheet_with_relief(browser):
     pg, fr = setup(browser, True, 412, 900)
-    tick_relief(fr, pg)
+    tick_relief_pose(fr, pg)
     fr.evaluate("([a, b]) => __RP.map.setView([a, b], 11, {animate:false})", [33.852, 35.987])    # Rayak
     pg.wait_for_timeout(1000)
     tap(pg, fr, 0, 0)

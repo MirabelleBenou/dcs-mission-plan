@@ -211,8 +211,15 @@ def attendre_barre_stable(pg, delai=DELAI):
 # la couche suit la case et le théâtre : le théâtre voulu est posé (RE.key) et sa description est arrivée (couche posée) ou a échoué (toast une fois annoncé)
 RELIEF_POSE = "RE.key === (DISP.relief && reliefTheatre(S.theatre) ? S.theatre : '') && (RE.key === '' || !!RE.layer || RE.toasted.has(RE.key))"
 RELIEF_POSE_LU = "[RE.key, DISP.relief, S.theatre, !!RE.layer, [...RE.toasted]]"
+RELIEF_CLE = "RE.key === (DISP.relief && reliefTheatre(S.theatre) ? S.theatre : '')"
 RELIEF_REPOS = """() => { if (RE.raf !== 0 || RE.dwell !== 0 || RE.pend !== '') return false; const b = document.getElementById('rp-alt'), x = document.getElementById('rp-alt-x');
   const k = JSON.stringify([!!b && !b.hidden, b ? b.textContent : '', !!x && !x.hidden, RE.tiles.size, RE.shown && RE.shown.kind]); const avant = window.__banc_relief; window.__banc_relief = k; return avant === k; }"""
+
+
+def attendre_relief_cle(fr, delai=DELAI):
+    """Ce que le geste produit tout de suite : RE.key suit la case et le théâtre (sans attendre la couche, que relief.json en retard peut retenir)."""
+    attendre(fr, RELIEF_CLE, 'RE.key suit la case Relief et le théâtre', lu=RELIEF_POSE_LU, delai=delai)
+    attendre_images(fr, 2, delai)
 
 
 def attendre_relief_pose(fr, delai=DELAI):
