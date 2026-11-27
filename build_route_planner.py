@@ -441,6 +441,14 @@ select.in { appearance: none; -webkit-appearance: none; padding-right: 22px;
 .pt-head span { font-size: 10px; letter-spacing: 1.2px; color: var(--khaki-light); text-transform: uppercase; min-width: 0; }
 .pt-row.pts, .pt-head.pts { grid-template-columns: 30px minmax(0, 1fr) 58px 62px 66px 34px; }
 .pt-row.pts input.in[data-k="alt"], .pt-row.pts input.in[data-k="gs"] { padding: 8px 5px 8px 7px; }
+/* le cadenas de vitesse : dans le champ, à droite (ni colonne ni largeur de plus) */
+.gs-wrap { position: relative; display: block; min-width: 0; }
+.gs-wrap > input.in { width: 100%; box-sizing: border-box; }
+.pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-right: 24px; }
+.gs-lock { position: absolute; right: 0; top: 0; bottom: 0; width: 22px; min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; color: #1f1c16; opacity: .5; background: transparent; border: 0; border-radius: 0; cursor: pointer; }
+.gs-lock.on { opacity: 1; }
+.gs-lock .tm-ico { width: 14px; height: 14px; }
+.gs-lock:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; opacity: 1; }
 .in:disabled { background: transparent; border: 1px dashed var(--amber-dark); color: var(--khaki-light); -webkit-text-fill-color: var(--khaki-light);
   text-align: center; cursor: not-allowed; opacity: 1; padding-left: 5px; }
 .ed-section .ui-note { margin: 8px 0 0; }
@@ -1191,7 +1199,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   .pt-row.pts > .pt-del { grid-column: 5; grid-row: 1 / span 2; height: auto; align-self: stretch; }
   .pt-row.pts > input[data-k="name"] { grid-column: 2 / span 3; grid-row: 1; }
   .pt-row.pts > input[data-k="alt"] { grid-column: 2; grid-row: 2; }
-  .pt-row.pts > input[data-k="gs"] { grid-column: 3; grid-row: 2; }
+  .pt-row.pts > input[data-k="gs"], .pt-row.pts > .gs-wrap { grid-column: 3; grid-row: 2; }
   .pt-row.pts > .tbm-trigger { grid-column: 4; grid-row: 2; }
   .pt-row.pts + .pt-row.pts { border-top: 1px dashed var(--khaki); padding-top: 6px; }
   .pt-head.pts > :nth-child(1) { grid-column: 1; grid-row: 1; }
@@ -1211,17 +1219,28 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .wp-time { display: inline-flex; align-items: center; gap: 4px; }
 .wp-time .tm-ico { flex: none; width: 11px; height: 11px; }
 .wp-time.red { background: var(--mp-sig-red); color: #fff; }
+.wp-time.amb { background: var(--mp-sig-orange); color: #1f1c16; }
 .tm-warn { margin-left: 2px; }
 .tm-wrap { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
 .tm-t { box-sizing: border-box; display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 6px; margin: 0 0 0 -6px; font: inherit; letter-spacing: 0; color: inherit; background: transparent; border: 1px solid transparent; border-radius: 0; cursor: pointer; }
 .tm-t:hover { border-color: #463f30; }
 .tm-t:focus-visible, .tm-lock:focus-visible, .tm-in:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
 .tm-t.red { margin-left: 0; color: #fff; background: var(--mp-sig-red); border-color: var(--mp-sig-red); }
+.tm-t.amb { margin-left: 0; color: #1f1c16; background: var(--mp-sig-orange); border-color: var(--mp-sig-orange); }
 .tm-in { box-sizing: border-box; width: 9em; height: 28px; padding: 0 6px; font: 400 12px var(--f-mono); letter-spacing: 0; color: #1f1c16; background: #fffdf6; border: 2px solid var(--amber); border-radius: 0; }
 .tm-lock { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; padding: 0; color: #1f1c16; background: transparent; border: 1px solid #463f30; border-radius: 0; cursor: pointer; }
 .tm-lock .tm-ico { width: 16px; height: 16px; }
 .tm-lock[aria-pressed="true"] { color: #f0e8d6; background: #1f1c16; }
 .tm-lock:disabled { opacity: .4; cursor: default; }
+/* l'orange (C13 bis) : le contour des boîtes du tronçon, l'étiquette en pastille sous chacune, le bandeau et son bouton */
+.lb-amb .lb-bg { stroke: var(--mp-sig-orange-line); stroke-width: 2.4; }
+.amb-lab { white-space: nowrap; font-family: var(--f-mono); font-size: 11.5px; font-weight: 400; line-height: 1.3; color: #1f1c16; background: var(--mp-sig-orange); padding: 1px 6px; }
+.amb-lab.amb-box { position: absolute; left: 50%; transform: translateX(-50%); }
+.amb-lab.amb-solo { display: inline-block; transform: translate(-50%, 14px); }
+.ui-bandeau.amb { border-left-color: var(--mp-sig-orange); }
+.ui-bandeau.amb .amb-t { margin-right: 6px; }
+.ui-bandeau.amb .amb-t b { font-weight: 700; }
+.ui-bandeau.amb .amb-apply { margin-top: 4px; }
 .nav-red { margin: 0; }
 .nav-red[hidden] { display: none; }
 .nav-red div + div { margin-top: 4px; }
@@ -1238,7 +1257,14 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   .tb-btn, .tapmode .tb-btn { min-width: 44px; }                    /* la barre des modes (Point · Réf. · Lire · Dessin · Règle) */
   /* les commandes de la carte (dans .leaflet-container, que la règle commune n'atteint pas) : le zoom, le bouton de recherche (son champ et sa croix sont déjà à 44 px) et la barre des modes */
   .leaflet-control-zoom a, .rp-search-btn, .tapmode .tb-btn { min-width: 44px; min-height: 44px; }
-  .pt-num, .pt-del { min-width: 0; }                                /* la ligne de point se redessine plus tard : hauteur de 44 px, largeurs de la base (n° et ✕ restent sous 44 de large) */
+  .pt-num, .pt-del { min-width: 0; }                                /* les lignes de références gardent leurs largeurs ; la ligne de point d'une seule rangée a sa règle plus bas (44 × 44) */
+  .gs-lock { width: 28px; }                                         /* le cadenas de vitesse : 28 de large sur toute la hauteur du champ (44) */
+  .pt-row.pts .gs-wrap > input.in[data-k="gs"] { padding-right: 30px; }
+}
+/* la ligne de point d'une seule rangée (à partir de 520,02 px) : n° et ✕ d'au moins 44 × 44 px, les colonnes ALT., VIT. et RÉF. inchangées, le nom prend le reste */
+@media (pointer: coarse) and (min-width: 520.02px) {
+  .pt-row.pts, .pt-head.pts { grid-template-columns: 44px minmax(0, 1fr) 58px 62px 66px 44px; }
+  .pt-row.pts > .pt-num, .pt-row.pts > .pt-del { min-width: 44px; height: 44px; }
 }
 /* la poignée entre la carte et le panneau : 44 px de haut, son trait au centre (flex), inchangé */
 @media (pointer: coarse) and (max-width: 1100px) {
@@ -1422,9 +1448,12 @@ __CSS__
         <div class="hdg nav-set">
           <div><div class="lbl" data-i18n="f.lbx">Boîtes de branche</div><span class="tb-group" role="group" data-i18n-aria-label="f.lbx" aria-label="Boîtes de branche"><button type="button" class="tb-btn" data-lbx="none" aria-pressed="false" data-i18n="lbx.none">Aucune</button><button type="button" class="tb-btn" data-lbx="min" aria-pressed="false" data-i18n="lbx.min">Minimale</button><button type="button" class="tb-btn" data-lbx="full" aria-pressed="true" data-i18n="lbx.full">Complète</button></span></div>
           <div class="gs"><label class="lbl" for="gs-def" id="gs-lbl"></label><input class="in" id="gs-def" type="text" inputmode="numeric" autocomplete="off" spellcheck="false"></div>
+          <div class="gs"><label class="lbl" for="mg-def" id="mg-lbl" data-i18n="nav.margin">Marge (± %)</label><input class="in" id="mg-def" type="text" inputmode="numeric" autocomplete="off" spellcheck="false"></div>
           <div><div class="lbl" data-i18n="f.trace">Tracé</div><span class="tb-group" role="group" data-i18n-aria-label="f.trace" aria-label="Tracé"><button type="button" class="tb-btn" data-trc="route" aria-pressed="true" data-i18n="col.route">Couleur</button><button type="button" class="tb-btn" data-trc="black" aria-pressed="false" data-i18n="col.black">Noir</button></span></div>
           <div><div class="lbl" data-i18n="f.ticks">Traits des minutes</div><span class="tb-group" role="group" data-i18n-aria-label="f.ticks" aria-label="Traits des minutes"><button type="button" class="tb-btn" data-tck="route" aria-pressed="true" data-i18n="col.route">Couleur</button><button type="button" class="tb-btn" data-tck="black" aria-pressed="false" data-i18n="col.black">Noir</button></span></div>
         </div>
+        <p class="ui-note" id="mg-note" data-i18n="nav.margin.n">Marge : variation permise des vitesses pour tenir les heures verrouillées.</p>
+        <div id="nav-amb"></div>
         <div class="hdg">
           <div><div class="lbl" data-i18n="f.ref">Cap</div><span class="tb-group" role="group"><button type="button" class="tb-btn" data-ref="true" aria-pressed="true" data-i18n="ref.true">Vrai</button><button type="button" class="tb-btn" data-ref="mag" aria-pressed="false" data-i18n="ref.mag">Magnétique</button></span></div>
           <div><div class="lbl" data-i18n="f.diss">DISS-15</div><span class="tb-group" role="group" data-i18n-aria-label="f.diss" aria-label="DISS-15"><button type="button" class="tb-btn" data-diss="off" aria-pressed="true" data-i18n="diss.off">Masquer</button><button type="button" class="tb-btn" data-diss="on" aria-pressed="false" data-i18n="diss.on">Afficher</button></span></div>
@@ -2338,8 +2367,17 @@ const I18N = {
     't.ph': 'hh:mm:ss',
     't.of': 'Heure de {p}',
     'nav.total.arr': '\u00b7 arriv\u00e9e {a}',
-    't.red': '{p} \u00e0 {h} intenable\u202f: il faudrait {n} ({v}) de {a} \u00e0 {b}. Aux vitesses de la route\u202f: {r}.',
-    't.red.nv': '{p} \u00e0 {h} intenable\u202f: il faudrait {n} de {a} \u00e0 {b}. Aux vitesses de la route\u202f: {r}.',
+    'nav.margin': 'Marge (± %)',
+    'nav.margin.n': 'Marge : variation permise des vitesses pour tenir les heures verrouillées.',
+    't.amb': 'Heures verrouillées {a} {ha} → {b} {hb} : tenues à {n} ({v}) sur les {k} branches, dans la marge ±{m} %.',
+    't.amb.1': 'Heures verrouillées {a} {ha} → {b} {hb} : tenues à {n} ({v}) sur la branche, dans la marge ±{m} %.',
+    't.apply': 'Appliquer',
+    't.leg': '→ {v} ({n})',
+    't.red.m': '{p} à {h} intenable : il faudrait {n} ({v}) de {a} à {b}, au-delà de la marge de ±{m} %. Aux vitesses de la route : {r}.',
+    't.red.lk': '{p} à {h} intenable : toutes les vitesses de {a} à {b} sont verrouillées. Aux vitesses de la route : {r}.',
+    't.red.lt': '{p} à {h} intenable : les branches verrouillées de {a} à {b} prennent déjà {d}. Aux vitesses de la route : {r}.',
+    'v.lock': 'Verrouiller la vitesse',
+    'v.unlock': 'Déverrouiller la vitesse',
     't.red.0': '{p} \u00e0 {h} intenable\u202f: m\u00eame heure que {a}. Aux vitesses de la route\u202f: {r}.',
     'exp.red.q': 'Une heure verrouill\u00e9e n\u2019est pas tenue ({p}). Exporter quand m\u00eame\u202f?',
     'exp.red.go': 'Exporter',
@@ -2934,8 +2972,17 @@ const I18N = {
     't.ph': 'hh:mm:ss',
     't.of': 'Time of {p}',
     'nav.total.arr': '\u00b7 arrival {a}',
-    't.red': '{p} at {h} cannot be met: it would take {n} ({v}) from {a} to {b}. At the route\u2019s speeds: {r}.',
-    't.red.nv': '{p} at {h} cannot be met: it would take {n} from {a} to {b}. At the route\u2019s speeds: {r}.',
+    'nav.margin': 'Margin (± %)',
+    'nav.margin.n': 'Margin: allowed change of speeds to meet locked times.',
+    't.amb': 'Locked times {a} {ha} → {b} {hb}: met at {n} ({v}) on the {k} legs, within the ±{m}% margin.',
+    't.amb.1': 'Locked times {a} {ha} → {b} {hb}: met at {n} ({v}) on the leg, within the ±{m}% margin.',
+    't.apply': 'Apply',
+    't.leg': '→ {v} ({n})',
+    't.red.m': '{p} at {h} cannot be met: it would take {n} ({v}) from {a} to {b}, beyond the ±{m}% margin. At the route’s speeds: {r}.',
+    't.red.lk': '{p} at {h} cannot be met: every speed from {a} to {b} is locked. At the route’s speeds: {r}.',
+    't.red.lt': '{p} at {h} cannot be met: the locked legs from {a} to {b} already take {d}. At the route’s speeds: {r}.',
+    'v.lock': 'Lock speed',
+    'v.unlock': 'Unlock speed',
     't.red.0': '{p} at {h} cannot be met: same time as {a}. At the route\u2019s speeds: {r}.',
     'exp.red.q': 'A locked time is not met ({p}). Export anyway?',
     'exp.red.go': 'Export',
@@ -3409,7 +3456,7 @@ function defaultState() {
     format: FORMAT_ID, name: '', theatre: 'Caucasus',
     units: { distance: 'km', altitude: 'm' },
     navDisplay: { ref: 'true', decl: '', mode: 'calc', year: '', force: false },
-    groundSpeed: GS_DEFAULT, legBoxes: 'full',
+    groundSpeed: GS_DEFAULT, speedMargin: RTM_MARGIN_DEFAULT, legBoxes: 'full',
     points: [],
     refs: [],
     ui: { layer: 'topo', grid: true, places: false, towns: true, airfields: true, trace: 'route', ticks: 'route' }
@@ -3498,7 +3545,7 @@ function readPoints(list) {
       altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
     };
     /* gs : la vitesse de la branche qui arrive au point, jamais sur le point 0 ; box : la place de sa boîte */
-    if (pts.length > 0 && typeof p.gs === 'number' && isFinite(p.gs) && p.gs > 0) q.gs = p.gs;
+    rtmReadGs(p, q, pts.length);       /* la vitesse de la branche (p.gs) et son verrou (p.gsLock), s'ils sont valides */
     if (pts.length > 0) { const bx = readBox(p.box); if (bx) q.box = bx; }
     const dc = readDcs(p.dcs);
     if (dc) q.dcs = dc;
@@ -3526,6 +3573,7 @@ function parseRoute(src) {
     units: { distance: un.distance === 'nm' ? 'nm' : 'km', altitude: un.altitude === 'ft' ? 'ft' : 'm' },
     navDisplay: readNavDisplay(nd),
     groundSpeed: (typeof src.groundSpeed === 'number' && isFinite(src.groundSpeed) && src.groundSpeed > 0) ? src.groundSpeed : GS_DEFAULT,
+    speedMargin: rtmMargin(src.speedMargin),
     legBoxes: LEGBOX_IDS.indexOf(src.legBoxes) !== -1 ? src.legBoxes : 'full',
     points: [],
     refs: []
@@ -4016,7 +4064,7 @@ const TMX = { i: -1, init: '', val: '', dirty: false, plain: false };
 function timing() {
   const pts = S.points, legs = [null];
   const ys = navIsCalc() ? navYear() : null;
-  const T = rtmCompute(pts, S.groundSpeed);       /* les temps viennent du bloc commun (route_timing_block.py), les mêmes qu'au Datacard Generator */
+  const T = rtmCompute(pts, S.groundSpeed, S.speedMargin);       /* les temps viennent du bloc commun (route_timing_block.py), les mêmes qu'au Datacard Generator */
   for (let i = 1; i < pts.length; i++) {
     const l = legInfo(pts[i - 1], pts[i], ys);
     legs.push({ cap: l.cap, km: T.legs[i].km, v: T.legs[i].v, sec: T.legs[i].sec });
@@ -6028,12 +6076,13 @@ function lockSvg(closed) {
 /* L'heure d'un point (la route a des heures) ou son temps écoulé ; l'export prend l'heure seule (TMX.plain) */
 function timeText(tm, i) { return tm.h.has ? rtmClock(tm.h.t[i]) : fmtElapsed(tm.el[i]); }
 function timeRed(tm, i) { return tm.h.has && !!tm.h.red[i] && !TMX.plain; }
+function timeAmb(tm, i) { return tm.h.has && !!tm.h.amb[i] && !TMX.plain; }       /* orange : à reprendre (la pastille orange, sans ⚠) */
 /* Sous un point de la carte : un cadenas fermé devant une heure verrouillée, ⚠ derrière une heure rouge */
 function wpTimeInner(tm, i) {
   const lk = tm.h.has && tm.h.lock[i] && !TMX.plain;
   return (lk ? lockSvg(true) : '') + esc(timeText(tm, i)) + (timeRed(tm, i) ? '<span class="tm-warn" aria-hidden="true">\u26a0</span>' : '');
 }
-function wpTimeCls(tm, i) { return 'wp-time' + (timeRed(tm, i) ? ' red' : ''); }
+function wpTimeCls(tm, i) { return 'wp-time' + (timeRed(tm, i) ? ' red' : timeAmb(tm, i) ? ' amb' : ''); }
 
 function wpIcon(p, i, tm) {
   return L.divIcon({
@@ -6172,7 +6221,7 @@ function boxLines(i, leg, mode) {
 
 /* La boîte en maison : toit (le nom du point d'arrivée) puis les lignes. Toit en haut (up), ou toit en bas avec le nom au-dessus du toit
    et les lignes au-dessus du nom, dans le même ordre ; rot : l'angle appliqué ; (fx, fy) : le reste sous-pixel du centre */
-function boxHtml(i, leg, mode, up, rot, fx, fy) {
+function boxHtml(i, leg, mode, up, rot, fx, fy, amb) {
   const D = BOX_DIMS[mode], w = D.w, roof = D.roof, rows = D.rows, H = roof + rows * BOX_ROW_H, e = 0.8, m = w / 2;
   const lines = boxLines(i, leg, mode);
   let d, ys = [];
@@ -6189,14 +6238,18 @@ function boxHtml(i, leg, mode, up, rot, fx, fy) {
   const rowsHtml = lines.map((tx, k) =>
     '<div class="lb-r' + (mode === 'full' && k === 4 ? ' lb-ete' : '') + '" style="top:' + ((up ? roof : 0) + k * BOX_ROW_H) + 'px">' + esc(tx) + '</div>').join('');
   return '<div class="lb-pos" style="transform:translate(' + fx + 'px,' + fy + 'px)">' +
-    '<div class="lb lb-' + mode + (up ? ' lb-up' : ' lb-down') + '" data-leg="' + i + '" data-rot="' + rot + '" style="width:' + w + 'px;height:' + H + 'px;left:' + (-w / 2) + 'px;top:' + (-H / 2) + 'px;transform:rotate(' + rot + 'deg)">' +
+    '<div class="lb lb-' + mode + (up ? ' lb-up' : ' lb-down') + (amb ? ' lb-amb' : '') + '" data-leg="' + i + '" data-rot="' + rot + '" style="width:' + w + 'px;height:' + H + 'px;left:' + (-w / 2) + 'px;top:' + (-H / 2) + 'px;transform:rotate(' + rot + 'deg)">' +
     '<svg class="lb-shape" width="' + w + '" height="' + H + '" viewBox="0 0 ' + w + ' ' + H + '" aria-hidden="true"><path class="lb-bg" d="' + d + '"/><path class="lb-ln" d="' + ln + '"/></svg>' +
-    (up ? nm + rowsHtml : rowsHtml + nm) + '</div></div>';
+    (up ? nm + rowsHtml : rowsHtml + nm) + (amb ? '<div class="amb-lab amb-box" style="top:' + (H + 3) + 'px">' + esc(amb) + '</div>' : '') + '</div></div>';
 }
+
+/* Les textes de l'orange (le bloc commun les écrit) : l'étiquette d'une branche, le message d'un tronçon */
+function ambOpts() { return { t: t, speedText: speedText, fr: CURRENT_LANG === 'fr', name: k => S.points[k] ? S.points[k].name : '', margin: S.speedMargin }; }
+function ambLabel(tm, i) { return rtmLegLabel(tm.h, i, ambOpts()); }
 
 /* La boîte de la branche (i-1 → i) : parallèle à sa branche, la pointe du toit dans le sens du tracé ; sa place est gardée en pixels
    (along le long du tracé, side à sa droite) depuis le milieu de la branche à l'écran */
-function drawBox(i, pa, pb, len, leg) {
+function drawBox(i, pa, pb, len, leg, amb) {
   const mode = S.legBoxes, D = BOX_DIMS[mode];
   const p = S.points[i];
   const ux = (pb.x - pa.x) / len, uy = (pb.y - pa.y) / len;
@@ -6216,7 +6269,7 @@ function drawBox(i, pa, pb, len, leg) {
   }
   const mk = L.marker(ll, {
     pane: 'legboxes', draggable: true, autoPan: false, keyboard: false, title: t('lb.tip'),
-    icon: L.divIcon({ className: 'lb-icon', iconSize: [0, 0], html: boxHtml(i, leg, mode, up, rot, fx, fy) })
+    icon: L.divIcon({ className: 'lb-icon', iconSize: [0, 0], html: boxHtml(i, leg, mode, up, rot, fx, fy, amb) })
   }).addTo(decorGroup);
   const sp = map.latLngToContainerPoint(ll);
   mk.on('click', ev => { L.DomEvent.stop(ev); });
@@ -6246,6 +6299,7 @@ function drawDecorNow() {
     const len = pa.distanceTo(pb);
     const leg = tm.legs[i];
     if (len > 0) drawTicks(i, pa, (pb.x - pa.x) / len, (pb.y - pa.y) / len, len, leg);
+    const amb = TMX.plain ? '' : ambLabel(tm, i);       /* « → 240 km/h (+9 %) » sous la boîte d'une branche libre d'un tronçon orange ; jamais à l'export */
     if (S.legBoxes === 'none') {
       /* « Aucune » : l'étiquette « cap · distance » de toujours */
       if (len >= LEG_LABEL_MIN_PX) {
@@ -6254,9 +6308,13 @@ function drawDecorNow() {
           interactive: false, keyboard: false,
           icon: L.divIcon({ className: 'leg-label-icon', iconSize: [0, 0], html: '<span class="leg-label">' + leg.cap + '° · ' + esc(fmtDist(leg.km)) + '</span>' })
         }).addTo(decorGroup);
+        if (amb) L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], {
+          interactive: false, keyboard: false,
+          icon: L.divIcon({ className: 'leg-label-icon', iconSize: [0, 0], html: '<span class="amb-lab amb-solo">' + esc(amb) + '</span>' })
+        }).addTo(decorGroup);
       }
     } else if (len >= BOX_MIN_PX) {
-      drawBox(i, pa, pb, len, leg);
+      drawBox(i, pa, pb, len, leg, amb);
     }
   }
 }
@@ -6374,7 +6432,7 @@ function insertPoint(i, lat, lon) {
 
 function deletePoint(i) {
   S.points.splice(i, 1);
-  if (S.points.length) { delete S.points[0].gs; delete S.points[0].box; }   /* le point 0 n'a ni vitesse ni boîte */
+  if (S.points.length) { delete S.points[0].gs; delete S.points[0].gsLock; delete S.points[0].box; }   /* le point 0 n'a ni vitesse ni boîte */
   if (sel > i) sel--;
   else if (sel === i) sel = Math.min(i, S.points.length - 1);
   afterEdit(true);
@@ -8285,6 +8343,11 @@ function rpTabsInit() {
 }
 
 /* ============= PANNEAU ============= */
+/* Le cadenas de vitesse, à l'intérieur du champ VIT. (à droite) : ouvert ou fermé, son nom change (v.lock / v.unlock), sans aria-pressed */
+function gsLockHtml(p, i) {
+  const lk = p.gsLock === true, lbl = esc(t(lk ? 'v.unlock' : 'v.lock'));
+  return '<button type="button" class="gs-lock' + (lk ? ' on' : '') + '" data-act="gslock" aria-label="' + lbl + '" title="' + lbl + '">' + lockSvg(lk) + '</button>';
+}
 function renderPts() {
   const dflt = speedDisp(S.groundSpeed);
   $('pts').innerHTML = S.points.map((p, i) =>
@@ -8292,7 +8355,7 @@ function renderPts() {
     '<input class="in" data-k="name" type="text" autocomplete="off" spellcheck="false" value="' + esc(p.name) + '">' +
     '<input class="in" data-k="alt" type="text" inputmode="numeric" autocomplete="off" value="' + altValue(p.alt) + '">' +
     (i === 0 ? '<input class="in" data-k="gs" type="text" disabled tabindex="-1" aria-label="' + esc(t(S.units.distance === 'nm' ? 'th.spd.kt' : 'th.spd.kmh')) + '" value="' + esc(t('spd.none')) + '">'
-             : '<input class="in" data-k="gs" type="text" inputmode="numeric" autocomplete="off" aria-label="' + esc(t(S.units.distance === 'nm' ? 'th.spd.kt' : 'th.spd.kmh')) + '" value="' + (typeof p.gs === 'number' ? speedDisp(p.gs) : '') + '" placeholder="' + dflt + '">') +
+             : '<span class="gs-wrap"><input class="in" data-k="gs" type="text" inputmode="numeric" autocomplete="off" aria-label="' + esc(t(S.units.distance === 'nm' ? 'th.spd.kt' : 'th.spd.kmh')) + '" value="' + (typeof p.gs === 'number' ? speedDisp(p.gs) : '') + '" placeholder="' + dflt + '">' + gsLockHtml(p, i) + '</span>') +
     '<select class="in" data-k="altRef"><option value="AGL"' + (p.altRef === 'AGL' ? ' selected' : '') + '>' + esc(t('ref.AGL')) + '</option>' +
     '<option value="MSL"' + (p.altRef === 'MSL' ? ' selected' : '') + '>' + esc(t('ref.MSL')) + '</option></select>' +
     '<button type="button" class="pt-del" data-act="delete" title="' + esc(t('tip.delete')) + '" aria-label="' + esc(t('tip.delete')) + '">×</button></div>').join('');
@@ -8380,15 +8443,23 @@ function navTimeHtml(tm, i) {
   if (TMX.i === i) {
     return '<span class="tm-wrap"><input class="tm-in" type="text" autocomplete="off" spellcheck="false" data-tmi="' + i + '" value="' + esc(TMX.val) + '" placeholder="' + esc(t('t.ph')) + '" aria-label="' + esc(t('t.of', { p: S.points[i].name.trim() !== '' ? S.points[i].name.trim() : String(i) })) + '">' + (has ? btn() : '') + '</span>';
   }
-  const red = timeRed(tm, i);
-  return '<span class="tm-wrap"><button type="button" class="tm-t' + (red ? ' red' : '') + '" data-tm="' + i + '">' + esc(has ? rtmClock(tm.h.t[i]) : t('nav.t', { t: fmtElapsed(tm.el[i]) })) +
+  const red = timeRed(tm, i), amb = timeAmb(tm, i);
+  return '<span class="tm-wrap"><button type="button" class="tm-t' + (red ? ' red' : amb ? ' amb' : '') + '" data-tm="' + i + '">' + esc(has ? rtmClock(tm.h.t[i]) : t('nav.t', { t: fmtElapsed(tm.el[i]) })) +
     (red ? '<span class="tm-warn" aria-hidden="true">⚠</span>' : '') + '</button>' + (has ? btn() : '') + '</span>';
 }
 /* Les messages des tronçons intenables (le bloc commun les écrit), en tête du panneau Navigation ; rien sans tronçon rouge */
 function redMsgs(tm) {
-  const o = { t: t, speedText: speedText, fr: CURRENT_LANG === 'fr', name: k => S.points[k] ? S.points[k].name : '' }, out = [];
+  const o = ambOpts(), out = [];
   tm.h.red.forEach((r, i) => { if (r) out.push(rtmRedMsg(S.points, tm.h, i, o)); });
   return out;
+}
+/* Un bandeau orange par tronçon à reprendre : le message, puis « Appliquer » */
+function navAmbRender(tm) {
+  const o = ambOpts(), out = [];
+  tm.h.amb.forEach((r, i) => {
+    if (r) out.push('<div class="ui-bandeau amb" data-amb="' + i + '"><span class="amb-t">' + rtmRedHtml(rtmAmbMsg(S.points, tm.h, i, o), esc) + '</span> <button type="button" class="ui-btn amb-apply" data-apply="' + i + '">' + esc(t('t.apply')) + '</button></div>');
+  });
+  $('nav-amb').innerHTML = out.join('');
 }
 function navRedRender(tm) {
   const box = $('nav-red'), m = redMsgs(tm);
@@ -8435,6 +8506,7 @@ function toggleTimeLock(i) {
   timesChanged();
 }
 function bindNavTimes() {
+  $('nav-amb').addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-apply]'); if (b) applyAmb(parseInt(b.dataset.apply, 10)); });
   const nb = $('nav-body');
   nb.addEventListener('pointerdown', ev => { if (TMX.i >= 0 && ev.target.closest && ev.target.closest('[data-tl]')) ev.preventDefault(); });       /* le cadenas ne prend pas le focus du champ ouvert : sa saisie se valide à son geste */
   nb.addEventListener('click', ev => {
@@ -8494,6 +8566,7 @@ function renderNav() {
     if (ni) { ni.value = TMX.val; if (hadFocus) { ni.focus({ preventScroll: true }); try { ni.setSelectionRange(ni.value.length, ni.value.length); } catch (e) { /* ignore */ } } }
   }
   navRedRender(tm);
+  navAmbRender(tm);
   PROF.nsig = profNavSig();       /* la signature tenue est celle de ce que le tableau montre : un relevé qui rend les mêmes chiffres après un relevé périmé redessine quand même la ligne */
   $('nav-total').textContent = t('nav.total.v', { d: fmtDist(tm.km), t: fmtElapsed(tm.sec) }) + (tm.h.has && S.points.length ? ' ' + t('nav.total.arr', { a: rtmClock(tm.h.t[S.points.length - 1]) }) : '');
   /* Les points de référence : après le total ; ni dans les branches ni dans le total */
@@ -8542,6 +8615,8 @@ function syncControls() {
   $('gs-lbl').textContent = t('f.gs', { u: t(S.units.distance === 'nm' ? 'u.kt' : 'u.kmh') });
   const gsIn = $('gs-def');
   if (document.activeElement !== gsIn) gsIn.value = speedDisp(S.groundSpeed);
+  const mgIn = $('mg-def');
+  if (document.activeElement !== mgIn) mgIn.value = String(S.speedMargin);
   syncSpeedPlaceholders();
   syncDecl();
   $('theme').value = document.body.dataset.theme;
@@ -8936,8 +9011,10 @@ function onRowInput(ev, kind) {
     p.alt = S.units.altitude === 'ft' ? n * FT_M : n;
   } else if (k === 'gs') {
     if (kind === 'ref' || parseInt(row.dataset.i, 10) === 0) return;
-    if (ev.target.value.trim() === '') delete p.gs;           /* vide : la vitesse de la route s'applique */
-    else { const v = readSpeed(ev.target.value); if (v == null) return; p.gs = v; }
+    if (ev.target.value.trim() === '') { delete p.gs; delete p.gsLock; }           /* vide : la vitesse de la route s'applique (et plus de verrou : il demande une vitesse) */
+    else { const v = readSpeed(ev.target.value); if (v == null) return; p.gs = v; }       /* une vitesse verrouillée se saisit encore : le verrou reste */
+    const lb = row.querySelector('.gs-lock');
+    if (lb) { const lk = p.gsLock === true, lbl = t(lk ? 'v.unlock' : 'v.lock'); lb.classList.toggle('on', lk); lb.setAttribute('aria-label', lbl); lb.title = lbl; lb.innerHTML = lockSvg(lk); }
   } else if (k === 'altRef') p.altRef = ev.target.value === 'MSL' ? 'MSL' : 'AGL';
   else return;
   persistState();
@@ -8946,6 +9023,19 @@ function onRowInput(ev, kind) {
   renderNav();
 }
 
+/* Verrouiller la vitesse de la branche qui arrive au point i (sans p.gs : la vitesse par défaut s'écrit d'abord), ou la libérer (p.gs reste) */
+function toggleSpeedLock(i) {
+  const p = S.points[i];
+  if (!p || i < 1) return;
+  if (p.gsLock === true) rtmUnlockGs(S.points, i); else rtmLockGs(S.points, i, S.groundSpeed);
+  afterEdit(true);
+}
+/* Appliquer : les vitesses recommandées du tronçon orange qui arrive au point b, écrites (entier de l'unité affichée) dans ses branches libres */
+function roundSpeed(kmh) { const n = Math.max(1, speedDisp(kmh)); return S.units.distance === 'nm' ? r4(n * NM_KM) : n; }
+function applyAmb(b) {
+  if (!rtmApply(S.points, timing().h, b, roundSpeed)) return;
+  afterEdit(true);
+}
 function onRowChange(ev, kind) {
   const row = ev.target.closest('.pt-row');
   const k = ev.target.dataset.k;
@@ -8964,6 +9054,7 @@ function onRowClick(ev, kind) {
   if (!btn) return;
   const list = kind === 'ref' ? S.refs : S.points;
   if (btn.dataset.act === 'delete') { if (kind === 'ref') deleteRef(i); else deletePoint(i); }
+  else if (btn.dataset.act === 'gslock' && kind !== 'ref') toggleSpeedLock(i);
   else if (btn.dataset.act === 'select' && list[i]) {
     map.setView([list[i].lat, list[i].lon], map.getZoom(), { animate: false });
     if (kind === 'ref') selectRef(i); else selectPoint(i);
@@ -9225,6 +9316,7 @@ function setRoute(route, noKey) {
   if (!noKey) mpUnitsWrite();
   S.navDisplay = route.navDisplay;
   S.groundSpeed = route.groundSpeed;
+  S.speedMargin = route.speedMargin;
   S.legBoxes = route.legBoxes;
   S.points = route.points;
   S.refs = route.refs;
@@ -9588,7 +9680,7 @@ function openAsRoute(route, msgFn) {
       S.name = ''; S.points = nb.points;
     }
     /* route de plus : son nom, ses points et ses références viennent du fichier, les unités et les réglages restent ceux du RP ; route active vide remplacée : tout le fichier, comme avant */
-    setRoute(empty ? route : Object.assign(uiCopy(route), { units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes }));
+    setRoute(empty ? route : Object.assign(uiCopy(route), { units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, speedMargin: S.speedMargin, legBoxes: S.legBoxes }));
     return true;
   };
   if (!replacing) { go(); if (msgFn) showToast(msgFn(), { type: 'ok' }); return true; }
@@ -10663,7 +10755,7 @@ function rtOpenGo() {
     pts.push({ name: p.name !== '' ? p.name : nextName(pts, pts.length), lat: r7(ll.lat), lon: r7(ll.lon), alt: p.alt, altRef: p.altRef });
   });
   rtHide('rt-open-modal');
-  openAsRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes, points: pts, refs: [] },
+  openAsRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, speedMargin: S.speedMargin, legBoxes: S.legBoxes, points: pts, refs: [] },
     () => t('toast.rtOpened') + (dropped ? ' · ' + t('toast.dropped', { n: dropped }) : ''));
 }
 
@@ -11731,7 +11823,7 @@ async function expRun() {
   let sw = null, out = null, partial = false;
   try {
     if (typeof html2canvas !== 'function') throw new Error('html2canvas absent');
-    TMX.plain = true; updateTimes();       /* l'image porte l'heure seule : ni cadenas, ni couleur, ni ⚠ */
+    TMX.plain = true; updateTimes(); drawDecorNow();       /* l'image porte l'heure seule : ni cadenas, ni couleur, ni ⚠, ni orange (contour, étiquette, pastille) */
     map.closePopup();
     partial = expForeignTiles(rect);
     await expPrepFonts();
@@ -11746,7 +11838,7 @@ async function expRun() {
     out = null;
   } finally {
     if (sw) { try { expRestorePaths(sw); } catch (e) { console.warn('[export carte] retour au SVG', e); } }
-    TMX.plain = false; updateTimes();
+    TMX.plain = false; updateTimes(); drawDecorNow();
     EXP.busy = false;
     $('export-layer').classList.remove('busy');
     $('exp-go').disabled = false;
@@ -11875,6 +11967,14 @@ function bindEvents() {
     persistState(); renderNav(); drawDecor(); updateTimes(); syncSpeedPlaceholders();
   });
   $('gs-def').addEventListener('change', e => { e.target.value = speedDisp(S.groundSpeed); });
+  /* La marge des vitesses (± %) : un entier de 1 à 50 ; une saisie hors règle ne change rien, le champ reprend la valeur gardée en quittant */
+  $('mg-def').addEventListener('input', e => {
+    const m = /^\s*(\d{1,2})\s*$/.exec(e.target.value), v = m ? parseInt(m[1], 10) : 0;
+    if (v < 1 || v > 50) return;
+    S.speedMargin = v;
+    persistState(); renderNav(); drawDecor(); updateTimes();
+  });
+  $('mg-def').addEventListener('change', e => { e.target.value = String(S.speedMargin); });
   $('decl').addEventListener('input', e => {
     S.navDisplay.decl = e.target.value;
     persistState(); renderNav(); drawRoute(); syncControls();

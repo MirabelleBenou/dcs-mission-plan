@@ -571,9 +571,12 @@ def test_the_waypoint_row_keeps_one_line_from_520_px(browser, w, h):
     pg, fr = rp(browser, w, h)
     m = fr.evaluate(ROW)
     assert abs(m['name']['t'] - m['alt']['t']) <= 1 and abs(m['alt']['t'] - m['ref']['t']) <= 1 and m['row']['h'] <= 46
-    assert m['num']['w'] <= 31 and m['del']['w'] <= 35 and m['fs']['name'] == '13px' and m['fs']['ref'] == '12px'
-    if w == 716:                                                              # les largeurs de la version d'avant à 716
-        assert abs(m['name']['w'] - 374) <= 1 and abs(m['alt']['w'] - 58) <= 1 and abs(m['gs']['w'] - 62) <= 1 and abs(m['ref']['w'] - 66) <= 1
+    assert m['fs']['name'] == '13px' and m['fs']['ref'] == '12px'
+    if w == 716:                                                              # n° et ✕ : 44 × 44 au doigt ; ALT., VIT. et RÉF. de la version d'avant, le nom prend le reste (374 − 24)
+        assert m['num']['w'] >= 44 and m['del']['w'] >= 44 and m['num']['h'] >= 44 and m['del']['h'] >= 44
+        assert abs(m['name']['w'] - 350) <= 1 and abs(m['alt']['w'] - 58) <= 1 and abs(m['gs']['w'] - 62) <= 1 and abs(m['ref']['w'] - 66) <= 1
+    else:                                                                     # 520 px : la ligne d'avant
+        assert m['num']['w'] <= 31 and m['del']['w'] <= 35
     assert all(d != 'dashed' for d in m['dash'])
     assert pg.errs == []
 

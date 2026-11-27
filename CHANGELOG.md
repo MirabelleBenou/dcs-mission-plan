@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+25` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+26` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -237,6 +237,11 @@ Between two releases, the hosted version shows its build number at the bottom of
 **Real times on the route**
 - In the Navigation section, touch a waypoint's time to type a real time (in the datacard's time reference): the other waypoints' times follow from the route's speeds, the map shows times instead of elapsed time, and the total adds the arrival time.
 - A padlock keeps a time fixed. When two fixed times cannot both be met at the route's speeds, the later one turns red with ⚠ and the panel says by how much; exports show plain times, and ask first if a red time remains.
+- When two fixed times cannot both be met, the Route Planner works out the speeds that would meet them, within a margin set next to the ground speed (±15 % by default): the legs turn orange with their recommended speed, and Apply writes those speeds into the route — and into the mission.
+- A padlock inside each speed field keeps that leg's speed as it is; beyond the margin, or with every speed locked, the time turns red and the panel says why.
+
+**Waypoint rows for the finger**
+- On a touch screen, a waypoint's number and its × are at least 44 px, so a missed tap no longer deletes a waypoint.
 
 ### Datacard Generator
 
@@ -271,6 +276,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 **Times from the route**
 - A Times row can follow a waypoint of the linked route: its time is computed, can be typed and locked, as in the Route Planner; “Take-off” follows the first waypoint once the route has times.
 - With route times, the TOS column of the navigation is computed (to the nearest minute) and can be typed too.
+- A time the route's speeds can meet within the margin shows in orange; apply the speeds in the Route Planner.
 
 ### Field Manual
 

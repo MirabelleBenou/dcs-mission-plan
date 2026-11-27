@@ -71,8 +71,8 @@ def secs(h):
     return a[0] * 3600 + a[1] * 60 + a[2]
 
 
-def calc(points, gs=220):
-    return node('const p = %s; const T = rtmCompute(p, %s); out({ t: T.t, el: T.el, has: T.has, fixed: T.fixed, lock: T.lock, red: T.red, km: T.km, sec: T.sec, clock: T.t.map(x => x === null ? null : rtmClock(x)) });' % (json.dumps(points), gs))
+def calc(points, gs=220, margin=15):
+    return node('const p = %s; const T = rtmCompute(p, %s, %s); out({ t: T.t, el: T.el, has: T.has, fixed: T.fixed, lock: T.lock, red: T.red, amb: T.amb, km: T.km, sec: T.sec, clock: T.t.map(x => x === null ? null : rtmClock(x)) });' % (json.dumps(points), gs, margin))
 
 
 @needs_node
@@ -103,27 +103,31 @@ def test_before_between_and_after_the_fixed_times():
 
 
 @needs_node
-def test_a_fixed_time_holds_to_five_seconds_and_turns_red_beyond_with_its_factor():
+def test_a_fixed_time_holds_to_five_seconds_then_is_orange_within_the_margin_and_red_beyond_with_its_factor():
     ex = el_at([220] * 5)
     base = 32400 + ex[4]
-    for off, red in ((5, False), (-5, False), (5.9, False), (6.5, True), (-6.5, True), (120, True)):
+    for off, unheld in ((5, False), (-5, False), (5.9, False), (6.5, True), (-6.5, True), (120, True)):
         p = eq_points(LONS); p[0].update(t='09:00:00', tLock=True); p[4].update(t=hms(base + off), tLock=True)
-        r = calc(p)
         besoin = secs(hms(base + off)) - 32400
-        # l'écart se juge sur les secondes entières posées : on recalcule ici avec ce que le point porte
-        want = abs(ex[4] - besoin) > 5
-        assert (r['red'][4] is not None) == want, (off, r['red'][4], ex[4] - besoin)
+        want = abs(ex[4] - besoin) > 5                     # l'écart se juge sur les secondes entières posées
+        r = calc(p)                                        # la marge de 15 % : orange, jamais rouge
+        assert r['red'] == [None] * 6 and (r['amb'][4] is not None) == want, (off, r['amb'][4], ex[4] - besoin)
         if want:
-            assert r['red'][4]['a'] == 0 and abs(r['red'][4]['f'] - ex[4] / besoin) < 1e-9 and abs(r['red'][4]['besoin'] - besoin) < 1e-9
-            assert r['clock'][4] == hms(base + off)                       # b garde sa valeur
-        assert all(x is None for k, x in enumerate(r['red']) if k != 4)
+            assert r['amb'][4]['a'] == 0 and abs(r['amb'][4]['f'] - ex[4] / besoin) < 1e-9 and r['clock'][4] == hms(base + off)       # b garde sa valeur
+            assert r['amb'][4]['free'] == [1, 2, 3, 4] and r['amb'][4]['L'] == 0
+        assert all(x is None for k, x in enumerate(r['amb']) if k != 4)
+        r1 = calc(p, margin=1)                             # la marge de 1 % : rouge « marge » dès que |f − 1| dépasse 1 %
+        far = want and abs(ex[4] / besoin - 1) * 100 > 1
+        assert (r1['red'][4] is not None) == far and (r1['amb'][4] is not None) == (want and not far), (off, r1['red'][4], r1['amb'][4])
+        if far:
+            assert r1['red'][4]['why'] == 'm' and abs(r1['red'][4]['f'] - ex[4] / besoin) < 1e-9
 
 
 @needs_node
 def test_a_zero_need_is_red_without_a_factor_and_midnight_wraps():
     p = eq_points(LONS); p[0].update(t='09:00:00', tLock=True); p[3].update(t='09:00:00', tLock=True)
     r = calc(p)
-    assert r['red'][3] is not None and r['red'][3]['f'] is None and r['red'][3]['besoin'] == 0
+    assert r['red'][3] is not None and r['red'][3]['f'] is None and r['red'][3]['besoin'] == 0 and r['red'][3]['why'] == '0' and r['amb'] == [None] * 6
     ex = el_at([220] * 5)
     p = eq_points(LONS); p[0].update(t='23:50:00', tLock=True)
     r = calc(p)
@@ -134,21 +138,20 @@ def test_a_zero_need_is_red_without_a_factor_and_midnight_wraps():
 def test_a_leg_speed_changes_the_elapsed_times_and_the_message_names_a_common_speed_only():
     p = eq_points(LONS); p[2]['gs'] = 300; p[0].update(t='09:00:00', tLock=True); p[4].update(t='09:30:00', tLock=True)
     ex = el_at([220, 300, 220, 220, 220])
-    r = calc(p)
+    r = calc(p, margin=1)
     assert all(abs(a - b) < 1e-6 for a, b in zip(r['el'], ex))
-    msgs = node("""const p = %s; const T = rtmCompute(p, 220);
-      const o = { t: (k, v) => k + '|' + [v.p, v.h, v.n, v.v, v.a, v.b, v.r].join('|'), speedText: x => Math.round(x) + ' km/h', fr: false, name: k => 'P' + k };
-      out(T.red.map((r, i) => r ? rtmRedMsg(p, T, i, o) : null));""" % json.dumps(p))
-    m = msgs[4]
-    assert m['text'].startswith('t.red.nv|P4|09:30:00|') and '|P0|P4|' in m['text']              # vitesses différentes de a à b : pas de parenthèse
+    prog = """const p = %s; const T = rtmCompute(p, 220, 1);
+      const o = { t: (k, v) => k + '|' + [v.p, v.h, v.n, v.v, v.a, v.b, v.r].join('|'), speedText: x => Math.round(x) + ' km/h', fr: false, name: k => 'P' + k, margin: 1 };
+      out(T.red.map((r, i) => r ? rtmRedMsg(p, T, i, o) : null));"""
+    m = node(prog % json.dumps(p))[4]
+    assert m['text'].startswith('t.red.m|P4|09:30:00|') and m['text'].split('|')[4] == ''              # vitesses différentes de a à b : pas de vitesse commune
+    assert '|P0|P4|' in m['text'] and m['text'].endswith('|' + hms(32400 + ex[4]))
     p[2].pop('gs')
-    msgs = node("""const p = %s; const T = rtmCompute(p, 220);
-      const o = { t: (k, v) => k + '|' + [v.p, v.h, v.n, v.v, v.a, v.b, v.r].join('|'), speedText: x => Math.round(x) + ' km/h', fr: false, name: k => 'P' + k };
-      out(T.red.map((r, i) => r ? rtmRedMsg(p, T, i, o) : null));""" % json.dumps(p))
+    m = node(prog % json.dumps(p))[4]
     ex = el_at([220] * 5)
     f = ex[4] / 1800
-    assert msgs[4]['text'].startswith('t.red|P4|09:30:00|') and msgs[4]['n'] == ('+' if f > 1 else '−') + str(max(1, abs(round((f - 1) * 100)))) + '%'
-    assert '|%d km/h|' % round(220 * f) in msgs[4]['text'] and msgs[4]['text'].endswith('|' + hms(32400 + ex[4]))
+    assert m['text'].startswith('t.red.m|P4|09:30:00|') and m['n'] == ('+' if f > 1 else '−') + str(max(1, abs(round((f - 1) * 100)))) + '%'
+    assert '|%d km/h|' % round(220 * f) in m['text'] and m['text'].endswith('|' + hms(32400 + ex[4]))
 
 
 @needs_node
@@ -259,6 +262,11 @@ def tm_type(fr, pg, i, text, enter=True):
         attendre(fr, 'TMX.i === -1', 'le champ refermé')
 
 
+def set_margin(fr, v):
+    fr.locator('#mg-def').fill(str(v))
+    attendre(fr, 'S.speedMargin === arg', 'la marge à %s' % v, arg=v, lu='S.speedMargin')
+
+
 def tm_lock(fr, i):
     fr.locator('#nav-body [data-tl="%d"]' % i).click()
 
@@ -306,8 +314,8 @@ def test_route_planner_typing_locking_and_the_map_follow_each_other_with_a_mouse
     assert pg.errs == []
 
 
-RED_FR = 'KARAVOSTASI à 10:14:00 intenable : il faudrait +9 % (240 km/h) d’AKROTIRI à KARAVOSTASI. Aux vitesses de la route : 10:16:36.'
-RED_EN = 'KARAVOSTASI at 10:14:00 cannot be met: it would take +9% (240 km/h) from AKROTIRI to KARAVOSTASI. At the route’s speeds: 10:16:36.'
+RED_FR = 'KARAVOSTASI à 10:14:00 intenable : il faudrait +9 % (240 km/h) d’AKROTIRI à KARAVOSTASI, au-delà de la marge de ±1 %. Aux vitesses de la route : 10:16:36.'
+RED_EN = 'KARAVOSTASI at 10:14:00 cannot be met: it would take +9% (240 km/h) from AKROTIRI to KARAVOSTASI, beyond the ±1% margin. At the route’s speeds: 10:16:36.'
 
 
 @needs_pw
@@ -320,6 +328,7 @@ def test_route_planner_red_time_banner_and_pastille(browser, lang, msg):
     tm_lock(fr, 0)
     tm_type(fr, pg, 4, '10:14')
     tm_lock(fr, 4)
+    set_margin(fr, 1)                                                     # +9 % tient dans la marge de 15 : la marge à 1 le garde rouge
     assert fr.evaluate(PTS) == [['09:45:00', True], OFF, OFF, OFF, ['10:14:00', True], OFF]
     assert fr.evaluate("() => document.getElementById('nav-red').textContent") == msg
     assert fr.evaluate("() => [...document.querySelectorAll('#nav-red b')].map(e => e.textContent)") == [msg.split('\u202f:' if lang == 'fr' else ': ')[0], '+9\u202f%' if lang == 'fr' else '+9%']
@@ -343,7 +352,7 @@ def test_route_planner_export_asks_before_a_red_time_and_carries_plain_times(bro
     fr = open_rp(pg)
     nav_open(fr)
     tm_type(fr, pg, 0, '09:45'); tm_lock(fr, 0)
-    tm_type(fr, pg, 4, '10:14'); tm_lock(fr, 4)
+    tm_type(fr, pg, 4, '10:14'); tm_lock(fr, 4); set_margin(fr, 1)
     fr.evaluate("""() => { window.__shots = []; window.html2canvas = function (el, o) {
       window.__shots.push([...document.querySelectorAll('.wp-time')].map(e => ({ html: e.innerHTML, cls: e.className, bg: getComputedStyle(e).backgroundColor, svg: e.querySelectorAll('svg').length })));
       return Promise.reject(new Error('banc')); }; }""")
@@ -670,7 +679,7 @@ def test_datacard_red_time_is_a_pastille_on_screen_and_never_in_the_exports(brow
     fr = open_rp(pg)
     nav_open(fr)
     tm_type(fr, pg, 0, '09:45'); tm_lock(fr, 0)
-    tm_type(fr, pg, 4, '10:14'); tm_lock(fr, 4)
+    tm_type(fr, pg, 4, '10:14'); tm_lock(fr, 4); set_margin(fr, 1)
     dg = open_dg(pg)
     attendre(dg, "dgRTcalc(curCard()).tm.red.some(r => !!r)", 'un tronçon rouge au Datacard Generator')
     dg_pick(dg, 3, 5)                                                       # la ligne TOT suit le point 4 (KARAVOSTASI)
@@ -711,7 +720,7 @@ def test_datacard_point_list_padlock_and_tos_field_are_aligned_at_two_widths(bro
     pg = shell(browser, w, h, touch=touch)
     fr = open_rp(pg)
     nav_open(fr)
-    tm_type(fr, pg, 0, '09:45'); tm_lock(fr, 0); tm_type(fr, pg, 4, '10:14'); tm_lock(fr, 4)       # un tronçon rouge au point 4
+    tm_type(fr, pg, 0, '09:45'); tm_lock(fr, 0); tm_type(fr, pg, 4, '10:14'); tm_lock(fr, 4); set_margin(fr, 1)       # un tronçon rouge au point 4
     dg = open_dg(pg)
     attendre(dg, "dgRTcalc(curCard()).tm.has === true", 'la route a des heures')
     dg_pick(dg, 3, 5)
