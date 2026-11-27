@@ -5711,7 +5711,7 @@ function blkBeacons(c) {
     '<tr><td class="ro">' + esc(l.role) + '</td><td class="nm">' + esc(l.name) + '</td><td class="m">' + esc(l.type) + '</td>' +
     '<td class="bc">' + (hasText(l.cs) ? esc(l.cs) : '—') + '</td><td class="m">' + esc(l.value) + '</td><td class="m">' + (hasText(l.rwy) ? esc(l.rwy) : '—') + '</td></tr>').join('');
   return blockHtml('beacons', t('dc.b.beacons'),
-    '<table class="dc-tab dc-bcn"><colgroup><col style="width:66px"><col style="width:236px"><col style="width:176px"><col style="width:148px"><col style="width:196px"><col></colgroup>' +
+    '<table class="dc-tab dc-bcn"><colgroup><col style="width:62px"><col style="width:214px"><col style="width:200px"><col style="width:140px"><col style="width:196px"><col></colgroup>' +
     '<thead><tr><th></th><th>' + esc(t('dc.h.bfield')) + '</th><th>' + esc(t('dc.h.btype')) + '</th><th>' + esc(t('dc.h.bcs')) + '</th><th>' + esc(t('dc.h.bfreq')) + '</th><th>' + esc(t('dc.h.brwy')) + '</th></tr></thead>' +
     '<tbody>' + body + '</tbody></table>', 'dc-bbt');
 }
@@ -6327,7 +6327,8 @@ function dgeFirstInput(root) {
   if (!root) return null;
   const all = root.querySelectorAll('input:not([type="hidden"]), textarea, select, .tbm-trigger');
   for (const x of all) { if (x.getClientRects().length && !x.disabled) return x; }       /* une liste au thème est cachée : son bouton, qui la précède, est pris */
-  return null;
+  const add = root.querySelector('.ed-btn-add:not([disabled])');       /* une liste vide : son bouton « Ajouter » */
+  return add && add.getClientRects().length ? add : null;
 }
 /* L'éditeur suit : la section s'ouvre, défile jusqu'à l'élément, qui porte un liseré ambre 1,6 s ; focus : il reçoit le focus */
 function dgeFollow(sec, el, focus) {
