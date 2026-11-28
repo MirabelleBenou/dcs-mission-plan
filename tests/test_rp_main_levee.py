@@ -6,6 +6,7 @@ et un toucher ne créent rien ; la carte ne bouge pas pendant le trait ; touch-a
 du JSON du calque et part à l'export comme une ligne par touchers. Les contrôles passent par le DOM, jamais par une capture."""
 import json
 import math
+import random
 import subprocess
 import sys
 from pathlib import Path
@@ -56,12 +57,16 @@ def test_two_equal_points_count_for_one_and_a_stroke_back_to_its_start_stays_ope
 
 
 @needs_node
-def test_over_500_vertices_the_tolerance_doubles_until_500_at_most_remain():
+def test_over_500_vertices_the_tolerance_doubles_until_500_at_most_remain_and_stops_at_the_first_tolerance_that_passes():
     saw = [[i * 7, (7 if i % 2 else 0)] for i in range(1300)]
-    low = node_stroke(saw, 'const low = rfhSimplify(P, 2).length;')
+    low = node_stroke(saw, 'const half = rfhSimplify(P, r.tol / 2).length, two = rfhSimplify(P, 2).length;')
     assert low['tol'] >= 4 and len(low['idx']) <= 500
-    n2 = json.loads(subprocess.run(['node', '-e', build_block() + '\nprocess.stdout.write(JSON.stringify(rfhSimplify(%s, 2).length));' % json.dumps(saw)], capture_output=True, text=True).stdout)
-    assert n2 > 500                                                                  # à 2 px, plus de 500 sommets
+    n = json.loads(subprocess.run(['node', '-e', build_block() + '\nconst P = %s; const r = rfhStroke(P);\nprocess.stdout.write(JSON.stringify([rfhSimplify(P, 2).length, rfhSimplify(P, r.tol / 2).length]));' % json.dumps(saw)], capture_output=True, text=True).stdout)
+    assert n[0] > 500 and n[1] > 500                                                 # à 2 px et à la moitié de la tolérance finale : plus de 500 ; le doublement s'arrête à la première qui passe
+    rnd = random.Random(3)
+    noise = [[i * 0.6, rnd.uniform(-25, 25)] for i in range(1300)]                  # un second trait : plus de 500 sommets à 2 px, mais le rendu final tombe entre 3 et 500
+    r = json.loads(subprocess.run(['node', '-e', build_block() + '\nconst P = %s; const r = rfhStroke(P);\nprocess.stdout.write(JSON.stringify([r.tol, r.idx.length, rfhSimplify(P, 2).length, rfhSimplify(P, r.tol / 2).length]));' % json.dumps(noise)], capture_output=True, text=True).stdout)
+    assert r[2] > 500 and r[3] > 500 and r[0] >= 4 and 3 <= r[1] <= 500, r
 
 
 # ---------------------------------------------------------------------------------------------------- le navigateur
@@ -317,4 +322,45 @@ def test_the_freehand_line_reads_back_from_the_layer_json_and_leaves_for_the_exp
     fr.evaluate('() => { expGo(); }')
     attendre(fr, 'window.__shots.length === 1', "le rendu parti (html2canvas appelé)")
     assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+def test_a_stroke_left_open_by_a_lost_pointer_up_is_dropped_and_the_next_complete_stroke_makes_the_only_line(browser):
+    pg = shell(browser, 1280, 800)
+    fr = open_rp(pg)
+    viser(fr, 33.865, 36.06, 12)
+    to_draw_line(fr)
+    ox, oy = origin(pg, fr)
+    cdp = pg.context.new_cdp_session(pg)
+    # 1. le bouton relâché sans pointerup : le mouvement suivant, bouton gauche absent, abandonne le trait
+    pg.mouse.move(ox + 200, oy + 300)
+    pg.mouse.down()
+    pg.mouse.move(ox + 260, oy + 340, steps=4)
+    assert fr.evaluate(STATE)['stroke'] is True
+    cdp.send('Input.dispatchMouseEvent', {'type': 'mouseMoved', 'x': ox + 300, 'y': oy + 360, 'button': 'none', 'buttons': 0})
+    assert fr.evaluate(STATE)['stroke'] is False and len(fr.evaluate(LINES)) == 0
+    pg.mouse.up()
+    # 2. un pointerdown du même pointeur sur un trait resté ouvert : l'ancien s'abandonne, le neuf commence
+    pg.mouse.move(ox + 200, oy + 300)
+    pg.mouse.down()
+    pg.mouse.move(ox + 260, oy + 340, steps=4)
+    cdp.send('Input.dispatchMouseEvent', {'type': 'mousePressed', 'x': ox + 300, 'y': oy + 200, 'button': 'left', 'buttons': 1, 'clickCount': 1})
+    assert fr.evaluate("() => DR.stroke && DR.stroke.pts.length") == 1
+    for x, y in wave(300, 200, 30)[1:]:
+        pg.mouse.move(ox + x, oy + y)
+    pg.mouse.up()
+    lines = fr.evaluate(LINES)
+    assert len(lines) == 1 and fr.evaluate(STATE)['stroke'] is False
+    first = container_px(fr, [lines[0]['points'][0]])[0]
+    assert abs(first[0] - 300) < 1.5 and abs(first[1] - 200) < 1.5                  # la ligne est celle du second trait
+    # 3. la capture perdue abandonne le trait
+    pg.mouse.move(ox + 200, oy + 400)
+    pg.mouse.down()
+    pg.mouse.move(ox + 260, oy + 440, steps=4)
+    assert fr.evaluate(STATE)['stroke'] is True
+    fr.evaluate("() => document.getElementById('map').releasePointerCapture(DR.stroke.id)")
+    attendre(fr, 'DR.stroke === null', 'le trait abandonné à la capture perdue')
+    pg.mouse.up()
+    assert len(fr.evaluate(LINES)) == 1 and pg.errs == []
     pg.context.close()

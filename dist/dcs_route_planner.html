@@ -12150,7 +12150,7 @@ function drOnZoom() {
   drContour();
 }
 
-/* ---- La main levée : un trait glissé sur la carte devient une ligne ordinaire (R2, R3 du lot) ---- */
+/* ---- La main levée : un trait glissé sur la carte devient une ligne ordinaire ---- */
 /* Elle est en vigueur : mode Dessin, outil Ligne, la bascule allumée, aucun objet choisi, aucun sommet posé, aucune fenêtre ni menu des calques ouverts (la recherche comprise) */
 function drFreeActive() {
   return drOn() && DR.tool === 'line' && DR.free && !drSel() && !(DR.build && DR.build.pts.length) && !DR.menu && !SR.open && !RT_MODALS.some(rtVisible) && !uiModalsOpen().length;
@@ -12177,9 +12177,9 @@ function drFreeAbort() {
 
 function drFreeDown(e) {
   if (!map || !drOn()) return;
-  if (DR.stroke) {         /* un autre pointeur pendant le trait l'annule : le pincement et le déplacement à deux doigts sont ceux de Leaflet */
-    if (e.pointerId !== DR.stroke.id) drFreeAbort();
-    return;
+  if (DR.stroke) {
+    if (e.pointerId !== DR.stroke.id) { drFreeAbort(); return; }       /* un autre pointeur pendant le trait l'annule : le pincement et le déplacement à deux doigts sont ceux de Leaflet */
+    drFreeAbort();                                                      /* le même pointeur : le trait précédent est resté ouvert (un pointerup perdu) ; il s'abandonne, le nouveau commence */
   }
   drFreeApply();           /* l'état à jour : une fenêtre a pu s'ouvrir ou se fermer sans passer par le dessin */
   if (!drFreeActive() || !e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
@@ -12192,6 +12192,7 @@ function drFreeDown(e) {
 function drFreeMove(e) {
   const s = DR.stroke;
   if (!s || e.pointerId !== s.id) return;
+  if (e.pointerType === 'mouse' && !(e.buttons & 1)) { drFreeAbort(); return; }       /* le bouton gauche est relâché sans que le pointerup soit arrivé : le trait s'abandonne */
   const p = map.mouseEventToLayerPoint(e), ll = map.layerPointToLatLng(p);
   s.pts.push([p.x, p.y]);
   if (!s.poly) s.poly = L.polyline([map.layerPointToLatLng(L.point(s.pts[0][0], s.pts[0][1]))], drPreviewStyle()).addTo(map);
@@ -12209,6 +12210,11 @@ function drFreeUp(e) {
   const keep = rfhStroke(pts).idx.map(i => drLL(map.layerPointToLatLng(L.point(pts[i][0], pts[i][1]))));
   if (keep.length < 2 || keep.every(q => q[0] === keep[0][0] && q[1] === keep[0][1])) return;
   drAdd(drNewZone(keep, false), true);
+}
+
+/* La capture du pointeur perdue (un menu contextuel, une autre fenêtre) : le trait s'abandonne, sauf si le pointeur est de nouveau capturé (un trait neuf du même pointeur) */
+function drFreeLost(e) {
+  if (DR.stroke && e.pointerId === DR.stroke.id && !map.getContainer().hasPointerCapture(e.pointerId)) drFreeAbort();
 }
 
 function drFreeCancel(e) {
@@ -12279,6 +12285,7 @@ function drInit() {
   mc.addEventListener('pointermove', drFreeMove);
   mc.addEventListener('pointerup', drFreeUp);
   mc.addEventListener('pointercancel', drFreeCancel);
+  mc.addEventListener('lostpointercapture', drFreeLost);
   document.addEventListener('keydown', ev => {
     if (ev.key !== 'Escape' || ev.defaultPrevented || !drOn() || SR.open || RT_MODALS.some(rtVisible) || uiModalsOpen().length) return;       /* une fenêtre de suite ouverte (la question de « Supprimer » comprise) : Échap ne regarde qu'elle */
     if (DR.stroke) drFreeAbort();                          /* Échap pendant un trait : il s'annule, rien ne se crée */
