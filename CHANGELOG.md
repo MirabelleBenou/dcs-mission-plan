@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+27` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+28` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -247,6 +247,13 @@ Between two releases, the hosted version shows its build number at the bottom of
 **Turns drawn to scale**
 - Choose a bank angle (15°, 30° or 45°) in the Navigation tab: each turn shows its arc and where to start turning, from the leg's ground speed; the navigation table gives the turn's radius and lead distance.
 - Timings are unchanged (point to point).
+
+**Paper base maps**
+- Two new base maps in the Display menu, “Paper” and “Dark paper”, on Caucasus, Cold War Germany and Syria: a vector map with towns, roads, rivers, forests and relief, under the Route Planner’s own grid; with Relief ticked, DCS’s relief replaces the map’s own.
+- The image for the briefing keeps it. On another theatre, or in a browser that cannot draw it, both lines are greyed out.
+
+**Sharper DCS map over Cold War Germany**
+- Where the finest DCS map tiles are missing, the map now shows the next level down instead of a blurred, much coarser one.
 
 ### Datacard Generator
 

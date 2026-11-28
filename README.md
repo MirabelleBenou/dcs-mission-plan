@@ -290,7 +290,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - Built for the DCS World virtual aviation community
 - DCS map tiles by the **[DCS Olympus](https://github.com/Pax1601/DCSOlympus)** team — [Discord](https://discord.gg/kNAQkhUHnQ)
 - Caucasus navigation chart by **Flappie** — [his website](http://dcsmaps.com/caucasus/openlayers) and the [GeoTIFF on DCS User Files](https://digitalcombatsimulator.com/en/files/3305623/), many thanks to him!
-- Map engine [Leaflet](https://leafletjs.com) (BSD-2-Clause); topographic tiles © OpenStreetMap contributors, SRTM, style © OpenTopoMap (CC-BY-SA); satellite imagery © Esri, Maxar, Earthstar Geographics; terrain relief © DCS World, Eagle Dynamics SA, read in the game (non-commercial use)
+- Map engine [Leaflet](https://leafletjs.com) (BSD-2-Clause); topographic tiles © OpenStreetMap contributors, SRTM, style © OpenTopoMap (CC-BY-SA); satellite imagery © Esri, Maxar, Earthstar Geographics; paper base map drawn with [MapLibre GL JS](https://maplibre.org) (BSD-3-Clause), [PMTiles](https://github.com/protomaps/PMTiles) (BSD-3-Clause) and [maplibre-gl-leaflet](https://github.com/maplibre/maplibre-gl-leaflet) (ISC), map data © OpenStreetMap contributors (ODbL), relief Copernicus WorldDEM © DLR e.V., © Airbus DS; terrain relief © DCS World, Eagle Dynamics SA, read in the game (non-commercial use)
 - NATO military symbols drawn with **[milsymbol](https://github.com/spatialillusions/milsymbol)** by Måns Beckman (MIT)
 - DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0-or-later); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
 - Airfield names and ids: pydcs, via DCS Airfield Charts

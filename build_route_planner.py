@@ -93,7 +93,14 @@ ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
 TOWNS_PATH = os.path.join(HERE, 'towns.json')
 
-REQUIRED_ASSETS = ['STARDOS_400', 'STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_leaflet', 'lib_leaflet_css', 'lib_milsymbol', 'lib_html2canvas']
+REQUIRED_ASSETS = ['STARDOS_400', 'STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_leaflet', 'lib_leaflet_css', 'lib_milsymbol', 'lib_html2canvas',
+                   'lib_maplibre_gl', 'lib_maplibre_gl_worker', 'lib_maplibre_gl_css', 'lib_pmtiles', 'lib_maplibre_gl_leaflet']
+# Le fond papier (tools/gen_map_libs.py) : la clé d'assets.json, le marqueur de la page et le sha256 du fichier npm ; le texte embarqué en est l'octet
+MAP_LIBS = [('lib_maplibre_gl_css', '__LIB_MAPLIBRE_GL_CSS__', 'a90798a1953017790e590f7e1bd35ff103a8a4263972cb47290b78adf86f8c20'),       # maplibre-gl 6.17.0 dist/maplibre-gl.css
+            ('lib_maplibre_gl', '__LIB_MAPLIBRE_GL__', 'e02cb08c572fd0950a75343cd558099c2a1dbbaf67f26b0c96f115431962d1ae'),               # maplibre-gl 6.17.0 dist/maplibre-gl.mjs (BSD-3-Clause)
+            ('lib_maplibre_gl_worker', '__LIB_MAPLIBRE_GL_WORKER__', '73d7a024a4efe1a46e49db193e18cfe33271e3ecc652ec7542c281a4ef5f0f04'), # maplibre-gl 6.17.0 dist/maplibre-gl-worker.mjs
+            ('lib_pmtiles', '__LIB_PMTILES__', 'caf981bc46f6327ee7e65d5dc964d89d38a69f60edca2bd4c5c890c21b554c6c'),                         # pmtiles 4.5.0 dist/pmtiles.js (BSD-3-Clause)
+            ('lib_maplibre_gl_leaflet', '__LIB_MAPLIBRE_GL_LEAFLET__', '1e6cf8cb3eb5fd909879aa1bf36a383fb506c9a5b2dbbfababce65a294dd1fcb')]  # @maplibre/maplibre-gl-leaflet 0.1.4 (ISC)
 MILSYMBOL_SHA256 = '5af6b52f8660baa432ef406e6cf7341dde26053848c6f71c52adabccf4cea9cc'   # milsymbol_rp.min.js (milsymbol 3.0.5, MIT), embarquée telle quelle
 
 if not os.path.isfile(ASSETS_PATH):
@@ -401,6 +408,8 @@ path.rp-turn-bad { stroke: var(--mp-sig-orange-line); }
   radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35), transparent 60%),
   repeating-linear-gradient(0deg, rgba(120,100,60,.035) 0 2px, transparent 2px 5px), #e6dcc2; }
 #map.grid-only .leaflet-tile-pane { visibility: hidden; }
+/* le fond papier : la carte MapLibre dans le panneau des tuiles, posée comme une couche de Leaflet ; elle ne reçoit aucun geste */
+#map .leaflet-gl-layer { position: absolute; left: 0; top: 0; pointer-events: none; }
 /* l'altitude du sol au pointeur (lot mp-relief-rp) : au-dessus des panneaux de Leaflet (400), sous ses contrôles (800) ; ne touche rien */
 #rp-alt { position: absolute; left: 0; top: 0; z-index: 500; pointer-events: none; font: 500 12px var(--f-ui); letter-spacing: .03em; padding: 4px 8px; background: rgba(26,28,20,.88); color: #e8dcb8; border: 1px solid var(--amber); border-radius: 2px; white-space: nowrap; }
 #rp-alt[hidden], #rp-alt-x[hidden] { display: none; }
@@ -1628,6 +1637,15 @@ __IMPORT_HTML__
 <script>
 __APP_JS__
 </script>
+<!-- Fond papier : bibliothèques embarquées inertes (type text/plain) ; elles ne se lisent qu'au premier choix d'un fond papier.
+     MapLibre GL JS 6.17.0 (BSD-3-Clause) — Copyright (c) 2023, MapLibre contributors — https://github.com/maplibre/maplibre-gl-js/blob/v6.17.0/LICENSE.txt
+     PMTiles 4.5.0 (BSD-3-Clause) — Copyright (c) Protomaps LLC — https://github.com/protomaps/PMTiles/blob/main/LICENSE
+     maplibre-gl-leaflet 0.1.4 (ISC) — Copyright (c) 2021 MapLibre contributors, Copyright (c) 2014, Mapbox — https://github.com/maplibre/maplibre-gl-leaflet/blob/main/LICENSE -->
+<script type="text/plain" id="lib-maplibre-gl-css">__LIB_MAPLIBRE_GL_CSS__</script>
+<script type="text/plain" id="lib-maplibre-gl">__LIB_MAPLIBRE_GL__</script>
+<script type="text/plain" id="lib-maplibre-gl-worker">__LIB_MAPLIBRE_GL_WORKER__</script>
+<script type="text/plain" id="lib-pmtiles">__LIB_PMTILES__</script>
+<script type="text/plain" id="lib-maplibre-gl-leaflet">__LIB_MAPLIBRE_GL_LEAFLET__</script>
 
 </body>
 </html>
@@ -1952,7 +1970,7 @@ const FORMAT_ID = 'dcs-route-v1';
 const SET_FORMAT = 'dcs-route-set-v1';
 const PACKAGE_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];     /* la v1 ne reste qu'en lecture */
 const THEME_IDS = ['cw-nato', 'cw-soviet', 'modern-nato', 'modern-east'];
-const LAYER_IDS = ['dcs', 'flappie', 'topo', 'sat', 'grid'];
+const LAYER_IDS = ['dcs', 'flappie', 'topo', 'sat', 'grid', 'papier', 'papier-sombre'];
 const MAX_POINTS = 30;
 const MAX_REFS = 12;
 const MAX_ROUTES = 12;
@@ -2160,10 +2178,13 @@ const OUR_LAYERS = {
   flappie: { theatre: 'Caucasus', path: 'flappie-caucasus/{z}/{x}/{y}.webp', maxNativeZoom: 12, maxZoom: 18,
              bounds: [[40.6442, 36.2470], [45.6131, 45.4817]] }
 };
-/* Couches en plus, par le miroir seul : [minNativeZoom, maxNativeZoom, minZoom], posées au-dessus des couches de DCS_LEVELS.
-   Le miroir de la page hôte porte ces niveaux, qu'Olympus ne sert pas : pas de repli sur Olympus pour elles. */
+/* Couches en plus, par le miroir seul : [minNativeZoom, maxNativeZoom, minZoom]. Chacune se pose à la place de son niveau natif parmi les couches de
+   DCS_LEVELS : juste au-dessus de la dernière dont le niveau natif le plus fin (maxNativeZoom) est inférieur ou égal au sien, sous celles qui sont plus
+   fines ; une couche plus fine que toutes est donc au-dessus de tout. GermanyCW : le niveau 14 entre la couche 13 et la 15 (là où la 15 manque, le 14
+   se voit au lieu du 13 agrandi ; là où elle existe, elle le couvre), le 16 au-dessus de tout. Le miroir de la page hôte porte ces niveaux, qu'Olympus
+   ne sert pas : pas de repli sur Olympus pour elles, et rien quand le miroir est coupé. */
 const DCS_EXTRA = {
-  'alt-GermanyCW': [[16, 16, 16]]
+  'alt-GermanyCW': [[14, 14, 14], [16, 16, 16]]
 };
 const TOPO_URL = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
 const SAT_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
@@ -2196,6 +2217,10 @@ const I18N = {
     'bm.topo': 'Topo',
     'bm.sat': 'Satellite',
     'bm.grid': 'Grille',
+    'bm.papier': 'Papier',
+    'bm.papierSombre': 'Papier sombre',
+    'bm.papier.off': 'Papier — absent de ce théâtre',
+    'bm.papier.nogl': 'Papier — ce navigateur n’affiche pas la carte vectorielle',
     'layer.dcsOff': 'Carte DCS — absente de ce théâtre',
     'layer.flappie': 'Carte de navigation (Flappie)',
     'tb.display': 'Affichage',
@@ -2294,6 +2319,7 @@ const I18N = {
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     'attr.places': 'Lieux © Esri, HERE, Garmin, OpenStreetMap contributors',
     'attr.relief': 'Relief : DCS World, Eagle Dynamics SA (usage non commercial)',
+    'attr.papier': 'Fond papier\u202f: {m}',
     'dsp.relief': 'Relief',
     'dsp.relief.tip': 'Relief du terrain, relevé dans DCS',
     'dsp.relief.off': 'Relief — absent de ce théâtre',
@@ -2811,6 +2837,10 @@ const I18N = {
     'bm.topo': 'Topo',
     'bm.sat': 'Satellite',
     'bm.grid': 'Grid',
+    'bm.papier': 'Paper',
+    'bm.papierSombre': 'Dark paper',
+    'bm.papier.off': 'Paper — not available for this theatre',
+    'bm.papier.nogl': 'Paper — this browser cannot draw the vector map',
     'layer.dcsOff': 'DCS map — not available for this theatre',
     'layer.flappie': 'Navigation chart (Flappie)',
     'tb.display': 'Display',
@@ -2909,6 +2939,7 @@ const I18N = {
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     'attr.places': 'Places © Esri, HERE, Garmin, OpenStreetMap contributors',
     'attr.relief': 'Relief: DCS World, Eagle Dynamics SA (non-commercial use)',
+    'attr.papier': 'Paper map: {m}',
     'dsp.relief': 'Relief',
     'dsp.relief.tip': 'Terrain relief, read in DCS',
     'dsp.relief.off': 'Relief — not available for this theatre',
@@ -3869,6 +3900,7 @@ function ourLayerIds(theatre) { return Object.keys(OUR_LAYERS).filter(id => OUR_
 function resolveLayer() {
   const o = ourLayer(S.ui.layer);
   if (o && o.theatre !== S.theatre) S.ui.layer = dcsKey() ? 'dcs' : 'topo';
+  else if (isPaper(S.ui.layer) && (!paperHas(S.theatre) || !paperGl2())) S.ui.layer = dcsKey() ? 'dcs' : 'topo';       /* le fond papier : sur ses trois théâtres, avec WebGL 2 */
   else if (S.ui.layer === 'dcs' && !dcsKey()) S.ui.layer = 'topo';
 }
 
@@ -4021,7 +4053,7 @@ function rpReload() {
 
 /* Le théâtre change (les routes des autres théâtres sont masquées et gardées) : la liste de la barre, ou un fichier CombatFlite qui nomme le sien */
 function setTheatre(id) {
-  const wasDcs = S.ui.layer === 'dcs' || !!ourLayer(S.ui.layer);
+  const wasDcs = S.ui.layer === 'dcs' || !!ourLayer(S.ui.layer) || isPaper(S.ui.layer);
   const changed = S.theatre !== theatreOf(id).id;
   if (changed) { RL.pts.length = 0; rsetSwitch(theatreOf(id).id); }      /* la règle mesure sur la carte d'un théâtre : elle ne passe pas à l'autre ; les routes de l'ancien se masquent, celles du nouveau reviennent */
   S.theatre = theatreOf(id).id;
@@ -4406,7 +4438,7 @@ function frameRoute() {
   });
 }
 
-function attrText(id) { return id === 'grid' ? '' : t('attr.' + id); }
+function attrText(id) { if (isPaper(id)) return t('attr.papier', { m: paperMention(id) }); return id === 'grid' ? '' : t('attr.' + id); }
 
 /* Le miroir des tuiles DCS. La page hôte peut écrire localStorage['map_layers_v1'] (même origine que ce module ; le module ne
    l'écrit jamais) : {"configSchemaVersion":1,"dcs":{"url":"/chemin/{key}/{z}/{x}/{y}.png"}}. Deux cas : avec cette clé valide,
@@ -4487,11 +4519,205 @@ function tileLayersFor(id) {
     const mk = (lv, mirrorOnly) => new DcsTileLayer(mirrorUrl,
       { minNativeZoom: lv[0], maxNativeZoom: lv[1], minZoom: lv[2], maxZoom: 18, attribution: attribution,
         mirrorUrl: mirrorUrl, olympusUrl: olympusUrl, mirrorOnly: mirrorOnly });
-    const layers = levels.map(lv => mk(lv, false));
-    if (!mirrorCut) (DCS_EXTRA[key] || []).forEach(lv => layers.push(mk(lv, true)));
-    return layers;
+    const order = levels.map(lv => ({ lv: lv, mirrorOnly: false }));
+    if (!mirrorCut) (DCS_EXTRA[key] || []).forEach(lv => {       /* à la place de son niveau natif (voir DCS_EXTRA) */
+      let i = order.length;
+      while (i > 0 && order[i - 1].lv[1] > lv[1]) i--;
+      order.splice(i, 0, { lv: lv, mirrorOnly: true });
+    });
+    return order.map(o => mk(o.lv, o.mirrorOnly));
   }
   return [];
+}
+
+/* ============= LE FOND PAPIER : une carte vectorielle (MapLibre GL JS, sous Leaflet par maplibre-gl-leaflet) =============
+   « Papier » et « Papier sombre », sur Caucasus, GermanyCW et Syria : le style que sert l'hôte (PUBLIC_TILES + « fonds/<théâtre>/style-clair.json », ou
+   « style-sombre.json »), ses données par le protocole pmtiles://. Les bibliothèques sont dans la page, inertes (<script type="text/plain">, en fin de page) :
+   rien ne s'en lit ni ne s'exécute avant le premier choix d'un fond papier, puis une fois par ouverture du module. La carte MapLibre n'est jamais
+   interactive : Leaflet seul reçoit gestes et clics. Le style est lu une fois par théâtre, par variante et par ouverture (un échec se relit au choix suivant). */
+const PAPER_THEATRES = ['Caucasus', 'GermanyCW', 'Syria'];
+const PAPER_ATTR_SYRIA = ['© OpenStreetMap contributors (ODbL)', 'Copernicus WorldDEM-30 © DLR e.V., © Airbus DS'];       /* les mentions tant que le style n'est pas lu */
+const PAPER_IDLE_MS = 3000;    /* l'export attend la carte au plus 3 s */
+const PP = {
+  libs: null,                  /* la promesse des bibliothèques (une fois par ouverture) */
+  styles: new Map(),           /* adresse du style → promesse du style lu */
+  read: new Map(),             /* adresse du style → style lu (pour les mentions) */
+  gl2: null,                   /* WebGL 2 : testé une fois */
+  proto: null,                 /* le protocole pmtiles (ses archives ouvertes, par adresse) */
+  Layer: null                  /* la couche, une sous-classe de L.MaplibreGL */
+};
+function isPaper(id) { return id === 'papier' || id === 'papier-sombre'; }
+function paperHas(theatre) { return PAPER_THEATRES.indexOf(theatre) !== -1; }
+function paperGl2() {
+  if (PP.gl2 === null) {
+    let ok = false;
+    try {
+      const g = document.createElement('canvas').getContext('webgl2');
+      ok = !!g;
+      const x = g && g.getExtension('WEBGL_lose_context');
+      if (x) x.loseContext();
+    } catch (e) { ok = false; }
+    PP.gl2 = ok;
+  }
+  return PP.gl2;
+}
+function paperStyleUrl(id, theatre) { return PUBLIC_TILES + 'fonds/' + String(theatre).toLowerCase() + '/' + (id === 'papier-sombre' ? 'style-sombre.json' : 'style-clair.json'); }
+
+/* La mention : l'attribution des sources « fond » puis « relief » du style lu, jointes par « · » ; sinon celles de Syria */
+function paperMention(id) {
+  const st = PP.read.get(paperStyleUrl(id, S.theatre));
+  const m = [];
+  if (st) ['fond', 'relief'].forEach(k => { const a = st.sources[k] && st.sources[k].attribution; if (typeof a === 'string' && a.trim()) m.push(a.trim()); });
+  return esc((m.length ? m : PAPER_ATTR_SYRIA).join(' · '));
+}
+
+/* Les bibliothèques, au premier choix d'un fond papier : la feuille de MapLibre, le module importé d'une URL blob:, maplibregl sur globalThis, le worker
+   sur une URL blob:, puis pmtiles.js et le pont exécutés, dans cet ordre ; le protocole pmtiles ajouté une fois */
+function paperLibText(id) {
+  const el = document.getElementById(id);
+  if (!el) throw new Error('bibliothèque absente : ' + id);
+  return el.textContent;
+}
+function paperLibs() {
+  if (!PP.libs) PP.libs = (async () => {
+    const css = document.createElement('style');
+    css.textContent = paperLibText('lib-maplibre-gl-css');
+    document.head.appendChild(css);
+    const mod = await import(URL.createObjectURL(new Blob([paperLibText('lib-maplibre-gl')], { type: 'text/javascript' })));
+    globalThis.maplibregl = mod;
+    mod.setWorkerUrl(URL.createObjectURL(new Blob([paperLibText('lib-maplibre-gl-worker')], { type: 'text/javascript' })));
+    ['lib-pmtiles', 'lib-maplibre-gl-leaflet'].forEach(id => {
+      const sc = document.createElement('script');
+      sc.textContent = paperLibText(id);
+      document.head.appendChild(sc);
+    });
+    if (!globalThis.pmtiles || typeof globalThis.pmtiles.Protocol !== 'function' || typeof L.MaplibreGL !== 'function') throw new Error('pmtiles ou le pont absent');
+    PP.proto = new globalThis.pmtiles.Protocol();
+    mod.addProtocol('pmtiles', PP.proto.tile);
+    /* la mention est celle des autres fonds (options.attribution) ; un retrait ne lève jamais, même si la carte n'a pas pu se créer */
+    PP.Layer = L.MaplibreGL.extend({
+      getAttribution: function () { return this.options.attribution; },
+      onRemove: function (m) {
+        try { L.MaplibreGL.prototype.onRemove.call(this, m); }
+        catch (e) {
+          const c = this._container;
+          if (c && c.parentNode) c.parentNode.removeChild(c);
+          try { if (this._glMap) this._glMap.remove(); } catch (e2) { /* ignore */ }
+          this._glMap = null;
+        }
+      }
+    });
+    return mod;
+  })();
+  return PP.libs;
+}
+
+/* Le style : lu une fois par adresse et par ouverture ; un échec (réseau, HTTP ≠ 200, JSON illisible, sans sources ni layers) ne se garde pas */
+function paperStyle(url) {
+  let p = PP.styles.get(url);
+  if (p) return p;
+  p = fetch(url, { cache: 'no-cache', mode: 'cors' })
+    .then(r => { if (r.status !== 200) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(j => {
+      if (!j || typeof j !== 'object' || !j.sources || typeof j.sources !== 'object' || Array.isArray(j.sources) || !Array.isArray(j.layers)) throw new Error('style illisible');
+      PP.read.set(url, j);
+      return j;
+    });
+  PP.styles.set(url, p);
+  p.catch(() => { if (PP.styles.get(url) === p) PP.styles.delete(url); });
+  return p;
+}
+
+/* Une adresse relative du style, résolue contre l'adresse du style ; d'un gabarit ({fontstack}, {z}…), la partie fixe seule */
+function paperAbs(u, base) {
+  if (typeof u !== 'string') return u;
+  const i = u.indexOf('{');
+  try { return i < 0 ? new URL(u, base).href : new URL(u.slice(0, i), base).href + u.slice(i); } catch (e) { return u; }
+}
+/* Le style que pose le RP, sur une copie : adresses absolues (pmtiles:// + l'adresse absolue), la grille du style retirée (le RP a la sienne),
+   la couche « relief » cachée quand le Relief de DCS est actif ; rien d'autre ne change */
+function paperPrepare(style, url) {
+  const s = JSON.parse(JSON.stringify(style));
+  Object.keys(s.sources).forEach(k => {
+    const src = s.sources[k];
+    if (!src || typeof src !== 'object') return;
+    if (typeof src.url === 'string') src.url = src.url.indexOf('pmtiles://') === 0 ? 'pmtiles://' + paperAbs(src.url.slice(10), url) : paperAbs(src.url, url);
+    if (Array.isArray(src.tiles)) src.tiles = src.tiles.map(u => paperAbs(u, url));
+  });
+  if (typeof s.sprite === 'string') s.sprite = paperAbs(s.sprite, url);
+  else if (Array.isArray(s.sprite)) s.sprite = s.sprite.map(x => (x && typeof x.url === 'string') ? Object.assign({}, x, { url: paperAbs(x.url, url) }) : x);
+  if (typeof s.glyphs === 'string') s.glyphs = paperAbs(s.glyphs, url);
+  s.layers = s.layers.filter(l => !(l && typeof l.id === 'string' && (l.id === 'grille' || l.id.indexOf('grille-') === 0)));
+  s.layers.forEach(l => { if (l && l.id === 'relief') l.layout = Object.assign({}, l.layout, { visibility: reliefLive() ? 'none' : 'visible' }); });
+  return s;
+}
+
+/* Une source en erreur : son archive est oubliée du protocole (pmtiles garderait l'en-tête en échec pour toute l'ouverture) ; le prochain choix la relit */
+function paperForget(style, sourceId) {
+  const src = style.sources[sourceId], u = src && typeof src.url === 'string' && src.url.indexOf('pmtiles://') === 0 ? src.url.slice(10) : '';
+  if (u && PP.proto && PP.proto.tiles && typeof PP.proto.tiles.delete === 'function') PP.proto.tiles.delete(u);
+}
+
+/* La carte MapLibre du fond posé, ou null */
+function paperGl() {
+  const l = PP.Layer && baseLayers.length === 1 && baseLayers[0] instanceof PP.Layer ? baseLayers[0] : null;
+  return (l && l.getMaplibreMap()) || null;
+}
+/* Le relief du style suit le Relief de DCS, sans relire le style */
+function paperReliefSync() {
+  const gl = paperGl();
+  if (!gl) return;
+  try { if (gl.getLayer('relief')) gl.setLayoutProperty('relief', 'visibility', reliefLive() ? 'none' : 'visible'); } catch (e) { /* style pas encore chargé : style.load le refait */ }
+}
+
+/* Pose le fond papier (appelée par setBase, après clearBase) : le repli si le style ne se lit pas, si les bibliothèques ou la carte échouent, ou si une
+   source (fond, relief) est en erreur avant le premier « idle » et que FALLBACK_MS passe sans lui ; le premier « idle » vaut une tuile chargée */
+function paperBase(id, gen) {
+  const url = paperStyleUrl(id, S.theatre);
+  Promise.all([paperLibs(), paperStyle(url)]).then(res => {
+    if (gen !== baseGen) return;
+    const prep = paperPrepare(res[1], url);
+    const lay = new PP.Layer({ style: prep, interactive: false, attributionControl: false,
+      canvasContextAttributes: { preserveDrawingBuffer: true }, attribution: attrText(id) });
+    baseLayers = [lay];
+    try { lay.addTo(map); } catch (e) { baseLayers = []; try { map.removeLayer(lay); } catch (e2) { /* ignore */ } throw e; }
+    const gl = lay.getMaplibreMap();
+    if (!gl) { baseLayers = []; try { map.removeLayer(lay); } catch (e2) { /* ignore */ } throw new Error('carte MapLibre absente'); }
+    let idled = false;
+    gl.on('error', e => {
+      if (!e || (e.sourceId !== 'fond' && e.sourceId !== 'relief')) return;
+      paperForget(prep, e.sourceId);
+      if (gen !== baseGen || idled) return;
+      tileErr++;
+      checkFallback();
+    });
+    gl.once('idle', () => { idled = true; if (gen !== baseGen) return; tileOk++; if (inFallback) setFallback(false); });
+    gl.on('style.load', () => { if (gen === baseGen) paperReliefSync(); });
+  }).catch(e => {
+    if (gen !== baseGen) return;
+    console.warn('[fond papier]', e);
+    setFallback(true);
+  });
+}
+
+/* L'export : la carte MapLibre rendue à la résolution de l'image, puis rendue à devicePixelRatio, même si la prise échoue */
+function paperIdle(gl, ms) {
+  return new Promise(res => {
+    let done = false, tm = null;
+    const end = () => { if (done) return; done = true; clearTimeout(tm); gl.off('idle', end); res(); };
+    tm = setTimeout(end, ms);
+    gl.once('idle', end);
+    gl.triggerRepaint();
+  });
+}
+async function paperShoot(gl, ratio, shoot) {
+  try {
+    gl.setPixelRatio(Math.max(window.devicePixelRatio || 1, ratio));
+    await paperIdle(gl, PAPER_IDLE_MS);
+    return await shoot();
+  } finally {
+    try { gl.setPixelRatio(null); } catch (e) { /* ignore */ }       /* sans valeur propre, MapLibre reprend devicePixelRatio */
+  }
 }
 
 function updateMapClass() {
@@ -4746,6 +4972,7 @@ function reliefLiveSync() {
   const now = reliefLive();
   if (now === RE.live) return;
   RE.live = now;
+  paperReliefSync();       /* le relief du fond papier : caché quand le Relief de DCS est actif */
   if (now && map && map._popup && map._popup.options && map._popup.options.className === 'cf-popup') map.closePopup();
   if (tapMode === 'read') drawLayers();
 }
@@ -5796,7 +6023,8 @@ function setBase() {
   if (id === 'grid') { setFallback(false); return; }
   if (navigator.onLine === false) { setFallback(true); return; }
   const gen = baseGen;
-  baseLayers = tileLayersFor(id);
+  if (isPaper(id)) paperBase(id, gen);       /* le fond papier : sa couche se pose quand ses bibliothèques et son style sont là */
+  else baseLayers = tileLayersFor(id);
   baseLayers.forEach(l => {
     l.on('tileload', () => { if (gen !== baseGen) return; tileOk++; if (inFallback) setFallback(false); });
     l.on('tileerror', () => { if (gen !== baseGen) return; tileErr++; checkFallback(); });
@@ -8693,11 +8921,13 @@ function renderTheatreOptions() {
   $('theatre').innerHTML = THEATRES.map(x => '<option value="' + x.id + '">' + esc(t('th.' + x.id)) + '</option>').join('');
 }
 
-/* Les fonds du sélecteur « Fond » du menu Affichage : « Carte DCS », nos couches du théâtre (juste après), puis Topo, Satellite, Grille ;
-   « Carte DCS » est grisée quand le théâtre n'en a pas */
+/* Les fonds du sélecteur « Fond » du menu Affichage : « Carte DCS », nos couches du théâtre (juste après), Papier et Papier sombre, puis Topo, Satellite, Grille ;
+   « Carte DCS » est grisée quand le théâtre n'en a pas, les deux fonds papier hors de leurs théâtres ou sans WebGL 2 */
 function baseRows() {
   const rows = [{ id: 'dcs', l: 'bm.dcs', off: !dcsKey() }];
   ourLayerIds(S.theatre).forEach(id => rows.push({ id: id, l: 'layer.' + id }));
+  const pOff = !paperHas(S.theatre) ? 'bm.papier.off' : (!paperGl2() ? 'bm.papier.nogl' : '');       /* le fond papier : grisé hors de ses théâtres, ou sans WebGL 2 */
+  rows.push({ id: 'papier', l: 'bm.papier', off: !!pOff, tip: pOff }, { id: 'papier-sombre', l: 'bm.papierSombre', off: !!pOff, tip: pOff });
   rows.push({ id: 'topo', l: 'bm.topo' }, { id: 'sat', l: 'bm.sat' }, { id: 'grid', l: 'bm.grid' });
   return rows;
 }
@@ -11156,7 +11386,7 @@ function dspBuild() {
   mkHead(t('dsp.g.fond'));
   const bm = document.createElement('div');
   bm.className = 'dsp-routes dsp-base';
-  bm.appendChild(mkSeg(t('dsp.g.fond'), seg => baseRows().forEach(r => seg.appendChild(mkBtn(t(r.l), { 'data-base': r.id }, r.off, r.off ? t('layer.dcsOff') : '')))));
+  bm.appendChild(mkSeg(t('dsp.g.fond'), seg => baseRows().forEach(r => seg.appendChild(mkBtn(t(r.l), { 'data-base': r.id }, r.off, r.off ? t(r.tip || 'layer.dcsOff') : '')))));
   ul.appendChild(bm);
   /* « Unités » : Distance km · NM, Altitude m · ft */
   mkHead(t('tb.units'));
@@ -11798,6 +12028,11 @@ function expPrepFonts() {
 /* html2canvas : la zone du cadre, à l'échelle qui donne 1 600 px au grand côté */
 function expShoot(rect) {
   const scale = EXP_LONG / Math.max(rect.w, rect.h);
+  const gl = paperGl();
+  if (gl) return paperShoot(gl, scale, () => expShot(rect, scale));       /* le fond papier : rendu à l'échelle de l'image le temps de la prise */
+  return expShot(rect, scale);
+}
+function expShot(rect, scale) {
   return html2canvas(map.getContainer(), {
     x: rect.x, y: rect.y, width: rect.w, height: rect.h, scale: scale,
     useCORS: true, allowTaint: false, backgroundColor: '#e6dcc2', logging: false,
@@ -12316,6 +12551,16 @@ def build():
     html = html.replace('__LIB_HTML2CANVAS__', lib_h2c)
     html = html.replace('__APP_JS__', js)
     html = html.replace('__APP_VERSION__', SUITE_VERSION)
+    # Le fond papier : les cinq textes, inertes, posés en dernier (aucun remplacement ne passe plus sur eux)
+    for _k, _mark, _sha in MAP_LIBS:
+        _txt = A[_k]
+        if hashlib.sha256(_txt.encode('utf-8')).hexdigest() != _sha:
+            raise SystemExit(f"[ERREUR] {_k} : le sha256 ne correspond pas au fichier npm (tools/gen_map_libs.py)")
+        if '</script' in _txt.lower() or '<!--' in _txt or '\r' in _txt or '\0' in _txt:
+            raise SystemExit(f"[ERREUR] {_k} : texte impossible à embarquer à l'octet dans un <script type=\"text/plain\">")
+        if html.count(_mark) != 1:
+            raise SystemExit(f"[ERREUR] marqueur {_mark} absent ou en double")
+        html = html.replace(_mark, _txt)
 
     # Contrôles de construction
     ui_verify(html)
@@ -12344,7 +12589,7 @@ def build():
     for _k in ("'op.route': 'Ouvrir une route ou des calques…'", "'op.route': 'Open a route or layers…'", "'op.route.h': '.json · Route Tool · CombatFlite'"):
         if _k not in html:
             raise SystemExit("[ERREUR] libellé du menu Ouvrir absent : " + _k)
-    left = re.findall(r'__[A-Z0-9_]{4,}__', re.sub(r'<script>.*?</script>', '', html, flags=re.S)[:])
+    left = re.findall(r'__[A-Z0-9_]{4,}__', re.sub(r'<script(?: type="text/plain" id="lib-[a-z-]+")?>.*?</script>', '', html, flags=re.S)[:])
     left = [x for x in left if x not in ('__proto__',)]
     if left:
         raise SystemExit(f"[ERREUR] Marqueurs non remplacés : {sorted(set(left))}")
