@@ -2319,7 +2319,7 @@ const I18N = {
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     'attr.places': 'Lieux © Esri, HERE, Garmin, OpenStreetMap contributors',
     'attr.relief': 'Relief : DCS World, Eagle Dynamics SA (usage non commercial)',
-    'attr.papier': 'Fond papier\u202f: {m}',
+    'attr.papier': 'Papier {m}',
     'dsp.relief': 'Relief',
     'dsp.relief.tip': 'Relief du terrain, relevé dans DCS',
     'dsp.relief.off': 'Relief — absent de ce théâtre',
@@ -2939,7 +2939,7 @@ const I18N = {
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     'attr.places': 'Places © Esri, HERE, Garmin, OpenStreetMap contributors',
     'attr.relief': 'Relief: DCS World, Eagle Dynamics SA (non-commercial use)',
-    'attr.papier': 'Paper map: {m}',
+    'attr.papier': 'Paper {m}',
     'dsp.relief': 'Relief',
     'dsp.relief.tip': 'Terrain relief, read in DCS',
     'dsp.relief.off': 'Relief — not available for this theatre',
@@ -4492,7 +4492,7 @@ const DcsTileLayer = L.TileLayer.extend({
     img.addEventListener('error', e => {
       if (aborted()) return;
       if (stage === 'mirror') {
-        mirrorNote(false);
+        if (!o.mirrorOnly) mirrorNote(false);       /* une couche du miroir seul : un 404 y veut dire « pas de tuile ici », pas une panne du miroir */
         if (olympusUrl) { stage = 'olympus'; cur = olympusUrl; img.src = olympusUrl; return; }
       }
       done(e, img);
@@ -4539,11 +4539,12 @@ const PAPER_THEATRES = ['Caucasus', 'GermanyCW', 'Syria'];
 const PAPER_ATTR_SYRIA = ['© OpenStreetMap contributors (ODbL)', 'Copernicus WorldDEM-30 © DLR e.V., © Airbus DS'];       /* les mentions tant que le style n'est pas lu */
 const PAPER_IDLE_MS = 3000;    /* l'export attend la carte au plus 3 s */
 const PP = {
-  libs: null,                  /* la promesse des bibliothèques (une fois par ouverture) */
+  libs: null,                  /* la promesse des bibliothèques (gardée si elle aboutit ; un échec se retente au choix suivant) */
   styles: new Map(),           /* adresse du style → promesse du style lu */
   read: new Map(),             /* adresse du style → style lu (pour les mentions) */
   gl2: null,                   /* WebGL 2 : testé une fois */
-  proto: null,                 /* le protocole pmtiles (ses archives ouvertes, par adresse) */
+  proto: null,                 /* le protocole pmtiles (ses archives ouvertes, par adresse) ; ajouté une fois par ouverture */
+  css: null, mod: null, scripts: false,       /* ce qui est déjà posé : un nouvel essai ne le repose pas */
   Layer: null                  /* la couche, une sous-classe de L.MaplibreGL */
 };
 function isPaper(id) { return id === 'papier' || id === 'papier-sombre'; }
@@ -4579,23 +4580,38 @@ function paperLibText(id) {
   return el.textContent;
 }
 function paperLibs() {
-  if (!PP.libs) PP.libs = (async () => {
-    const css = document.createElement('style');
-    css.textContent = paperLibText('lib-maplibre-gl-css');
-    document.head.appendChild(css);
-    const mod = await import(URL.createObjectURL(new Blob([paperLibText('lib-maplibre-gl')], { type: 'text/javascript' })));
-    globalThis.maplibregl = mod;
-    mod.setWorkerUrl(URL.createObjectURL(new Blob([paperLibText('lib-maplibre-gl-worker')], { type: 'text/javascript' })));
-    ['lib-pmtiles', 'lib-maplibre-gl-leaflet'].forEach(id => {
-      const sc = document.createElement('script');
-      sc.textContent = paperLibText(id);
-      document.head.appendChild(sc);
-    });
+  if (PP.libs) return PP.libs;
+  const p = (async () => {
+    if (!PP.css) {
+      const css = document.createElement('style');
+      css.textContent = paperLibText('lib-maplibre-gl-css');
+      document.head.appendChild(css);
+      PP.css = css;
+    }
+    if (!PP.mod) {
+      const url = URL.createObjectURL(new Blob([paperLibText('lib-maplibre-gl')], { type: 'text/javascript' }));
+      let mod;
+      try { mod = await import(url); } finally { URL.revokeObjectURL(url); }       /* l'URL du module ne sert qu'à l'import ; celle du worker reste */
+      globalThis.maplibregl = mod;
+      mod.setWorkerUrl(URL.createObjectURL(new Blob([paperLibText('lib-maplibre-gl-worker')], { type: 'text/javascript' })));
+      PP.mod = mod;
+    }
+    if (!PP.scripts) {
+      PP.scripts = true;
+      ['lib-pmtiles', 'lib-maplibre-gl-leaflet'].forEach(id => {
+        const sc = document.createElement('script');
+        sc.textContent = paperLibText(id);
+        document.head.appendChild(sc);
+      });
+    }
     if (!globalThis.pmtiles || typeof globalThis.pmtiles.Protocol !== 'function' || typeof L.MaplibreGL !== 'function') throw new Error('pmtiles ou le pont absent');
-    PP.proto = new globalThis.pmtiles.Protocol();
-    mod.addProtocol('pmtiles', PP.proto.tile);
-    /* la mention est celle des autres fonds (options.attribution) ; un retrait ne lève jamais, même si la carte n'a pas pu se créer */
-    PP.Layer = L.MaplibreGL.extend({
+    if (!PP.proto) {
+      PP.proto = new globalThis.pmtiles.Protocol();
+      PP.mod.addProtocol('pmtiles', PP.proto.tile);
+    }
+    /* la mention est celle des autres fonds (options.attribution) ; un retrait ne lève jamais, même si la carte n'a pas pu se créer ;
+       l'image demandée par _transitionEnd (et _resize) ne fait rien si la couche a été retirée entre-temps */
+    if (!PP.Layer) PP.Layer = L.MaplibreGL.extend({
       getAttribution: function () { return this.options.attribution; },
       onRemove: function (m) {
         try { L.MaplibreGL.prototype.onRemove.call(this, m); }
@@ -4605,11 +4621,24 @@ function paperLibs() {
           try { if (this._glMap) this._glMap.remove(); } catch (e2) { /* ignore */ }
           this._glMap = null;
         }
+      },
+      _transitionEnd: function () {
+        L.Util.requestAnimFrame(function () {
+          if (!this._map || !this._glMap) return;
+          const zoom = this._map.getZoom(), center = this._map.getCenter();
+          const offset = this._map.latLngToContainerPoint(this._map.getBounds().getNorthWest());
+          this._resizeContainer();
+          L.DomUtil.setTransform(this._glMap._actualCanvas, offset, 1);
+          this._glMap.once('moveend', L.Util.bind(function () { if (this._map && this._glMap) this._zoomEnd(); }, this));
+          this._glMap.jumpTo({ center: center, zoom: zoom - 1 });
+        }, this);
       }
     });
-    return mod;
+    return PP.mod;
   })();
-  return PP.libs;
+  PP.libs = p;
+  p.catch(() => { if (PP.libs === p) PP.libs = null; });       /* un échec ne se garde pas : le choix suivant retente */
+  return p;
 }
 
 /* Le style : lu une fois par adresse et par ouverture ; un échec (réseau, HTTP ≠ 200, JSON illisible, sans sources ni layers) ne se garde pas */
@@ -4670,8 +4699,9 @@ function paperReliefSync() {
   try { if (gl.getLayer('relief')) gl.setLayoutProperty('relief', 'visibility', reliefLive() ? 'none' : 'visible'); } catch (e) { /* style pas encore chargé : style.load le refait */ }
 }
 
-/* Pose le fond papier (appelée par setBase, après clearBase) : le repli si le style ne se lit pas, si les bibliothèques ou la carte échouent, ou si une
-   source (fond, relief) est en erreur avant le premier « idle » et que FALLBACK_MS passe sans lui ; le premier « idle » vaut une tuile chargée */
+/* Pose le fond papier (appelée par setBase, après clearBase) : le repli si le style ne se lit pas, si les bibliothèques ou la carte échouent, ou si la
+   source « fond » est en échec (l'archive, pas une tuile) : FALLBACK_MS passé, checkFallback() replie, comme pour les tuiles. Le premier « idle » d'un fond
+   qui se lit vaut une tuile chargée ; le relief en échec ne replie pas (la carte reste utilisable) */
 function paperBase(id, gen) {
   const url = paperStyleUrl(id, S.theatre);
   Promise.all([paperLibs(), paperStyle(url)]).then(res => {
@@ -4683,15 +4713,17 @@ function paperBase(id, gen) {
     try { lay.addTo(map); } catch (e) { baseLayers = []; try { map.removeLayer(lay); } catch (e2) { /* ignore */ } throw e; }
     const gl = lay.getMaplibreMap();
     if (!gl) { baseLayers = []; try { map.removeLayer(lay); } catch (e2) { /* ignore */ } throw new Error('carte MapLibre absente'); }
-    let idled = false;
+    let idled = false, fondBad = false;
     gl.on('error', e => {
       if (!e || (e.sourceId !== 'fond' && e.sourceId !== 'relief')) return;
       paperForget(prep, e.sourceId);
-      if (gen !== baseGen || idled) return;
+      /* le fond sans tuile en cause (l'archive, son en-tête, son répertoire) : le fond est en échec, l'idle qui suit ne compte pas ; le relief seul ne replie pas */
+      if (gen !== baseGen || e.sourceId !== 'fond' || e.tile || fondBad || idled) return;
+      fondBad = true;
       tileErr++;
       checkFallback();
     });
-    gl.once('idle', () => { idled = true; if (gen !== baseGen) return; tileOk++; if (inFallback) setFallback(false); });
+    gl.on('idle', () => { if (gen !== baseGen || fondBad || idled) return; idled = true; tileOk++; if (inFallback) setFallback(false); });
     gl.on('style.load', () => { if (gen === baseGen) paperReliefSync(); });
   }).catch(e => {
     if (gen !== baseGen) return;
@@ -12119,15 +12151,29 @@ function expCompose(shot, rect) {
   g.textAlign = 'center'; g.fillText('N', nx, ny + 28);
   g.textAlign = 'left';
 
-  /* l'attribution : juste au-dessus du bandeau, alignée à droite */
+  /* l'attribution : juste au-dessus du bandeau, alignée à droite ; trop longue pour une ligne, elle passe sur deux, coupée à un séparateur
+     (« · », « , » ou « ; »), et la boîte grandit d'une ligne ; la seconde ne finit par « … » que si deux lignes ne suffisent pas */
   const at = expAttribution();
   if (at) {
     g.font = "400 12px 'Roboto Mono', 'Courier New', monospace";
-    let txt = t('cart.attr') + ' ' + at;
-    while (txt.length > 4 && g.measureText(txt).width + 18 > W) txt = txt.replace(/…$/, '').slice(0, -1).replace(/\s+$/, '') + '…';
-    const bw = Math.ceil(g.measureText(txt).width) + 18;
-    g.fillStyle = 'rgba(244,241,228,.82)'; g.fillRect(W - bw, H - 22, bw, 22);
-    g.fillStyle = '#11120c'; g.textBaseline = 'middle'; g.fillText(txt, W - bw + 9, H - 11 + 0.5);
+    const fits = s => g.measureText(s).width + 18 <= W;
+    const cut = s => { while (s.length > 4 && !fits(s)) s = s.replace(/…$/, '').slice(0, -1).replace(/\s+$/, '') + '…'; return s; };
+    const txt = t('cart.attr') + ' ' + at;
+    let lines = [txt];
+    if (!fits(txt)) {
+      lines = null;
+      for (let i = txt.length - 1; i > 0 && !lines; i--) {
+        if ('·,;'.indexOf(txt.charAt(i)) === -1) continue;
+        const a = txt.slice(0, i + (txt.charAt(i) === '·' ? 0 : 1)).replace(/\s+$/, ''), b = txt.slice(i + (txt.charAt(i) === '·' ? 0 : 1)).replace(/^\s+/, '');
+        if (a && b && fits(a)) lines = [a, cut(b)];
+      }
+      if (!lines) lines = [cut(txt)];
+    }
+    const LH = 16, bh = 22 + LH * (lines.length - 1);
+    const bw = Math.ceil(Math.max.apply(null, lines.map(l => g.measureText(l).width))) + 18;
+    g.fillStyle = 'rgba(244,241,228,.82)'; g.fillRect(W - bw, H - bh, bw, bh);
+    g.fillStyle = '#11120c'; g.textBaseline = 'middle';
+    lines.forEach((l, k) => g.fillText(l, W - bw + 9, H - 11 - LH * (lines.length - 1 - k) + 0.5));
     g.textBaseline = 'alphabetic';
   }
   return { canvas: cv, width: W, height: H + EXP_BAND };

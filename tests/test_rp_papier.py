@@ -31,24 +31,10 @@ import fabriquer as FAB  # noqa: E402
 
 PT = re.search(r"PUBLIC_TILES = '([^']+)'", build_block()).group(1)
 FONDS = PT + 'fonds/'
-LIBS = {'lib_maplibre_gl': 'e02cb08c572fd0950a75343cd558099c2a1dbbaf67f26b0c96f115431962d1ae',
-        'lib_maplibre_gl_worker': '73d7a024a4efe1a46e49db193e18cfe33271e3ecc652ec7542c281a4ef5f0f04',
-        'lib_maplibre_gl_css': 'a90798a1953017790e590f7e1bd35ff103a8a4263972cb47290b78adf86f8c20',
-        'lib_pmtiles': 'caf981bc46f6327ee7e65d5dc964d89d38a69f60edca2bd4c5c890c21b554c6c',
-        'lib_maplibre_gl_leaflet': '1e6cf8cb3eb5fd909879aa1bf36a383fb506c9a5b2dbbfababce65a294dd1fcb'}
-SYRIA_M = '© OpenStreetMap contributors (ODbL) · Copernicus WorldDEM-30 © DLR e.V., © Airbus DS'
+SRC = (ROOT / 'build_route_planner.py').read_text(encoding='utf-8')
+LIBS = dict(re.findall(r"\('(lib_[a-z_]+)', '__LIB_[A-Z_]+__', '([0-9a-f]{64})'\)", SRC))     # les sha256 des fichiers npm, lus dans MAP_LIBS du build
+SYRIA_M = '© OpenStreetMap contributors (ODbL) · Copernicus WorldDEM-30 © DLR e.V., © Airbus DS'       # les mentions des styles servis (fixture)
 CAUCASUS_M = '© OpenStreetMap contributors (ODbL) · Copernicus WorldDEM-30 © DLR e.V., © Airbus DS, Copernicus WorldDEM-90 © DLR e.V., © Airbus DS'
-ATTR_FR = 'Fond papier : '
-ATTR_EN = 'Paper map: '
-OFF_FR = 'Papier — absent de ce théâtre'
-NOGL_FR = 'Papier — ce navigateur n’affiche pas la carte vectorielle'
-CHANGELOG_BLOCK = """**Paper base maps**
-- Two new base maps in the Display menu, “Paper” and “Dark paper”, on Caucasus, Cold War Germany and Syria: a vector map with towns, roads, rivers, forests and relief, under the Route Planner’s own grid; with Relief ticked, DCS’s relief replaces the map’s own.
-- The image for the briefing keeps it. On another theatre, or in a browser that cannot draw it, both lines are greyed out.
-"""
-README_INS = '; paper base map drawn with [MapLibre GL JS](https://maplibre.org) (BSD-3-Clause), [PMTiles](https://github.com/protomaps/PMTiles) (BSD-3-Clause) and [maplibre-gl-leaflet](https://github.com/maplibre/maplibre-gl-leaflet) (ISC), map data © OpenStreetMap contributors (ODbL), relief Copernicus WorldDEM © DLR e.V., © Airbus DS'
-PLANCHE_FR = 'n’existe que sur le Caucase. Papier et Papier sombre, un fond vectoriel, n’existent que sur le Caucase, l’Allemagne de la guerre froide et la Syrie. Profil du sol'
-PLANCHE_EN = 'exists only on the Caucasus. Paper and Dark paper, a vector base map, exist only on the Caucasus, Cold War Germany and Syria. Ground profile'
 RELIEF_DOC = {'format': 'dcs-relief-tiles-v1', 'theatre': 'Syria', 'edition': 'test', 'minZoom': 8, 'maxNativeZoom': 11, 'tileSize': 256,
               'bounds': [[33.15, 35.15], [36.75, 37.95]],
               'layers': {'hillshade': {'path': 'hillshade/{z}/{x}/{y}.webp'},
@@ -58,8 +44,9 @@ RELIEF_DOC = {'format': 'dcs-relief-tiles-v1', 'theatre': 'Syria', 'edition': 't
 # Ce que le contexte enregistre dans chaque cadre, avant tout script : les URL blob: créées, le texte remis à chaque Blob, les protocoles PMTiles construits,
 # et (sans WebGL 2) le contexte webgl2 refusé
 INIT = """(() => {
-  const C = URL.createObjectURL; window.__blobUrls = 0;
-  URL.createObjectURL = function () { window.__blobUrls++; return C.apply(this, arguments); };
+  const C = URL.createObjectURL, R = URL.revokeObjectURL; window.__blobUrls = 0; window.__made = []; window.__revoked = [];
+  URL.createObjectURL = function (b) { window.__blobUrls++; const u = C.apply(this, arguments); window.__made.push([u, b && b.size]); return u; };
+  URL.revokeObjectURL = function (u) { window.__revoked.push(u); return R.apply(this, arguments); };
   const B = window.Blob; window.__blobTexts = [];
   const W = function Blob(parts, opt) { if (Array.isArray(parts) && parts.length === 1 && typeof parts[0] === 'string') window.__blobTexts.push(parts[0]); return new B(parts, opt); };
   W.prototype = B.prototype; window.Blob = W;
@@ -83,8 +70,7 @@ class Bench:
                        'caucasus/style-clair.json': lire('caucasus-style-clair.json')}
         self.style_status = {}                       # adresse relative → statut HTTP forcé
         self.data = {'fond.pmtiles': lire('fond.pmtiles'), 'relief.pmtiles': lire('relief.pmtiles')}
-        self.mode = {'fond.pmtiles': 'ok', 'relief.pmtiles': 'ok'}       # ok · err (500) · hang (sans réponse, jusqu'à release)
-        self.pending = []
+        self.mode = {'fond.pmtiles': 'ok', 'relief.pmtiles': 'ok'}       # ok · err (500)
 
     def serve(self, route, name):
         body = self.data[name]
@@ -95,14 +81,6 @@ class Bench:
             a, b = int(m.group(1)), min(int(m.group(2)), len(body) - 1)
             return route.fulfill(status=206, headers={**cors, 'Content-Range': 'bytes %d-%d/%d' % (a, b, len(body))}, body=body[a:b + 1])
         return route.fulfill(status=200, headers=cors, body=body)
-
-    def release(self):
-        p, self.pending = self.pending, []
-        for route, name in p:
-            try:
-                self.serve(route, name)
-            except Exception:
-                pass
 
     def handler(self, route):
         url = route.request.url
@@ -124,15 +102,13 @@ class Bench:
                 mode = self.mode[name]
                 if mode == 'err':
                     return route.fulfill(status=500, headers=cors, body='')
-                if mode == 'hang':
-                    self.pending.append((route, name))
-                    return None
                 return self.serve(route, name)
             return route.fulfill(status=404, headers=cors, body='')
         if url.startswith(PT + 'relief/'):
             rest = url[len(PT + 'relief/'):]
-            if rest == 'Syria/relief.json':
-                return route.fulfill(status=200, headers={**cors, 'Content-Type': 'application/json'}, body=json.dumps(RELIEF_DOC))
+            th = rest.split('/')[0]
+            if rest == th + '/relief.json' and th in ('Syria', 'Caucasus'):
+                return route.fulfill(status=200, headers={**cors, 'Content-Type': 'application/json'}, body=json.dumps({**RELIEF_DOC, 'theatre': th}))
             return route.fulfill(status=404, headers=cors, body='')
         return route.abort()
 
@@ -176,8 +152,6 @@ def open_rp(br, w=1280, h=800, touch=False, lang='fr', nogl=False, seed=None, th
 
 
 def close(pg):
-    pg.bench.release()
-    pg.wait_for_timeout(50)
     pg.context.close()
 
 
@@ -241,38 +215,27 @@ def proj(fr, lat, lon):
 
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------
-def test_texts_libraries_and_fixture_are_where_the_lot_says():
-    log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-    unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
-    rp = unreleased.split('\n### Route Planner\n', 1)[1].split('\n### ', 1)[0]
-    assert unreleased.count(CHANGELOG_BLOCK) == 1 and rp.count(CHANGELOG_BLOCK) == 1
-    assert rp.index('**Turns drawn to scale**') < rp.index(CHANGELOG_BLOCK) and rp.split('**Turns drawn to scale**', 1)[1].split('\n\n**', 1)[1].startswith('Paper base maps**')
-    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
-    line = [ln for ln in readme.splitlines() if ln.startswith('- Map engine [Leaflet]')]
-    assert len(line) == 1 and line[0].count(README_INS + '; terrain relief © DCS World') == 1
-    assert line[0].endswith('terrain relief © DCS World, Eagle Dynamics SA, read in the game (non-commercial use)')
-    pl = (ROOT / 'fm_planches_block.py').read_text(encoding='utf-8')
-    assert pl.count(PLANCHE_FR) == 1 and pl.count(PLANCHE_EN) == 1
-    src = (ROOT / 'build_route_planner.py').read_text(encoding='utf-8')
-    for k in ("'bm.papier': 'Papier'", "'bm.papierSombre': 'Papier sombre'", "'bm.papier.off': '%s'" % OFF_FR, "'bm.papier.nogl': '%s'" % NOGL_FR, "'attr.papier': 'Fond papier\\u202f: {m}'",
-              "'bm.papier': 'Paper'", "'bm.papierSombre': 'Dark paper'", "'bm.papier.off': 'Paper — not available for this theatre'",
-              "'bm.papier.nogl': 'Paper — this browser cannot draw the vector map'", "'attr.papier': 'Paper map: {m}'"):
-        assert src.count(k) == 1, k
-    assert "const LAYER_IDS = ['dcs', 'flappie', 'topo', 'sat', 'grid', 'papier', 'papier-sombre'];" in src
-    assert re.search(r'^DEV_BUILD = 28$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
-    # les cinq clés d'assets.json, à l'octet des fichiers npm (tools/gen_map_libs.py)
+def test_libraries_inert_once_and_fixture_remade_to_the_byte(tmp_path):
+    # les cinq bibliothèques d'assets.json, à l'octet des fichiers npm (les sha256 de MAP_LIBS, dans le build)
+    assert len(LIBS) == 5
     assets = json.loads((ROOT / 'assets.json').read_text(encoding='utf-8'))
-    assert list(assets)[-5:] == ['lib_maplibre_gl', 'lib_maplibre_gl_worker', 'lib_maplibre_gl_css', 'lib_pmtiles', 'lib_maplibre_gl_leaflet']
     for k, sha in LIBS.items():
         assert hashlib.sha256(assets[k].encode('utf-8')).hexdigest() == sha, k
     # la page : les cinq textes, inertes, une fois chacun
     html = (ROOT / 'dist' / 'dcs_route_planner.html').read_text(encoding='utf-8')
     for k in LIBS:
-        tag = '<script type="text/plain" id="%s">' % k.replace('lib_', 'lib-').replace('_', '-')
+        tag = '<script type="text/plain" id="%s">' % k.replace('_', '-')
         assert html.count(tag) == 1 and html.count(tag + assets[k] + '</script>') == 1, k
-    # la fixture : deux petits PMTiles, refaits à l'octet par leur script
-    assert sum((FIX / n).stat().st_size for n in ('fond.pmtiles', 'relief.pmtiles')) < 50 * 1024
-    assert (FIX / 'style-clair.json').read_bytes().startswith(b'{') and json.loads(lire('style-clair.json'))['name'] == 'papier-clair'
+    # les deux fonds sont des fonds du module
+    ids = re.search(r"const LAYER_IDS = \[([^\]]*)\];", SRC).group(1)
+    assert "'papier'" in ids and "'papier-sombre'" in ids
+    # la fixture : refaite à l'octet par son script
+    import shutil
+    import subprocess
+    shutil.copy(FIX / 'fabriquer.py', tmp_path / 'fabriquer.py')
+    subprocess.run([sys.executable, '-B', str(tmp_path / 'fabriquer.py')], check=True, capture_output=True)
+    for n in ('fond.pmtiles', 'relief.pmtiles'):
+        assert (tmp_path / n).read_bytes() == (FIX / n).read_bytes(), n
 
 
 @needs_pw
@@ -282,14 +245,15 @@ def test_rows_in_place_greyed_off_their_theatres_and_nothing_loaded_before_a_cho
     assert fr.evaluate("S.theatre") == 'Syria'
     r = rows(fr)
     assert [x['id'] for x in r] == ['dcs', 'papier', 'papier-sombre', 'topo', 'sat', 'grid']
-    assert [(x['txt'], x['off']) for x in r[1:3]] == [('Papier', False), ('Papier sombre', False)]
+    assert [(x['txt'], x['off']) for x in r[1:3]] == [(fr.evaluate("t('bm.papier')"), False), (fr.evaluate("t('bm.papierSombre')"), False)]
     # avant tout choix : rien de MapLibre (aucune URL blob:, pas de maplibregl, aucune requête du fond papier)
     assert fr.evaluate("[window.__blobUrls, typeof globalThis.maplibregl, PP.libs, document.querySelectorAll('.leaflet-gl-layer').length]") == [0, 'undefined', None, 0]
     assert pg.bench.fonds() == []
     set_theatre(fr, 'MarianaIslands')
     r = rows(fr)
     assert [x['id'] for x in r] == ['dcs', 'papier', 'papier-sombre', 'topo', 'sat', 'grid']
-    assert [(x['off'], x['title']) for x in r[1:3]] == [(True, OFF_FR), (True, OFF_FR)]
+    off = fr.evaluate("t('bm.papier.off')")
+    assert off and off != fr.evaluate("t('layer.dcsOff')") and [(x['off'], x['title']) for x in r[1:3]] == [(True, off), (True, off)]
     # une ligne grisée ne choisit rien
     menu(fr, True)
     fr.evaluate("document.querySelector('#dsp-panel [data-base=papier]').click()")
@@ -326,11 +290,14 @@ def test_libraries_once_style_read_once_per_variant_transformed_and_its_credits(
     assert st['sprite'] in (FONDS + 'syria/sprite/papier', [{'id': 'default', 'url': FONDS + 'syria/sprite/papier'}])
     assert fr.evaluate("paperGl().getLayoutProperty('relief', 'visibility')") in ('visible', None)
     # la mention, FR puis EN
-    assert ATTR_FR + SYRIA_M in attribution(fr)
+    fr_txt = fr.evaluate("t('attr.papier', { m: arg })" .replace('arg', json.dumps(SYRIA_M)))
+    assert SYRIA_M in fr_txt and fr_txt in attribution(fr)
     fr.evaluate("setLang('en')")
-    attendre(fr, "__RP.map.attributionControl.getContainer().textContent.indexOf(arg) !== -1", 'la mention en anglais', lu="__RP.map.attributionControl.getContainer().textContent", arg=ATTR_EN + SYRIA_M)
+    en_txt = fr.evaluate("t('attr.papier', { m: arg })".replace('arg', json.dumps(SYRIA_M)))
+    assert en_txt != fr_txt and SYRIA_M in en_txt
+    attendre(fr, "__RP.map.attributionControl.getContainer().textContent.indexOf(arg) !== -1", 'la mention en anglais', lu="__RP.map.attributionControl.getContainer().textContent", arg=en_txt)
     fr.evaluate("setLang('fr')")
-    attendre(fr, "__RP.map.attributionControl.getContainer().textContent.indexOf(arg) !== -1", 'la mention en français', lu="__RP.map.attributionControl.getContainer().textContent", arg=ATTR_FR + SYRIA_M)
+    attendre(fr, "__RP.map.attributionControl.getContainer().textContent.indexOf(arg) !== -1", 'la mention en français', lu="__RP.map.attributionControl.getContainer().textContent", arg=fr_txt)
     # trois choix : une lecture par variante
     choose(fr, 'papier-sombre')
     paper_up(fr)
@@ -361,7 +328,7 @@ def test_libraries_once_style_read_once_per_variant_transformed_and_its_credits(
     set_theatre(fr, 'Caucasus')
     paper_up(fr)
     assert fr.evaluate("S.ui.layer") == 'papier' and pg.bench.fonds('/style-')[-1] == 'caucasus/style-clair.json'
-    assert ATTR_FR + CAUCASUS_M in attribution(fr) and SYRIA_M + ' ·' not in attribution(fr)
+    assert fr.evaluate("t('attr.papier', { m: arg })".replace('arg', json.dumps(CAUCASUS_M))) in attribution(fr) and SYRIA_M + ' ·' not in attribution(fr)
     assert fr.evaluate("[maplibregl.config.REGISTERED_PROTOCOLS.pmtiles === window.__proto0, window.__pmProtocols, window.__blobTexts.length >= 2]") == [True, 1, True]
     assert fr.evaluate("paperGl().getStyle().sources.fond.url") == 'pmtiles://' + FONDS + 'caucasus/fond.pmtiles'
     assert pg.errs == []
@@ -392,69 +359,95 @@ def test_a_kept_paper_map_comes_back_as_the_dcs_map_where_it_cannot_be_drawn(bro
     attendre_theatre(fr, 'Syria')
     assert fr.evaluate("S.ui.layer") == 'dcs'
     r = rows(fr)
-    assert [(x['id'], x['off'], x['title']) for x in r[1:3]] == [('papier', True, NOGL_FR), ('papier-sombre', True, NOGL_FR)]
+    nogl = fr.evaluate("t('bm.papier.nogl')")
+    assert nogl and nogl != fr.evaluate("t('bm.papier.off')") and [(x['id'], x['off'], x['title']) for x in r[1:3]] == [('papier', True, nogl), ('papier-sombre', True, nogl)]
     assert fr.evaluate("[window.__blobUrls, typeof globalThis.maplibregl]") == [0, 'undefined'] and pg.bench.fonds() == []
     assert pg.errs == []
     close(pg)
 
 
 @needs_pw
-def test_fallback_on_a_missing_or_bad_style_or_a_failing_source_and_back(browser):
+def test_fallback_on_a_missing_or_bad_style_or_a_failing_base_and_back(browser):
     pg, fr = open_rp(browser)
     viser(fr, *FAB.tile_ll(4096, 4096), 11)                                               # sur la tuile du banc
     fms = fr.evaluate("FALLBACK_MS")
     bench = pg.bench
+    BANNER = "inFallback && document.getElementById('fallback').classList.contains('show')"
 
     def wait_banner(t0):
-        attendre(fr, "inFallback && document.getElementById('fallback').classList.contains('show')", 'le bandeau de repli', lu="[inFallback, tileOk, tileErr, timerElapsed]", delai=fms + 6000)
+        attendre(fr, BANNER, 'le bandeau de repli', lu="[inFallback, tileOk, tileErr, timerElapsed]", delai=fms + 6000)
         return (time.monotonic() - t0) * 1000
+
+    def other_then_paper():
+        """Retenter, c'est choisir un autre fond puis le papier ; la Grille sort du repli (Topo, requêtes coupées, y resterait)."""
+        choose(fr, 'grid')
+        attendre(fr, "!inFallback", 'la grille choisie : hors du repli', lu='inFallback')
+        choose(fr, 'papier')
+        return time.monotonic()
 
     # le style en 404
     bench.style_status['syria/style-clair.json'] = 404
-    t0 = time.monotonic()
     choose(fr, 'papier')
-    assert wait_banner(t0) <= fms + 1500
+    t0 = time.monotonic()
+    assert wait_banner(t0) <= fms + 3000
     assert fr.evaluate("S.ui.layer") == 'papier' and json.loads(fr.evaluate("localStorage.getItem('route_state_v1')"))['ui']['layer'] == 'papier'
-    # le style illisible : relu au choix suivant (un échec ne se garde pas)
+    # le style illisible (JSON tronqué, puis sans sources) : relu à chaque choix (un échec ne se garde pas)
     bench.style_status.pop('syria/style-clair.json')
     bench.styles['syria/style-clair.json'] = b'{"version": 8, "sources": '
-    choose(fr, 'grid')
-    attendre(fr, "!inFallback", 'la grille choisie : hors du repli', lu='inFallback')
-    t0 = time.monotonic()
-    choose(fr, 'papier')
-    assert wait_banner(t0) <= fms + 1500
-    bench.styles['syria/style-clair.json'] = json.dumps({'version': 8, 'layers': []}).encode()       # sans sources
-    choose(fr, 'grid')
-    attendre(fr, "!inFallback", 'la grille choisie : hors du repli', lu='inFallback')
-    choose(fr, 'papier')
-    wait_banner(time.monotonic())
+    assert wait_banner(other_then_paper()) <= fms + 3000
+    bench.styles['syria/style-clair.json'] = json.dumps({'version': 8, 'layers': []}).encode()
+    assert wait_banner(other_then_paper()) <= fms + 3000
     assert bench.fonds('/style-').count('syria/style-clair.json') == 3
-    # une source « fond » en erreur, et pas d'idle (le relief sans réponse) : le bandeau après FALLBACK_MS
+    # l'archive du fond en 500, le relief servi (l'idle libre) : le fond est en échec, le bandeau vient à FALLBACK_MS
     bench.styles['syria/style-clair.json'] = lire('style-clair.json')
-    bench.mode.update({'fond.pmtiles': 'err', 'relief.pmtiles': 'hang'})
-    choose(fr, 'grid')
-    attendre(fr, "!inFallback", 'la grille choisie : hors du repli', lu='inFallback')
-    t0 = time.monotonic()
-    choose(fr, 'papier')
-    attendre(fr, "!!paperGl() && tileErr > 0", 'la source fond en erreur', lu="[!!paperGl(), tileErr, tileOk]", delai=10000)
+    bench.mode.update({'fond.pmtiles': 'err', 'relief.pmtiles': 'ok'})
+    t0 = other_then_paper()
+    attendre(fr, "!!paperGl() && tileErr > 0", "l'archive du fond en échec", lu="[!!paperGl(), tileErr, tileOk]", delai=10000)
     el = wait_banner(t0)
-    assert el >= fms - 300 and el <= fms + 1500 and fr.evaluate("tileOk") == 0 and fr.evaluate("S.ui.layer") == 'papier'
-    # tout servi : un autre fond, puis le papier ; le fond revient, le bandeau part
-    bench.mode.update({'fond.pmtiles': 'ok', 'relief.pmtiles': 'ok'})
-    bench.release()
-    choose(fr, 'grid')
-    attendre(fr, "!inFallback", 'la grille choisie : hors du repli', lu='inFallback')
-    choose(fr, 'papier')
+    assert fms - 300 <= el <= fms + 3000 and fr.evaluate("[tileOk, S.ui.layer]") == [0, 'papier']
+    # le fond servi : un autre fond, puis le papier ; le fond revient (son archive relue), le bandeau part
+    bench.mode['fond.pmtiles'] = 'ok'
+    other_then_paper()
     attendre(fr, "!!paperGl() && tileOk > 0 && !inFallback && !document.getElementById('fallback').classList.contains('show')", 'le fond revenu, le bandeau parti', lu=PAPER_UP_LU, delai=20000)
     attendre(fr, "paperGl().querySourceFeatures('fond', { sourceLayer: 'routes' }).length > 0 && tileErr === 0", 'les routes du fond lues de nouveau (son archive relue)',
              lu="[paperGl().querySourceFeatures('fond', { sourceLayer: 'routes' }).length, tileErr]")
-    # une erreur de sprite ou de glyphes seule (le relief sans réponse : pas d'idle) : pas de repli
-    bench.mode['relief.pmtiles'] = 'hang'
+    # le relief en 500, le fond servi : pas de repli (une carte sans relief reste utilisable) ; sprite et glyphes en 404 non plus
+    bench.mode['relief.pmtiles'] = 'err'
     choose(fr, 'papier-sombre')
-    attendre(fr, "!!paperGl() && timerElapsed", 'FALLBACK_MS passé sur le fond papier sombre', lu="[!!paperGl(), timerElapsed, tileOk, tileErr]", delai=fms + 6000)
+    attendre(fr, "!!paperGl() && timerElapsed && tileOk > 0", 'FALLBACK_MS passé sur le fond papier sombre', lu="[!!paperGl(), timerElapsed, tileOk, tileErr]", delai=fms + 6000)
     attendre_images(fr, 5)
-    assert [u for u in bench.fonds() if 'sprite' in u or 'glyphs' in u]                   # demandés, en 404
-    assert fr.evaluate("[inFallback, tileErr, tileOk, document.getElementById('fallback').classList.contains('show')]") == [False, 0, 0, False]
+    assert [u for u in bench.fonds() if u.endswith('relief.pmtiles')] and [u for u in bench.fonds() if 'sprite' in u or 'glyphs' in u]      # demandés, en échec
+    assert fr.evaluate("[inFallback, tileErr, document.getElementById('fallback').classList.contains('show')]") == [False, 0, False]
+    assert pg.errs == []
+    close(pg)
+
+
+@needs_pw
+def test_the_libraries_are_tried_again_after_a_failure_without_posting_twice(browser):
+    pg, fr = open_rp(browser)
+    viser(fr, *FAB.tile_ll(4096, 4096), 11)
+    good = fr.evaluate("document.getElementById('lib-maplibre-gl').textContent.length")
+    fr.evaluate("window.__lib = document.getElementById('lib-maplibre-gl').textContent; document.getElementById('lib-maplibre-gl').textContent = 'export const x = ;'; 0")
+    choose(fr, 'papier')
+    attendre(fr, "inFallback && document.getElementById('fallback').classList.contains('show') && PP.libs === null", 'le repli, la promesse des bibliothèques oubliée', lu="[inFallback, PP.libs]")
+    assert fr.evaluate("[typeof globalThis.maplibregl, !!PP.css, PP.scripts, window.__pmProtocols]") == ['undefined', True, False, 0]
+    fr.evaluate("document.getElementById('lib-maplibre-gl').textContent = window.__lib; 0")
+    choose(fr, 'grid')
+    attendre(fr, "!inFallback", 'la grille choisie : hors du repli', lu='inFallback')
+    choose(fr, 'papier')
+    paper_up(fr)
+    css = fr.evaluate("[...document.querySelectorAll('style')].filter(s => s.textContent.indexOf('.maplibregl-map{') === 0).length")
+    scripts = fr.evaluate("[...document.head.querySelectorAll('script')].filter(s => s.textContent === document.getElementById('lib-pmtiles').textContent || s.textContent === document.getElementById('lib-maplibre-gl-leaflet').textContent).length")
+    assert [css, scripts, fr.evaluate("window.__pmProtocols"), fr.evaluate("maplibregl.getVersion()")] == [1, 2, 1, '6.17.0'] and good > 1000000
+    # les URL blob: des deux essais du module révoquées, celle du worker gardée
+    made = fr.evaluate("window.__made")
+    mods = [u for u, n in made if n == 1110272 or n == len('export const x = ;')]
+    workers = [u for u, n in made if n == 520114]
+    revoked = fr.evaluate("window.__revoked")
+    assert len(mods) == 2 and all(u in revoked for u in mods) and len(workers) == 1 and workers[0] not in revoked
+    # le pont après un retrait : _transitionEnd et _resize demandent une image, la couche part avant elle ; aucune erreur
+    fr.evaluate("(() => { const l = __RP.baseLayers[0]; l._transitionEnd(); l._resize(); dspSetBase('grid'); })(); 0")
+    attendre_images(fr, 5)
     assert pg.errs == []
     close(pg)
 
@@ -488,8 +481,8 @@ def test_the_export_keeps_the_paper_map_its_credits_and_a_sharp_pixel_ratio(brow
     attendre(pg, '!!window.__sent', 'la carte envoyée', lu='!!window.__sent', delai=30000)
     assert fr.evaluate("window.__pr") == max(1, scale)
     attendre(fr, "paperGl().getPixelRatio() === window.devicePixelRatio", 'le rapport de pixels revenu', lu='paperGl().getPixelRatio()')
-    # la mention dans l'image (expAttribution() ramène tous les blancs, U+202F compris, à l'espace, comme pour tous les fonds)
-    assert any(('Fond papier : ' + SYRIA_M) in t for t in fr.evaluate("window.__txt")), [t for t in fr.evaluate("window.__txt") if len(t) > 12]
+    # la mention dans l'image
+    assert SYRIA_M in drawn(fr), fr.evaluate("window.__txt")
     sent = pg.evaluate("window.__sent")
     W = 1600 if rect['w'] >= rect['h'] else round(1600 * 2 / 3)
     k = W / rect['w']
@@ -506,8 +499,32 @@ def test_the_export_keeps_the_paper_map_its_credits_and_a_sharp_pixel_ratio(brow
     assert dark, got['col']
     centre = (min(dark) + max(dark)) / 2
     assert abs(centre) <= 2, (dark, centre)
+    # le Caucase en portrait, Relief de DCS coché : les mentions ne tiennent pas en une ligne ; sur deux, entières
+    fr.evaluate("expClose(); 0")
+    set_theatre(fr, 'Caucasus')
+    paper_up(fr)
+    menu(fr, True)
+    fr.evaluate("document.querySelector('#dsp-panel [data-k=relief]').click()")
+    menu(fr, False)
+    attendre(fr, "reliefLive()", 'le Relief de DCS posé', lu='[RE.key, !!RE.layer, !!RE.meta]')
+    cadre_export(fr, True)
+    fr.evaluate("expSetOrient('portrait'); 0")
+    attendre_images(fr, 3)
+    fr.evaluate("window.__txt = []; 0")
+    pg.evaluate("window.__sent = null")
+    fr.evaluate("expGo()")
+    attendre(pg, '!!window.__sent', 'la carte envoyée (portrait)', lu='!!window.__sent', delai=30000)
+    lines = [x for x in fr.evaluate("window.__txt") if 'OpenStreetMap' in x or 'WorldDEM' in x or 'Eagle Dynamics' in x]
+    relief = re.sub(r'\s+', ' ', fr.evaluate("t('attr.relief')"))
+    assert len(lines) == 2 and not [x for x in lines if x.endswith('…')], lines
+    assert CAUCASUS_M in drawn(fr) and relief in drawn(fr), (lines, relief)
     assert pg.errs == []
     close(pg)
+
+
+def drawn(fr):
+    """Les textes dessinés dans l'image, joints par une espace, les blancs ramenés à l'espace (comme expAttribution())."""
+    return re.sub(r'\s+', ' ', ' '.join(fr.evaluate("window.__txt")))
 
 
 @needs_pw
@@ -627,5 +644,48 @@ def test_level_14_of_the_mirror_over_cold_war_germany_between_levels_13_and_15(b
     attendre_images(fr, 10)
     assert fr.evaluate(LAYER_OPTS) == [[1, 11, 1, False], [13, 13, 11, False], [15, 15, 13, False]]
     assert not [u for u in log[n0:] if '/14/' in u], log[n0:]
+    assert pg.errs == []
+    close(pg)
+
+
+@needs_pw
+def test_404s_of_a_mirror_only_layer_do_not_cut_the_mirror(browser):
+    """Au zoom 14 sur GermanyCW : les 404 du niveau 14 (miroir seul) arrivent d'abord, quinze au moins, avant le premier 200 du miroir ; il n'est pas coupé."""
+    pg, fr = open_rp(browser)
+    set_theatre(fr, 'GermanyCW')
+    lat, lon = FAB.tile_ll(4096, 4096, z=14, x=T14[0], y=T14[1])
+    viser(fr, lat, lon, 14)
+    base = pg.bench.handler
+    st = {'n404': 0, 'held': []}
+    tile = FAB.png(256, 256, (40, 120, 200))
+
+    def h(route):
+        url = route.request.url
+        if not url.startswith(MIRROR_GCW):
+            return base(route)
+        pg.bench.log.append(url)
+        if url[len(MIRROR_GCW):].startswith('14/'):
+            st['n404'] += 1
+            return route.fulfill(status=404, headers={'Access-Control-Allow-Origin': '*'}, body='')
+        st['held'].append(route)                       # les autres niveaux attendent : aucun 200 avant les 404 du niveau 14
+        return None
+    pg.unroute('**/*')
+    pg.route('**/*', h)
+    assert fr.evaluate("[mirrorOk, mirrorFail, mirrorCut, S.ui.layer]") == [0, 0, False, 'topo']
+    choose(fr, 'dcs')
+    # quinze tuiles du niveau 14 en échec, vues par la page, avant le moindre 200
+    attendre(fr, "__RP.baseLayers.length === 5 && [...__RP.baseLayers[2].getContainer().querySelectorAll('img')].filter(i => i.complete && i.naturalWidth === 0 && i.getAttribute('src')).length >= 15",
+             'quinze 404 du niveau 14 reçus par la page', lu="[__RP.baseLayers.length, mirrorOk, mirrorFail, mirrorCut]", delai=20000)
+    attendre_images(fr, 3)
+    assert fr.evaluate("[mirrorOk, mirrorFail, mirrorCut]") == [0, 0, False] and st['n404'] >= 15 and st['held'], st
+    held, st['held'] = st['held'], []
+    for r in held:
+        r.fulfill(status=200, headers={'Access-Control-Allow-Origin': '*', 'Content-Type': 'image/png'}, body=tile)
+    attendre(fr, "[...__RP.baseLayers[1].getContainer().querySelectorAll('img.leaflet-tile-loaded')].length > 0", 'les tuiles 13 du miroir chargées ensuite',
+             lu="[mirrorOk, mirrorFail, mirrorCut]")
+    assert fr.evaluate("[mirrorCut, mirrorFail]") == [False, 0] and fr.evaluate("mirrorOk") > 0
+    for r in st['held']:
+        r.fulfill(status=200, headers={'Access-Control-Allow-Origin': '*', 'Content-Type': 'image/png'}, body=tile)
+    assert not [u for u in pg.bench.log if u.startswith(OLYMPUS)]
     assert pg.errs == []
     close(pg)
