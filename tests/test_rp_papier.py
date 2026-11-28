@@ -628,11 +628,12 @@ def test_level_14_of_the_mirror_over_cold_war_germany_between_levels_13_and_15(b
         const a = f(__RP.baseLayers[2], '/14/8542/5438.png'), b = f(__RP.baseLayers[3], '/15/17085/10876.png'); return [a.left, a.top, a.right, a.bottom, b.left, b.top, b.right, b.bottom]; })()""")
     assert geo[0] - 1 <= geo[4] and geo[6] <= geo[2] + 1 and geo[1] - 1 <= geo[5] and geo[7] <= geo[3] + 1, geo
     assert fr.evaluate("mirrorCut") is False
-    # Syria : les couches DCS de la base (DCS_LEVELS seul, aucune du miroir seul)
+    # Syria : une seule couche, la nôtre (THEATRE_TILES), ni miroir ni Olympus
     set_theatre(fr, 'Syria')
-    attendre(fr, "dcsKey() === 'alt-syria' && S.ui.layer === 'dcs'", 'la Carte DCS de Syria', lu='[dcsKey(), S.ui.layer]')
-    syria = fr.evaluate(LAYER_OPTS)
-    assert syria == fr.evaluate("DCS_LEVELS[dcsKey()].map(lv => [lv[0], lv[1], lv[2], false])") == [[1, 15, 1, False], [16, 16, 16, False], [17, 17, 17, False]]
+    attendre(fr, "dcsKey() === 'alt-syria' && S.ui.layer === 'dcs' && __RP.baseLayers.length === 1", 'la Carte DCS de Syria', lu='[dcsKey(), S.ui.layer, __RP.baseLayers.length]')
+    syria = fr.evaluate("__RP.baseLayers.map(l => [l.options.minNativeZoom, l.options.maxNativeZoom, l.options.maxZoom, l._url, !!l.options.mirrorOnly, l.options.bounds ? [l.options.bounds[0][0], l.options.bounds[0][1], l.options.bounds[1][0], l.options.bounds[1][1]] : null])")
+    assert syria == [[8, 15, 18, PT + 'alt-syria/{z}/{x}/{y}.png', False, [31.0, 32.1, 38.25, 41.15]]], syria
+    assert fr.evaluate("DCS_LEVELS['alt-syria']") is None
     set_theatre(fr, 'GermanyCW')
     attendre(fr, "dcsKey() === 'alt-GermanyCW' && __RP.baseLayers.length === 5", 'la Carte DCS de GermanyCW de nouveau', lu=LAYER_OPTS)
     viser(fr, lat, lon, 15)

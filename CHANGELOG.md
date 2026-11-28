@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+29` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+30` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -261,6 +261,10 @@ Between two releases, the hosted version shows its build number at the bottom of
 
 **Draw mode for the finger on narrow phones**
 - On a touch screen below 440 px wide, the drawing tools sit on two rows, each at least 44 px; below 400 px, the mode buttons no longer cover the zoom buttons.
+
+**Our own DCS map over Syria**
+- On Syria, the DCS map and the Satellite background now show our own captures of the game's F10 map (up to zoom 15, enlarged beyond), with today's airfields; outside the captured area they show nothing.
+- Other theatres are unchanged.
 
 ### Datacard Generator
 

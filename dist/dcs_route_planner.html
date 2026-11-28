@@ -3084,7 +3084,6 @@ const TOWNS = {"Caucasus":[["Aatsy",43.135637,40.731036],["Abadzehskaya",44.3938
 
 /* Couches Olympus : [minNativeZoom, maxNativeZoom, minZoom], empilées dans cet ordre (config.json d'Olympus du 24 octobre) */
 const DCS_LEVELS = {
-  'alt-syria':                 [[1, 15, 1], [16, 16, 16], [17, 17, 17]],
   'alt-caucasus':              [[1, 13, 1], [13, 16, 13], [16, 18, 16]],
   'alt-nevada':                [[1, 13, 1], [13, 16, 13], [16, 17, 16]],
   'alt-marianaislands-modern': [[1, 13, 1], [13, 18, 13]],
@@ -3101,6 +3100,14 @@ const PUBLIC_TILES = 'https://dcs-tools-4thveaw.tail777510.ts.net/tuiles/';
 const OUR_LAYERS = {
   flappie: { theatre: 'Caucasus', path: 'flappie-caucasus/{z}/{x}/{y}.webp', maxNativeZoom: 12, maxZoom: 18,
              bounds: [[40.6442, 36.2470], [45.6131, 45.4817]] }
+};
+/* Nos captures de la carte F10 de DCS, par théâtre : « Carte DCS » (alt) et « Satellite » (sat) se posent à la place des fonds habituels (miroir, Olympus, Esri) :
+   une seule couche chacune, chemin sous l'adresse publique, zooms natifs, emprise [[sud, ouest], [nord, est]] (aucune tuile demandée hors de l'emprise). Un autre théâtre s'y ajoute par une ligne. */
+const THEATRE_TILES = {
+  Syria: {
+    alt: { path: 'alt-syria/{z}/{x}/{y}.png',  minNativeZoom: 8, maxNativeZoom: 15, maxZoom: 18, bounds: [[31.00, 32.10], [38.25, 41.15]] },
+    sat: { path: 'sat-syria/{z}/{x}/{y}.webp', minNativeZoom: 8, maxNativeZoom: 15, maxZoom: 18, bounds: [[31.00, 32.10], [38.25, 41.15]] }
+  }
 };
 /* Couches en plus, par le miroir seul : [minNativeZoom, maxNativeZoom, minZoom]. Chacune se pose à la place de son niveau natif parmi les couches de
    DCS_LEVELS : juste au-dessus de la dernière dont le niveau natif le plus fin (maxNativeZoom) est inférieur ou égal au sien, sous celles qui sont plus
@@ -3238,6 +3245,7 @@ const I18N = {
     'th.Afghanistan': 'Afghanistan',
     'th.Falklands': 'Atlantique Sud',
     'attr.dcs': 'Carte DCS © <a href="https://github.com/Pax1601/DCSOlympus">DCS Olympus</a>',
+    'attr.dcs.ed': 'Carte DCS © <a href="https://www.digitalcombatsimulator.com/">Eagle Dynamics</a>',
     'attr.flappie': 'Carte © <a href="https://digitalcombatsimulator.com/en/files/3305623/">Flappie</a>',
     'attr.topo': 'Données © <a href="https://www.openstreetmap.org/copyright">contributeurs OpenStreetMap</a>, SRTM · style © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
@@ -3861,6 +3869,7 @@ const I18N = {
     'th.Afghanistan': 'Afghanistan',
     'th.Falklands': 'South Atlantic',
     'attr.dcs': 'DCS map © <a href="https://github.com/Pax1601/DCSOlympus">DCS Olympus</a>',
+    'attr.dcs.ed': 'DCS map © <a href="https://www.digitalcombatsimulator.com/">Eagle Dynamics</a>',
     'attr.flappie': 'Map © <a href="https://digitalcombatsimulator.com/en/files/3305623/">Flappie</a>',
     'attr.topo': 'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, SRTM · style © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
@@ -7496,7 +7505,8 @@ function frameRoute() {
   });
 }
 
-function attrText(id) { if (isPaper(id)) return t('attr.papier', { m: paperMention(id) }); return id === 'grid' ? '' : t('attr.' + id); }
+function theatreTiles(id) { const o = Object.prototype.hasOwnProperty.call(THEATRE_TILES, S.theatre) ? THEATRE_TILES[S.theatre] : null; return o && (id === 'dcs' || id === 'sat') ? o[id === 'dcs' ? 'alt' : 'sat'] : null; }
+function attrText(id) { if (isPaper(id)) return t('attr.papier', { m: paperMention(id) }); if (theatreTiles(id)) return t('attr.dcs.ed'); return id === 'grid' ? '' : t('attr.' + id); }
 
 /* Le miroir des tuiles DCS. La page hôte peut écrire localStorage['map_layers_v1'] (même origine que ce module ; le module ne
    l'écrit jamais) : {"configSchemaVersion":1,"dcs":{"url":"/chemin/{key}/{z}/{x}/{y}.png"}}. Deux cas : avec cette clé valide,
@@ -7563,6 +7573,10 @@ const DcsTileLayer = L.TileLayer.extend({
 function tileLayersFor(id) {
   const attribution = attrText(id);
   if (id === 'topo') return [L.tileLayer(TOPO_URL, { subdomains: 'abc', maxNativeZoom: 17, maxZoom: 18, attribution: attribution })];
+  const own = theatreTiles(id);
+  if (own) {
+    return [L.tileLayer(PUBLIC_TILES + own.path, { minNativeZoom: own.minNativeZoom, maxNativeZoom: own.maxNativeZoom, maxZoom: own.maxZoom, bounds: own.bounds, attribution: attribution })];
+  }
   if (id === 'sat') return [L.tileLayer(SAT_URL, { maxNativeZoom: 19, maxZoom: 18, attribution: attribution })];
   const ours = ourLayer(id);
   if (ours) {
