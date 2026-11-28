@@ -27,6 +27,7 @@ from projection_block import build_block as build_projection_block
 from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
 from route_timing_block import build_block as build_route_timing_block
+from route_freehand_block import build_block as build_route_freehand_block
 from route_turns_block import build_block as build_route_turns_block
 from route_write_block import build_block as build_route_write_block
 from group_store_block import build_block as build_group_store_block
@@ -1107,6 +1108,28 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dr-h.r.rot i::after { content: '⟳'; position: absolute; inset: 0; font: 700 15px/18px var(--f-ui); color: var(--ink); text-align: center; }
 .dr-hint .tb-btn.mq-props svg { width: 18px; height: 18px; }
 .dr-hint .tb-btn.mq-props.on { background: var(--amber-dark); border-color: var(--amber); }
+
+/* la main levée de l'outil Ligne : la bascule du bandeau (l'icône, puis le libellé), et la carte en vigueur : le doigt dessine (touch-action: none, que Leaflet retire avec le déplacement), la souris ne sélectionne rien */
+.dr-hint .tb-btn.dr-free { display: inline-flex; align-items: center; gap: 6px; }
+.dr-hint .tb-btn.dr-free svg { width: 18px; height: 18px; flex: none; }
+.dr-hint .tb-btn.dr-free.on { background: var(--amber-dark); border-color: var(--amber); color: var(--paper-light); box-shadow: inset 0 -3px 0 var(--amber); }
+#map.rp-freehand { touch-action: none; cursor: crosshair; -webkit-user-select: none; user-select: none; }
+@media (pointer: coarse) {
+  .dr-hint .tb-btn { min-height: 44px; }
+}
+/* au doigt sous 440 px : la barre des outils sur deux rangées de cinq (20 % chacun, les bords communs à 1 px), l'ordre de DR_TOOLS ; au-dessus de 440 px, ou à la souris, celle de la base */
+@media (pointer: coarse) and (max-width: 439.98px) {
+  .dr-bar:not(.selmode) .dr-tools { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); flex: 1 1 100%; }
+  .dr-bar:not(.selmode) .dr-tool { min-width: 0; max-width: none; min-height: 50px; }
+  .dr-bar:not(.selmode) .dr-tool:nth-child(5n + 1) { border-left: 1px solid var(--khaki); }
+  .dr-bar:not(.selmode) .dr-tool:nth-child(n + 6) { margin-top: -1px; }
+}
+/* au doigt sous 400 px : la bascule n'a que son icône ; la barre des modes se resserre pour ne plus recouvrir le zoom */
+@media (pointer: coarse) and (max-width: 399.98px) {
+  .dr-hint .tb-btn.dr-free span { display: none; }
+  .tapmode .tb-btn { padding: 0 5px; letter-spacing: .4px; }
+  .tapmode .tb-btn[data-tap="draw"], .tapmode .tb-btn[data-tap="ruler"] { gap: 3px; }
+}
 
 /* ce que la maquette ne dit pas (lot rp-v1.7.0) : « À gauche » et « Afficher / Masquer » tiennent sur une ligne dans les 150 / 132 px (104 sous 600 px) de la maquette */
 .mq-turn .dr-seg .tb-btn, .mq-gshow .dr-seg .tb-btn { font-size: 11px; letter-spacing: .6px; padding: 0 3px; white-space: nowrap; }
@@ -2715,6 +2738,9 @@ const I18N = {
     'dr.nv.n': '{n} sommets',
     'dr.build.add': '— touchez pour en ajouter',
     'dr.build.close': '— touchez le premier pour fermer',
+    'dr.free': 'Main levée',
+    'dr.msg.free.touch': 'Dessinez du doigt. Deux doigts déplacent la carte.',
+    'dr.msg.free.mouse': 'Glissez pour dessiner. La molette zoome.',
     'dr.finish': 'Terminer',
     'dr.undo': 'Retirer le dernier sommet',
     'dr.cancel': 'Abandonner',
@@ -3335,6 +3361,9 @@ const I18N = {
     'dr.nv.n': '{n} vertices',
     'dr.build.add': '— tap to add more',
     'dr.build.close': '— tap the first one to close',
+    'dr.free': 'Freehand',
+    'dr.msg.free.touch': 'Draw with one finger. Two fingers move the map.',
+    'dr.msg.free.mouse': 'Drag to draw. The wheel zooms.',
     'dr.finish': 'Finish',
     'dr.undo': 'Remove the last vertex',
     'dr.cancel': 'Cancel',
@@ -3513,6 +3542,7 @@ const $ = id => document.getElementById(id);
 @@GEO_BLOCK@@
 @@ROUTE_TIMING_BLOCK@@
 @@ROUTE_TURNS_BLOCK@@
+@@ROUTE_FREEHAND_BLOCK@@
 @@READNUM_BLOCK@@
 
 @@MAGVAR_BLOCK@@
@@ -7157,7 +7187,8 @@ const DR_ICONS = {
   orbit: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M7 7h10a5 5 0 0 1 0 10H7A5 5 0 0 1 7 7z\" stroke-dasharray=\"3.2 2.2\"/><path d=\"M15 4.5l2.5 2.5L15 9.5\" stroke-dasharray=\"none\"/></svg>",
   box: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\"/><path d=\"M9.2 4.5v15M14.8 4.5v15M3.5 9.5h17M3.5 14.5h17\" stroke-width=\"1\" stroke-dasharray=\"2 1.6\"/></svg>",
   symbol: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"6\" width=\"18\" height=\"12\"/><path d=\"M3 6l18 12M21 6L3 18\"/></svg>",
-  ruler: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\"><rect x=\"2.5\" y=\"7.5\" width=\"19\" height=\"9\"/><path d=\"M6.5 7.5v4M10.5 7.5v3M14.5 7.5v4M18.5 7.5v3\" stroke-width=\"1.8\"/></svg>"
+  ruler: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\"><rect x=\"2.5\" y=\"7.5\" width=\"19\" height=\"9\"/><path d=\"M6.5 7.5v4M10.5 7.5v3M14.5 7.5v4M18.5 7.5v3\" stroke-width=\"1.8\"/></svg>",
+  libre: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 17c2.5-4 4.5-6 6.5-4.5S11 18 14 15s2-8 4.5-9S21 8 21 8\"/></svg>"
 };
 
 const DR_COLORS = ['#000000', '#c8102e', '#1f4fa8', '#2e7d32', '#e07b00', '#7b2d8e', '#ffffff'];
@@ -7188,6 +7219,8 @@ const DR = {
   sheet: false,         /* la fiche « Réglages » est ouverte */
   menu: false,          /* le menu des calques est ouvert */
   color: DR_COLOR0,     /* la dernière couleur choisie dans une fiche */
+  free: false,          /* la main levée de l'outil Ligne : en mémoire seulement (ni enregistrée ni relue), elle garde son dernier état tant que le Route Planner reste ouvert */
+  stroke: null,         /* le trait en cours : { id, pts: [[x, y] en coordonnées de calque], poly } */
   hs: [],               /* les poignées : { mk, pos, tap, start, move, end } */
   sym: { side: 'F', style: 'fill', size: 'm', code: 'GPUCI---', ech: '-' },   /* le dernier symbole créé : camp, style, taille, symbole, échelon (en mémoire seulement) */
   symId: null,          /* l'id de ce symbole : ses réglages suivent la fiche tant que c'est lui qu'on règle */
@@ -7298,7 +7331,7 @@ function drEnsureLayer() {
 }
 
 /* ---- Créer ---- */
-function drAdd(it) {
+function drAdd(it, stay) {
   const l = drEnsureLayer();
   drApplyDraft(it);       /* seuls les réglages changés dans la fiche « à venir » passent à l'objet */
   if (it.type === 'symbol') drSymRemember(it);
@@ -7306,6 +7339,13 @@ function drAdd(it) {
   persistLayers();
   renderLayers();
   drawLayers();
+  if (stay) {             /* un trait à main levée : l'outil reste Ligne, rien n'est choisi, le brouillon (et sa fiche, si elle est ouverte) reste pour le trait suivant */
+    drClearPreview();
+    drBuildHandles();
+    drContour();
+    drSyncUi();
+    return;
+  }
   DR.tool = 'select';
   DR.build = null;
   DR.draft = null;        /* la fiche, si elle est ouverte, reste ouverte sur l'objet créé */
@@ -7411,6 +7451,7 @@ function drMapClick(ev) {
   if (DR.menu) { DR.menu = false; drSyncUi(); return; }
   const ll = ev.latlng;
   const tool = DR.tool;
+  if (tool === 'line' && drFreeActive()) return;       /* la main levée en vigueur : le clic qui suit un glisser à la souris, ou un toucher, ne pose ni sommet ni objet */
   if (tool === 'select') { drPickAt(ev.containerPoint); return; }
   if (tool === 'circle') { drAdd(drNewCircle(ll)); return; }
   if (tool === 'point') { drAdd(drNewPoint(ll)); return; }
@@ -7444,14 +7485,20 @@ function drClearPreview() {
   DR.preview = [];
 }
 
+/* Le style de l'aperçu d'une zone ou d'une ligne : la couleur et le trait du brouillon (celui d'un trait à main levée aussi) */
+function drPreviewStyle() {
+  const dash = DR.draft ? DR.draft.it.dash : 'solid';
+  const st = { pane: 'drawedit', color: DR.color, weight: 2.5, opacity: 1, interactive: false, lineJoin: 'round', lineCap: 'round' };
+  if (dash === 'dot') st.dashArray = '2 6'; else if (dash === 'dash') st.dashArray = '8 6';
+  return st;
+}
+
 function drBuildPreview() {
   drClearPreview();
   const b = DR.build;
   if (!b || !drOn()) return;
   if (b.kind !== 'zone' && b.kind !== 'line') return;
-  const dash = DR.draft ? DR.draft.it.dash : 'solid';                         /* la couleur et le trait du brouillon */
-  const st = { pane: 'drawedit', color: DR.color, weight: 2.5, opacity: 1, interactive: false, lineJoin: 'round', lineCap: 'round' };
-  if (dash === 'dot') st.dashArray = '2 6'; else if (dash === 'dash') st.dashArray = '8 6';
+  const st = drPreviewStyle();
   if (b.pts.length >= 2) DR.preview.push(L.polyline(b.pts, st).addTo(map));
   if (b.kind === 'zone' && b.pts.length >= 3) {
     DR.preview.push(L.polyline([b.pts[b.pts.length - 1], b.pts[0]], Object.assign({}, st, { dashArray: '6 6', opacity: 0.7 })).addTo(map));
@@ -7991,15 +8038,22 @@ function drRenderHint() {
   else if (tool === 'orbit' || tool === 'box') m = esc(t('dr.msg.' + tool + (b && b.pts.length ? '2' : '')));
   else {
     const n = b ? b.pts.length : 0;
-    if (!n) m = esc(t('dr.msg.zone'));
+    if (!n) m = esc(t(tool === 'line' && DR.free ? (window.matchMedia('(pointer: coarse)').matches ? 'dr.msg.free.touch' : 'dr.msg.free.mouse') : 'dr.msg.zone'));
     else m = '<b>' + esc(t(cfOne(n) ? 'dr.nv.1' : 'dr.nv.n', { n: n })) + '</b> ' + esc(t('dr.build.add')) + (tool === 'zone' && n >= 3 ? ' ' + esc(t('dr.build.close')) : '');
-    a += '<button type="button" class="tb-btn" data-dr="undo" title="' + esc(t('dr.undo')) + '" aria-label="' + esc(t('dr.undo')) + '">↶</button>' +
-      '<button type="button" class="tb-btn go" data-dr="finish">' + esc(t('dr.finish')) + '</button>';
+    if (n) {         /* ↶ et Terminer ne font rien sans sommet : ils viennent avec le premier */
+      a += '<button type="button" class="tb-btn" data-dr="undo" title="' + esc(t('dr.undo')) + '" aria-label="' + esc(t('dr.undo')) + '">↶</button>' +
+        '<button type="button" class="tb-btn go" data-dr="finish">' + esc(t('dr.finish')) + '</button>';
+    }
   }
   if (tool !== 'select') {
     /* les réglages de l'objet à venir : le bouton avant ↶ / Terminer / ✕ */
     a = '<button type="button" class="tb-btn mq-props' + (DR.sheet ? ' on' : '') + '" data-dr="props" aria-pressed="' + (DR.sheet ? 'true' : 'false') + '" title="' + esc(t('dr.b.props')) +
       '" aria-label="' + esc(t('dr.b.props')) + '">' + DR_ICONS.props + '</button>' + a;
+  }
+  if (tool === 'line' && !(b && b.pts.length)) {
+    /* la main levée : la bascule de l'outil Ligne tant qu'aucun sommet n'est posé, en tête des actions */
+    a = '<button type="button" class="tb-btn dr-free' + (DR.free ? ' on' : '') + '" data-dr="free" aria-pressed="' + (DR.free ? 'true' : 'false') + '" title="' + esc(t('dr.free')) +
+      '" aria-label="' + esc(t('dr.free')) + '">' + DR_ICONS.libre + '<span>' + esc(t('dr.free')) + '</span></button>' + a;
   }
   if (tool !== 'select') a += '<button type="button" class="tb-btn" data-dr="cancel" title="' + esc(t('dr.cancel')) + '" aria-label="' + esc(t('dr.cancel')) + '">✕</button>';
   msg.innerHTML = m;
@@ -8186,6 +8240,7 @@ function drSyncUi() {
   drRenderPop();
   drRenderSheet(false);
   drPlaceSheet();
+  drFreeApply();
 }
 
 /* Les champs numériques de la fiche : leur champ de l'objet */
@@ -8391,6 +8446,7 @@ function drEnter() {
 }
 
 function drExit() {
+  drFreeAbort();
   if (DR.build) { drFinish(true); DR.build = null; }       /* assez de sommets : elle se termine ; sinon elle s'abandonne sans rien écrire */
   DR.tool = 'select'; DR.sel = null; DR.vtx = -1; DR.sheet = false; DR.menu = false; DR.draft = null; DR.lab = null;
   drClearPreview();
@@ -8398,6 +8454,7 @@ function drExit() {
   drContour();
   drRlab();
   map.getContainer().classList.remove('rp-drawing');
+  drFreeApply();          /* le déplacement de la carte revient */
   drSheetListClose();
   $('dr-ui').hidden = true;
   $('dr-sheet').hidden = true;
@@ -8412,6 +8469,71 @@ function drOnZoom() {
   drContour();
 }
 
+/* ---- La main levée : un trait glissé sur la carte devient une ligne ordinaire (R2, R3 du lot) ---- */
+/* Elle est en vigueur : mode Dessin, outil Ligne, la bascule allumée, aucun objet choisi, aucun sommet posé, aucune fenêtre ni menu des calques ouverts (la recherche comprise) */
+function drFreeActive() {
+  return drOn() && DR.tool === 'line' && DR.free && !drSel() && !(DR.build && DR.build.pts.length) && !DR.menu && !SR.open && !RT_MODALS.some(rtVisible) && !uiModalsOpen().length;
+}
+
+/* Pose l'état : en vigueur, la carte ne se déplace plus d'un doigt (touch-action: none, que Leaflet retire avec le déplacement) ; sinon le déplacement revient */
+function drFreeApply() {
+  if (!map) return;
+  const on = drFreeActive();
+  map.getContainer().classList.toggle('rp-freehand', on);
+  if (on && map.dragging.enabled()) map.dragging.disable();
+  else if (!on && !map.dragging.enabled()) map.dragging.enable();
+  if (!on) drFreeAbort();
+}
+
+/* Le trait en cours s'abandonne : rien n'est créé */
+function drFreeAbort() {
+  const s = DR.stroke;
+  if (!s) return;
+  DR.stroke = null;
+  if (s.poly) map.removeLayer(s.poly);
+  try { map.getContainer().releasePointerCapture(s.id); } catch (x) { /* ignore */ }
+}
+
+function drFreeDown(e) {
+  if (!map || !drOn()) return;
+  if (DR.stroke) {         /* un autre pointeur pendant le trait l'annule : le pincement et le déplacement à deux doigts sont ceux de Leaflet */
+    if (e.pointerId !== DR.stroke.id) drFreeAbort();
+    return;
+  }
+  drFreeApply();           /* l'état à jour : une fenêtre a pu s'ouvrir ou se fermer sans passer par le dessin */
+  if (!drFreeActive() || !e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  if (e.target && e.target.closest && e.target.closest('.leaflet-control, .dr-ui, .dr-sheet, .leaflet-marker-icon, .leaflet-popup')) return;
+  const p = map.mouseEventToLayerPoint(e);
+  DR.stroke = { id: e.pointerId, pts: [[p.x, p.y]], poly: null };
+  try { map.getContainer().setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+}
+
+function drFreeMove(e) {
+  const s = DR.stroke;
+  if (!s || e.pointerId !== s.id) return;
+  const p = map.mouseEventToLayerPoint(e), ll = map.layerPointToLatLng(p);
+  s.pts.push([p.x, p.y]);
+  if (!s.poly) s.poly = L.polyline([map.layerPointToLatLng(L.point(s.pts[0][0], s.pts[0][1]))], drPreviewStyle()).addTo(map);
+  s.poly.addLatLng(ll);
+}
+
+function drFreeUp(e) {
+  const s = DR.stroke;
+  if (!s || e.pointerId !== s.id) return;
+  const p = map.mouseEventToLayerPoint(e);
+  s.pts.push([p.x, p.y]);
+  const pts = s.pts;
+  drFreeAbort();
+  if (rfhReach(pts) < RFH_TAP_PX) return;           /* sous 8 px de son départ : un toucher, rien ne se crée */
+  const keep = rfhStroke(pts).idx.map(i => drLL(map.layerPointToLatLng(L.point(pts[i][0], pts[i][1]))));
+  if (keep.length < 2 || keep.every(q => q[0] === keep[0][0] && q[1] === keep[0][1])) return;
+  drAdd(drNewZone(keep, false), true);
+}
+
+function drFreeCancel(e) {
+  if (DR.stroke && e.pointerId === DR.stroke.id) drFreeAbort();
+}
+
 function drOnClick(ev) {
   const b = ev.target.closest ? ev.target.closest('[data-dr]') : null;
   if (!b) return;
@@ -8424,6 +8546,7 @@ function drOnClick(ev) {
   else if (a === 'undo') { if (DR.build) { DR.build.pts.pop(); drBuildRefresh(); } }
   else if (a === 'finish') drFinish(false);
   else if (a === 'cancel') drCancel();
+  else if (a === 'free') { DR.free = !DR.free; drSyncUi(); }
   else if (a === 'vtx') drRemoveVertex();
   else if (a === 'props') { if (drSheetTarget()) { DR.sheet = !DR.sheet; DR.sheetKey = ''; drSyncUi(); } }
   else if (a === 'dup') drCopy();
@@ -8469,9 +8592,16 @@ function drInit() {
     if (row && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); DR.layerId = row.dataset.id; DR.menu = false; drSyncUi(); }
   });
   map.on('zoomend', drOnZoom);
+  map.on('zoomstart', drFreeAbort);       /* la molette pendant un trait : les points ne sont plus à l'échelle du trait, il s'annule */
+  const mc = map.getContainer();
+  mc.addEventListener('pointerdown', drFreeDown, true);
+  mc.addEventListener('pointermove', drFreeMove);
+  mc.addEventListener('pointerup', drFreeUp);
+  mc.addEventListener('pointercancel', drFreeCancel);
   document.addEventListener('keydown', ev => {
     if (ev.key !== 'Escape' || ev.defaultPrevented || !drOn() || SR.open || RT_MODALS.some(rtVisible) || uiModalsOpen().length) return;       /* une fenêtre de suite ouverte (la question de « Supprimer » comprise) : Échap ne regarde qu'elle */
-    if (DR.menu) { DR.menu = false; drSyncUi(); }
+    if (DR.stroke) drFreeAbort();                          /* Échap pendant un trait : il s'annule, rien ne se crée */
+    else if (DR.menu) { DR.menu = false; drSyncUi(); }
     else if (DR.build || DR.tool !== 'select') drCancel();
     else if (DR.sheet && drSel()) { DR.sheet = false; drSyncUi(); }
     else if (drSel()) drDeselect();
@@ -12568,7 +12698,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@PROJECTION_BLOCK@@\n', build_projection_block()).replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@ROUTE_TIMING_BLOCK@@\n', build_route_timing_block()).replace('@@ROUTE_TURNS_BLOCK@@\n', build_route_turns_block()).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@PUBLIC_HOST_BLOCK@@\n', build_public_host_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
+    js = js.replace('@@PROJECTION_BLOCK@@\n', build_projection_block()).replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@ROUTE_TIMING_BLOCK@@\n', build_route_timing_block()).replace('@@ROUTE_TURNS_BLOCK@@\n', build_route_turns_block()).replace('@@ROUTE_FREEHAND_BLOCK@@\n', build_route_freehand_block()).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@PUBLIC_HOST_BLOCK@@\n', build_public_host_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     js = js.replace('@@TBM_JS@@\n', build_tbm_block())
     js = js.replace('@@THREATS_BLOCK@@\n', threats_block.build_block())
     if '@@' in js:

@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+28` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+29` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -254,6 +254,13 @@ Between two releases, the hosted version shows its build number at the bottom of
 
 **Sharper DCS map over Cold War Germany**
 - Where the finest DCS map tiles are missing, the map now shows the next level down instead of a blurred, much coarser one.
+
+**Freehand lines**
+- In Draw mode, choose Line, then Freehand in the hint bar: drag to draw. With a finger, one finger draws and two fingers move and zoom the map.
+- Each stroke becomes an ordinary line, simplified, with the usual colour, width and type; it is edited and exported like any line.
+
+**Draw mode for the finger on narrow phones**
+- On a touch screen below 440 px wide, the drawing tools sit on two rows, each at least 44 px; below 400 px, the mode buttons no longer cover the zoom buttons.
 
 ### Datacard Generator
 
